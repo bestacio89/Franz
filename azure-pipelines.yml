@@ -1,0 +1,97 @@
+trigger:
+  branches:
+    include:
+      - Develop
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  dockerRegistry: 'myregistry.azurecr.io'
+  imageNameApi: 'minervaapi'
+  imageNameConsumer: 'minervaconsumer'
+
+steps:
+  - task: NuGetToolInstaller@1
+    displayName: 'Install NuGet Tool Installer'
+
+  - task: NuGetCommand@2
+    displayName: 'Restore NuGet Packages'
+    inputs:
+      restoreSolution: '$(solution)'
+      feedsToUse: 'config'
+      nugetConfigPath: 'nuget.config'
+
+  - task: VSBuild@1
+    displayName: 'Build the Solution'
+    inputs:
+      solution: '$(solution)'
+      platform: '$(buildPlatform)'
+      configuration: '$(buildConfiguration)'
+      msbuildArgs: '/p:ExcludeProjects="**/Minerva.DockerCompose/Minerva.DockerCompose.dcproj"'
+
+  - task: VSTest@2
+    displayName: 'Automated Testing'
+    inputs:
+      testSelector: 'testAssemblies'
+      testAssemblyVer2: |
+        **\TestProject1\**\*test*.dll
+        !**\*TestAdapter.dll
+        !**\obj\**
+      searchFolder: '$(System.DefaultWorkingDirectory)'
+      platform: '$(buildPlatform)'
+      configuration: '$(buildConfiguration)'
+
+
+# All commented following steps are reference to when dockers are part of your microservice Layout Environment  uncomment and configure as needed. This have already been tested and are part of a proper microservice application
+
+# - task: Docker@2
+#    displayName: 'Build Docker Image for Minerva.API'
+#    inputs:
+#      command: build
+#      Dockerfile: 'sources/back/Minerva.Api/Dockerfile'  # Adjusted relative path
+#      context: 'sources/back/Minerva.Api/'  # Specify the context directory
+#      tags: |
+#        $(dockerRegistry)/$(imageNameApi):latest
+
+#  - task: Docker@2
+#    displayName: 'Push Docker Image for Minerva.API'
+#    inputs:
+#      command: push
+#      repository: $(dockerRegistry)/$(imageNameApi)
+#      tags: |
+#        latest
+#        $(Build.BuildId)
+
+#  - task: Docker@2
+#    displayName: 'Build Docker Image for Minerva.Consumer'
+#    inputs:
+#      command: build
+#      Dockerfile: 'sources/back/Minerva.Consumer/Dockerfile'  # Adjusted relative path
+#      context: 'sources/back/Minerva.Consumer/'  # Specify the context directory
+#      tags: |
+#       $(dockerRegistry)/$(imageNameConsumer):latest
+
+#  - task: Docker@2
+#    displayName: 'Push Docker Image for Minerva.Consumer'
+#    inputs:
+#      command: push
+#      repository: $(dockerRegistry)/$(imageNameConsumer)
+#      tags: |
+#        latest
+#        $(Build.BuildId)
+
+# Example Deployment Step (commented out for template use)
+# Uncomment and modify the following step according to your deployment needs:
+# - task: AzureRmWebAppDeployment@4
+#   displayName: 'Deploy to Azure Web App'
+#   inputs:
+#     appType: 'webAppContainer'
+#     azureSubscription: 'Your Azure Subscription'
+#     appServiceName: 'YourAppServiceName'
+#     deployToSlotOrASE: true
+#     slotName: 'production'
+#     imageName: '$(dockerRegistry)/$(imageNameApi):$(Build.BuildId)'
