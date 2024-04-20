@@ -97,6 +97,10 @@ public class ApplicationArchitectureTests : BaseArchitectureTest
         .Should()
         .BeAssignableTo(typeof(ICommandBaseRequest))
         .OrShould()
+        .BeAssignableTo(typeof(IEntity))
+        .OrShould()
+        .BeAssignableTo(typeof(IAggregateRoot))
+        .OrShould()
         .DependOnAnyTypesThat()
         .ResideInNamespace("Franz.Common.Business.Events")
         .OrShould().DependOnAnyTypesThat()
@@ -109,6 +113,9 @@ public class ApplicationArchitectureTests : BaseArchitectureTest
         .ResideInNamespace("MediatR")
         .OrShould().DependOnAnyTypesThat()
         .ResideInNamespace("System")
+        .OrShould().DependOnAnyTypesThat()
+        .ResideInNamespace("AutoMapper")
+
         .Because("Application layer should utilize shared business logic components from the Franz.Common.Business namespace, ensuring consistent business logic implementation across applications.");
     
     rule.Check(BaseArchitecture);
