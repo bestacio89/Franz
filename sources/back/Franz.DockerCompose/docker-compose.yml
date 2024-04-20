@@ -1,0 +1,40 @@
+# version: '3.4'
+
+# services:
+#   rabbitmq:
+#     image: rabbitmq:3-management
+#     hostname: rabbitmq
+#     ports:
+#       - "5672:5672"  # Default RabbitMQ port
+#       - "15672:15672" # Management plugin
+#     environment:
+#       RABBITMQ_ERLANG_COOKIE: 'secret_cookie_here'
+#       RABBITMQ_DEFAULT_USER: 'user'
+#       RABBITMQ_DEFAULT_PASS: 'password'
+#     volumes:
+#       - "rabbitmq_data:/var/lib/rabbitmq"
+
+#   minerva.api:
+#     image: ${DOCKER_REGISTRY-}minervaapi
+#     build:
+#       context: sources/back/Minerva.Api/
+#       dockerfile: Dockerfile
+#     ports:
+#       - "80:80"
+#       - "443:443"
+
+#   #minerva.consumer:
+#    # image: ${DOCKER_REGISTRY-}minervaconsumer
+#     #build:
+#      # context: sources/back/Minerva.Consumer/
+#       #dockerfile: Dockerfile
+#     #environment:
+#      # - RABBITMQ_HOST=rabbitmq
+#      # - RABBITMQ_PORT=5672
+#      # - RABBITMQ_USERNAME=user
+#      # - RABBITMQ_PASSWORD=password
+#    # depends_on:
+#     #  - rabbitmq
+
+# volumes:
+#   rabbitmq_data:

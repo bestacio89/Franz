@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../../common.targets" />
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="Franz.Common.Business" Version="1.2.60" />
+    <PackageReference Include="MediatR" Version="12.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Franz.Contracts\Franz.Contracts.csproj" />
+    <ProjectReference Include="..\Franz.Domain\Franz.Domain.csproj" />
+    <ProjectReference Include="..\Franz.Persistence\Franz.Persistence.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Features\Example\Commands\" />
+    <Folder Include="Features\Example\Queries\" />
+  </ItemGroup>
+
+</Project>
