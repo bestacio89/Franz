@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <Import Project="../../../common.targets" />
+
+  <PropertyGroup>
+    <UserSecretsId>d6ba6873-85eb-4154-bcd5-6a49a182b334</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..\..</DockerfileContext>
+    <DockerComposeProjectPath>..\..\Franz.DockerCompose.dcproj</DockerComposeProjectPath>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
+    <PackageReference Include="Franz.Common.Http" Version="1.2.60" />
+    <PackageReference Include="Franz.Common.Http.Bootstrap" Version="1.2.60" />
+    <PackageReference Include="Franz.Common.Http.EntityFramework" Version="1.2.60" />
+    <PackageReference Include="Franz.Common.Http.Messaging" Version="1.2.60" />
+    <PackageReference Include="MediatR" Version="12.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.5" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Franz.Persistence\Franz.Persistence.csproj" />
+    <ProjectReference Include="..\Franz.Application\Franz.Application.csproj" />
+    <ProjectReference Include="..\Franz.Contracts\Franz.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+  </ItemGroup>
+
+  <Target Name="GenerateCSharpClient" AfterTargets="Build" Condition="Exists('Controllers\*.cs')">
+    <Exec Command="dotnet nswag run /variables:Configuration=$(Configuration) /variables:Platform=$(Platform) /variables:OutputPath=$(OutputPath) /variables:ProjectName=$(MSBuildProjectName) /variables:AssemblyName=$(AssemblyName) /variables:TargetFramework=$(TargetFramework) /variables:SwaggerFile=$(OutputPath)$(AssemblyName).xml /variables:CSharpClientOutput=..\Franz.ClientHTTP\Client\CSharp\$(MSBuildProjectName)Client.cs /variables:ClientNamespace=$(MSBuildProjectName).Client.CSharp /runtime:net8.0" />
+  </Target>
+
+  <Target Name="GenerateTypeScriptClient" AfterTargets="Build" Condition="Exists('Controllers\*.cs')">
+    <Exec Command="dotnet nswag run /variables:Configuration=$(Configuration) /variables:Platform=$(Platform) /variables:OutputPath=$(OutputPath) /variables:ProjectName=$(MSBuildProjectName) /variables:AssemblyName=$(AssemblyName) /variables:TargetFramework=$(TargetFramework) /variables:SwaggerFile=$(OutputPath)$(AssemblyName).xml /variables:TypeScriptClientOutput=..\Franz.ClientHTTP\Client\TypeScript\$(MSBuildProjectName)Client.ts /variables:ClientNamespace=$(MSBuildProjectName).Client.TypeScript /runtime:net8.0" />
+  </Target>
+
+</Project>
