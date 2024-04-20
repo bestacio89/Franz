@@ -31,7 +31,7 @@ steps:
       solution: '$(solution)'
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
-      msbuildArgs: '/p:ExcludeProjects="**/Minerva.DockerCompose/Minerva.DockerCompose.dcproj"'
+      msbuildArgs: '/p:ExcludeProjects="**/Franz.DockerCompose/Franz.DockerCompose.dcproj"'
 
   - task: VSTest@2
     displayName: 'Automated Testing'
