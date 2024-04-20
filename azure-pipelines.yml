@@ -11,8 +11,8 @@ variables:
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
   dockerRegistry: 'myregistry.azurecr.io'
-  imageNameApi: 'minervaapi'
-  imageNameConsumer: 'minervaconsumer'
+  imageNameApi: 'Franzapi'
+  imageNameConsumer: 'Franzconsumer'
 
 steps:
   - task: NuGetToolInstaller@1
