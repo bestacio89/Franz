@@ -1,0 +1,44 @@
+version: 2
+updates:
+  # Update GitHub actions in workflows
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'sunday'
+
+  # Enable version updates for Docker in the 'Docker' directory
+#  - package-ecosystem: 'docker'
+#    directory: 'Docker/'
+#    schedule:
+#      interval: 'weekly'
+#      day: 'sunday'
+#    ignore:
+#      - dependency-name: '*'
+#        update-types:
+#          - 'version-update:semver-major'
+#          - 'version-update:semver-minor'
+
+  # Enable version updates for NuGet (.NET) dependencies in the root directory
+  - package-ecosystem: 'nuget'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'sunday'
+    ignore:
+      - dependency-name: '*'
+        update-types:
+          - 'version-update:semver-major'
+          - 'version-update:semver-minor'
+
+  # Enable version updates for NuGet (.NET) dependencies in a subdirectory
+  - package-ecosystem: 'nuget'
+    directory: 'subdirectory/'
+    schedule:
+      interval: 'weekly'
+      day: 'sunday'
+    ignore:
+      - dependency-name: '*'
+        update-types:
+          - 'version-update:semver-major'
+          - 'version-update:semver-minor'
