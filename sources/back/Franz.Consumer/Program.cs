@@ -1,43 +1,38 @@
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using Franz.Persistence;
-using Franz.Common.Business.Events;
 using Microsoft.Extensions.DependencyInjection;
-using System;
+using Microsoft.Extensions.Configuration;
+using Franz.Common.Business.Domain;
+using Franz.Common.Messaging.Kafka;
+using Franz.Common.EntityFramework.SQLServer.Extensions;
+using Franz.Consumer.Extensions;
+using Franz.Consumer.Services;
+using Franz.Persistence;
+using Franz.Common.Messaging.Delegating;
+using Franz.Consumer.Handlers;
 
-namespace Franz.Consumer
-{
-  public static class Program
-  {
-    public static void Main(string[] args)
+var builder = Host.CreateDefaultBuilder(args)
+    .ConfigureAppConfiguration((context, config) =>
     {
-      // Initialize configuration
-      var configuration = new ConfigurationBuilder()
-          .AddJsonFile("appsettings.json") // Adjust the path to your app settings JSON
-          .Build();
-
-      // Create the host builder
-      var hostBuilder = CreateHostBuilder(args);
-
-      // Build and run the host
-      hostBuilder.Build().Run();
-    }
-
-    public static IHostBuilder CreateHostBuilder(string[] args)
+      // Add configuration files
+      config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+      config.AddJsonFile($"appsettings.{context.HostingEnvironment.EnvironmentName}.json", optional: true);
+    })
+    .ConfigureServices((context, services) =>
     {
-      // Create the host builder and configure services
-      var hostBuilder = Host.CreateDefaultBuilder(args)
-          .ConfigureServices((hostContext, services) =>
-          {
-            // Add application services, configurations, etc.
-            services.AddDbContext<ApplicationDbContext>(); // Replace with your actual DbContext
+      var configuration = context.Configuration;
+      var environment = context.HostingEnvironment;
 
-            // Retrieve the specific configuration section required by AddMessaging
-            var messagingConfig = hostContext.Configuration.GetSection("Messaging");
-            services.AddMessaging(messagingConfig); // Pass the configuration section to AddMessaging
-          });
+      // Messaging architecture (Kafka and related services)
+      services.AddMessagingArchitecture(environment, configuration);
+      services.AddKafkaMessaging(configuration);
 
-      return hostBuilder;
-    }
-  }
-}
+      // Database setup (SQL Server)
+      services.AddSqlServerDatabase<ApplicationDbContext>(configuration);
+
+      // Add additional application services if needed
+      services.AddScoped<IMessageHandler, KafkaMessageHandler>();
+    })
+    .Build();
+
+// Run the host
+await builder.RunAsync();
