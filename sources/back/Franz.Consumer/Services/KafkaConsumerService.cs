@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using Franz.Common.Messaging;
+using System.Text;
 
 namespace Franz.Consumer.Services
 {
@@ -50,8 +51,20 @@ namespace Franz.Consumer.Services
             var result = _consumer.Consume(cancellationToken);
             _logger.LogInformation($"Message consumed from topic {_topicName}: {result.Message.Value}");
 
+            // Convert Kafka headers to Franz Message headers
+            var headers = result.Message.Headers?
+                .ToDictionary(
+                    header => header.Key,
+                    header => new Microsoft.Extensions.Primitives.StringValues(
+                        Encoding.UTF8.GetString(header.GetValueBytes() ?? Array.Empty<byte>())
+                    )
+                ) ?? new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>();
+
+            // Create the Franz Message object
+            var franzMessage = new Message(result.Message.Value, headers);
+
             // Pass the message to the handler
-            _messageHandler.Process(new Message(result.Message.Key, result.Message.Value));
+            _messageHandler.Process(franzMessage);
           }
           catch (Exception ex)
           {
