@@ -4,7 +4,7 @@
 
 	<ItemGroup>
 	  <PackageReference Include="Dawn.Guard" Version="1.12.0" />
-	  <PackageReference Include="Franz.Common.Business" Version="1.2.60" />
+	  <PackageReference Include="Franz.Common.Business" Version="1.2.62" />
 	
 	</ItemGroup>
 
