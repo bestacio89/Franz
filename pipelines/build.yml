@@ -3,13 +3,6 @@ trigger:
     include:
       - Develop  # Only trigger on changes to the 'Develop' branch in the Franz repo
 
-resources:
-  repositories:
-    - repository: franzRepo  # Link the pipeline to the Franz repository
-      type: git
-      name: project/Franz  # Path to the Franz repository
-      ref: refs/heads/Develop  # Optionally specify the branch
-
 pool:
   vmImage: 'windows-latest'
 
@@ -17,9 +10,6 @@ variables:
   solution: '**/*.sln'  # Solution files to be restored
   buildPlatform: 'Any CPU'  # Platform for building
   buildConfiguration: 'Release'  # Build configuration
-  dockerRegistry: 'myregistry.azurecr.io'  # Azure Container Registry
-  imageNameApi: 'Franzapi'  # Docker image name for the API
-  imageNameConsumer: 'Franzconsumer'  # Docker image name for the Consumer
 
 jobs:
   - job: BuildAndTest
@@ -58,62 +48,3 @@ jobs:
           searchFolder: '$(System.DefaultWorkingDirectory)'
           platform: '$(buildPlatform)'
           configuration: '$(buildConfiguration)'
-
-  - job: DockerBuildAndPush
-    displayName: 'Build and Push Docker Images'
-    dependsOn: BuildAndTest  # Ensure this runs after the build and test steps
-    steps:
-      # Step 1: Build Docker Image for the API
-      - task: Docker@2
-        displayName: 'Build Docker Image for Franz.API'
-        inputs:
-          command: build
-          Dockerfile: 'src/Franz.Backend/Api/Dockerfile'  # Adjusted relative path
-          context: 'src/Franz.Backend/Api'  # Specify the context directory for the API
-          tags: |
-            $(dockerRegistry)/$(imageNameApi):latest
-
-      # Step 2: Push Docker Image for the API
-      - task: Docker@2
-        displayName: 'Push Docker Image for Franz.API'
-        inputs:
-          command: push
-          repository: $(dockerRegistry)/$(imageNameApi)
-          tags: |
-            latest
-            $(Build.BuildId)
-
-      # Step 3: Build Docker Image for the Consumer
-      - task: Docker@2
-        displayName: 'Build Docker Image for Franz.Consumer'
-        inputs:
-          command: build
-          Dockerfile: 'src/Franz.Backend/Consumer/Dockerfile'  # Adjusted relative path
-          context: 'src/Franz.Backend/Consumer'  # Specify the context directory for the Consumer
-          tags: |
-            $(dockerRegistry)/$(imageNameConsumer):latest
-
-      # Step 4: Push Docker Image for the Consumer
-      - task: Docker@2
-        displayName: 'Push Docker Image for Franz.Consumer'
-        inputs:
-          command: push
-          repository: $(dockerRegistry)/$(imageNameConsumer)
-          tags: |
-            latest
-            $(Build.BuildId)
-
-  - job: DeployToAzure
-    displayName: 'Deploy to Azure Web App'
-    dependsOn: DockerBuildAndPush  # Ensure this runs after Docker build and push
-    steps:
-      # Step 1: Deploy to Azure Web App
-      - task: AzureRmWebAppDeployment@4
-        displayName: 'Deploy to Azure Web App'
-        inputs:
-          appType: 'webAppContainer'
-          azureSubscription: 'your-azure-subscription'  # Update with your Azure Subscription name
-          appServiceName: 'yourAppServiceName'  # Update with your Azure Web App name
-          deployToSlotOrASE: true
-          slotName: 'production'  # Specify the deployment slot (e.g., production, staging)
-          imageName: '$(dockerRegistry)/$(imageNameApi):$(Build.BuildId)'  # Docker image tag for API

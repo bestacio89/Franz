@@ -3,12 +3,6 @@ trigger:
     include:
       - main  # Adjust this based on your branch strategy
 
-resources:
-  repositories:
-    - repository: FranzRepo
-      type: git
-      name: project/Franz  # Link to the Franz repository (containing both front-end and back-end)
-
 parameters:
   - name: repository
     displayName: Repository name
@@ -99,7 +93,7 @@ stages:
 - stage: "Deploy_Infrastructure"
   displayName: "Deploy Infrastructure"
   jobs:
-    - job: BicepDeploy
+    - job: 
       displayName: "Deploy Infrastructure with Bicep"
       pool:
         vmImage: 'ubuntu-latest'
@@ -107,7 +101,7 @@ stages:
         - task: AzureCLI@2
           displayName: 'Deploy infrastructure using Bicep'
           inputs:
-            azureSubscription: 'gpt4-enterprise-service-connection'
+            azureSubscription: ''
             scriptType: bash
             scriptLocation: inlineScript
             inlineScript: |

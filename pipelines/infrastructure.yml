@@ -1,9 +1,3 @@
-resources:
-  repositories:
-    - repository: franzRepo  # This is a custom name for the repository
-      type: git
-      name: project/Franz  # Replace this with the actual path of the Franz repo in your Azure DevOps project
-
 trigger:
   branches:
     include:
