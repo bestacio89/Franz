@@ -1,21 +1,21 @@
 version: '3.4'
 
 services:
-  Minerva.Api:
+  Franz.Api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=https://+:443;http://+:80
     ports:
-      - "80"
-      - "443"
+      - "80:80"
+      - "443:443"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     networks:
-      - nt_Minerva
-    container_name: Minerva_api
+      - nt_Franz
+    container_name: Franz_api
     
-  Minerva.Consumer:
+  Franz.Consumer:
     environment:
       - DOTNET_ENVIRONMENT=Docker
     restart: always  
@@ -23,9 +23,9 @@ services:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     networks:
-      - nt_Minerva
-    container_name: Minerva_consumer
+      - nt_Franz
+    container_name: Franz_consumer
     
 networks:
-  nt_Minerva:
-    name: nt_Minerva
+  nt_Franz:
+    name: nt_Franz

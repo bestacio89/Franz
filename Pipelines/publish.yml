@@ -1,0 +1,56 @@
+parameters:
+  - name: repository
+    displayName: Repository name
+    default: Franz
+  - name: major
+    displayName: Major {x.0.0}
+    type: number
+    default: 2
+  - name: minor
+    displayName: Minor {1.x.0}
+    type: number
+    default: 1
+  - name: patch
+    displayName: Patch {1.0.x}
+    type: string
+    default: 5
+  - name: frontEndType  # Parameter for selecting which front-end to deploy
+    displayName: "Front-End Type"
+    type: string
+    default: "Blazor"  # Default to Blazor, options: Angular, Blazor, ASP.NET
+    values:
+      - Angular
+      - Blazor
+      - ASP.NET
+
+name: $(Build.DefinitionName)-$(Build.BuildId)-$(Build.BuildNumber)
+
+trigger: none  # Adjust this trigger based on your needs
+
+stages:
+- stage: "Build_Frontend"
+  displayName: "Build Frontend"
+  jobs:
+    - job: DockerBuild
+      displayName: "Docker Build"
+      pool:
+        vmImage: 'ubuntu-latest'
+      steps:
+        - task: Docker@2
+          displayName: 'Build Docker image for selected front-end'
+          inputs:
+            containerRegistry: 'gpt4enterprisesharedacr-connection'  # Your Azure Container Registry
+            repository: '${{ parameters.repository }}-frontend-${{ parameters.frontEndType }}'  # Dynamically set repository name
+            dockerfile: $[variables['dockerfilePath']]  # Dockerfile path will be determined dynamically
+            buildContext: $[variables['buildContext']]  # Build context will be determined dynamically
+            tags: |
+              ${{ parameters.Major }}.${{ parameters.Minor }}.${{ parameters.patch }}
+
+# Variables to dynamically set based on the front-end type
+variables:
+  dockerfilePath: $[if(eq(parameters.frontEndType, 'Angular'), 'src/FranzFront.Angular/Dockerfile', 
+                        if(eq(parameters.frontEndType, 'Blazor'), 'src/FranzFront.Blazor/Client/Dockerfile', 
+                        'src/FranzFront.ASPNET/Dockerfile'))]
+  buildContext: $[if(eq(parameters.frontEndType, 'Angular'), 'src/FranzFront.Angular', 
+                       if(eq(parameters.frontEndType, 'Blazor'), 'src/FranzFront.Blazor', 
+                       'src/FranzFront.ASPNET'))]
