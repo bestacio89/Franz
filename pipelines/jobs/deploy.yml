@@ -16,7 +16,7 @@ jobs:
   environment: ${{ parameters.environmentName }}
   pool:
     vmImage: 'ubuntu-latest'
-  
+
   variables:
     - group: franz-${{ parameters.environmentName }}
     - group: mutualized-resources
@@ -30,7 +30,7 @@ jobs:
       deploy:
         steps:
         - checkout: self
-              
+
         # Step 1: Check if Action Group Exists
         - task: AzureCLI@2
           displayName: 'Check if ${{ parameters.actionGroupName }} Exists'
@@ -48,7 +48,46 @@ jobs:
                 fi
           name: CheckActionGroup
 
-        # Step 2: Deploy Infrastructure using Bicep
+        # Step 2: Check if Kafka Namespace Exists
+        - task: AzureCLI@2
+          displayName: 'Check if Kafka Namespace Exists'
+          inputs:
+            azureSubscription: ${{ parameters.azureServiceConnection }}
+            scriptType: bash
+            scriptLocation: inlineScript
+            inlineScript: |
+                kafkaExists=$(az resource show \
+                  --resource-group ${{ parameters.resourceGroupName }} \
+                  --name "yourKafkaNamespace" \
+                  --resource-type "Microsoft.EventHub/namespaces" \
+                  --query "id" -o tsv)
+
+                if [ -z "$kafkaExists" ]; then
+                    echo "Kafka namespace does not exist. Proceeding with Kafka deployment..."
+                    echo "##vso[task.setvariable variable=kafkaExists;isOutput=true]false"
+                else
+                    echo "Kafka namespace already exists."
+                    echo "##vso[task.setvariable variable=kafkaExists;isOutput=true]true"
+                fi
+          name: CheckKafkaExistence
+
+        # Step 3: Deploy Kafka if it doesn't exist
+        - task: AzureCLI@2
+          displayName: 'Deploy Kafka Namespace and Topic'
+          condition: eq(variables['kafkaExists'], 'false')  # Only run if Kafka doesn't exist
+          inputs:
+            azureSubscription: ${{ parameters.azureServiceConnection }}
+            scriptType: bash
+            scriptLocation: inlineScript
+            inlineScript: |
+                echo "Deploying Kafka namespace..."
+                az deployment group create \
+                  --resource-group ${{ parameters.resourceGroupName }} \
+                  --template-file src/infrastructure/kafka.bicep \
+                  --parameters kafkaNamespaceName="yourKafkaNamespace" \
+                               location="${{ parameters.resourceGroupLocation }}"
+
+        # Step 4: Deploy Infrastructure using Bicep
         - task: AzureCLI@2
           displayName: "Deploy Infrastructure with Bicep"
           inputs:
@@ -76,7 +115,7 @@ jobs:
                   actionGroupExists="$(CheckActionGroup.actionGroupExists)" \
                   actionGroupName="${{ parameters.actionGroupName }}"
 
-        # Step 3: Capture BICEP Outputs as Agent Variables
+        # Step 5: Capture BICEP Outputs as Agent Variables
         - task: AzureCLI@2
           displayName: "Capture BICEP Outputs as Agent Variables"
           name: 'bicepOutput'
@@ -87,9 +126,8 @@ jobs:
             inlineScript: |
               $out = az deployment group show -g ${{ parameters.resourceGroupName }} -n main | convertfrom-json | foreach properties | foreach outputs
 
-              $provisionOutputs = [PSCustomObject]@{}
+              $provisionOutputs = [PSCustomObject]@{ }
               $out | Get-Member -MemberType NoteProperty | ForEach-Object {
-
                   $name = $_.name
                   $provisionOutputs | Add-Member -MemberType NoteProperty -Name $name -value $out.$name.value
                   Write-Host "##vso[task.setvariable variable=$($name);isOutput=true]$($out.$name.value)"
@@ -97,7 +135,7 @@ jobs:
 
               $provisionOutputs
 
-        # Step 4: Restart Web App (Optional)
+        # Step 6: Restart Web App (Optional)
         - task: AzureCLI@2
           displayName: "Restart Web App"
           inputs:
@@ -107,7 +145,7 @@ jobs:
             inlineScript: |
               az webapp restart --name $(bicepOutput.frontEndServiceName) --resource-group ${{ parameters.resourceGroupName }}
 
-        # Step 5: PAL Registration (Conditional)
+        # Step 7: PAL Registration (Conditional)
         - task: AzureCLI@2
           condition: ${{ parameters.registrerPAL }}
           displayName: "Run PowerShell Script for PAL Registration"
