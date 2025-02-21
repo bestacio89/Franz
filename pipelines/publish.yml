@@ -29,6 +29,8 @@ parameters:
       - ASP.NET
 
 variables:
+  - group: AzureVariables  # 🔥 Loads environment-specific Azure variables
+
   frontendPaths:
     Angular: 
       dockerfilePath: 'src/FranzFront.Angular/Dockerfile'
@@ -55,7 +57,7 @@ stages:
         - task: Docker@2
           displayName: 'Build Docker image for selected front-end'
           inputs:
-            containerRegistry: 'gpt4enterprisesharedacr-connection'
+            containerRegistry: $(AZURE_CONTAINER_REGISTRY)
             repository: '${{ parameters.repository }}-frontend-${{ parameters.frontEndType }}'
             dockerfile: ${{ variables.dockerfilePath }}
             buildContext: ${{ variables.buildContext }}
@@ -73,7 +75,7 @@ stages:
         - task: Docker@2
           displayName: 'Build Docker image for API'
           inputs:
-            containerRegistry: 'gpt4enterprisesharedacr-connection'
+            containerRegistry: $(AZURE_CONTAINER_REGISTRY)
             repository: '${{ parameters.repository }}-api'
             dockerfile: 'src/Franz.Backend/Api/Dockerfile'
             buildContext: 'src/Franz.Backend/Api'
@@ -83,7 +85,7 @@ stages:
         - task: Docker@2
           displayName: 'Build Docker image for Consumer'
           inputs:
-            containerRegistry: 'gpt4enterprisesharedacr-connection'
+            containerRegistry: $(AZURE_CONTAINER_REGISTRY)
             repository: '${{ parameters.repository }}-consumer'
             dockerfile: 'src/Franz.Backend/Consumer/Dockerfile'
             buildContext: 'src/Franz.Backend/Consumer'
@@ -91,24 +93,35 @@ stages:
               ${{ parameters.Major }}.${{ parameters.Minor }}.${{ parameters.patch }}
 
 - stage: "Deploy_Infrastructure"
-  displayName: "Deploy Infrastructure"
+  displayName: "Deploy Azure Infrastructure"
   jobs:
-    - job: 
+    - job: DeployAzureBicep
       displayName: "Deploy Infrastructure with Bicep"
       pool:
         vmImage: 'ubuntu-latest'
       steps:
         - task: AzureCLI@2
+          displayName: 'Login to Azure'
+          inputs:
+            azureSubscription: $(AZURE_SUBSCRIPTION_ID)
+            scriptType: bash
+            scriptLocation: inlineScript
+            inlineScript: |
+              az login --service-principal -u $(AZURE_CLIENT_ID) -p $(AZURE_CLIENT_SECRET) --tenant $(AZURE_TENANT_ID)
+
+        - task: AzureCLI@2
           displayName: 'Deploy infrastructure using Bicep'
           inputs:
-            azureSubscription: ''
+            azureSubscription: $(AZURE_SUBSCRIPTION_ID)
             scriptType: bash
             scriptLocation: inlineScript
             inlineScript: |
               az config set bicep.use_binary_from_path=false
               az deployment group create \
-                --resource-group ${{ parameters.resourceGroupName }} \
+                --resource-group $(AZURE_RESOURCE_GROUP) \
                 --template-file src/infrastructure/main.bicep \
-                --parameters frontendClientId="$(frontendClientId)" \
-                --parameters backendClientId="$(backendClientId)" \
+                --parameters location=$(AZURE_REGION) \
+                             frontendClientId="$(frontendClientId)" \
+                             backendClientId="$(backendClientId)" \
+                             databaseType=$(AZURE_DATABASE_TYPE) \
                 --mode Incremental
