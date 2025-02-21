@@ -3,7 +3,7 @@
   <Import Project="../../../common.targets" />
 
   <ItemGroup>
-    <PackageReference Include="Franz.Common.Business" Version="1.2.62" />
+    <PackageReference Include="Franz.Common.Business" Version="1.2.64" />
   </ItemGroup>
 
   <ItemGroup>

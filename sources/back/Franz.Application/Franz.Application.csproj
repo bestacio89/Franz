@@ -3,8 +3,9 @@
   <Import Project="../../../common.targets" />
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="13.0.1" />
-    <PackageReference Include="Franz.Common.Business" Version="1.2.62" />
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
+    <PackageReference Include="Franz.Common.Business" Version="1.2.64" />
+    <PackageReference Include="Franz.Common.Hosting" Version="1.2.64" />
     <PackageReference Include="MediatR" Version="12.4.1" />
   </ItemGroup>
 

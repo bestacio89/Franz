@@ -12,17 +12,18 @@
 
   <ItemGroup>
     <PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
-    <PackageReference Include="Franz.Common.Http" Version="1.2.62" />
-    <PackageReference Include="Franz.Common.Http.Bootstrap" Version="1.2.62" />
-    <PackageReference Include="Franz.Common.Http.EntityFramework" Version="1.2.62" />
-    <PackageReference Include="Franz.Common.Http.Messaging" Version="1.2.62" />
+    <PackageReference Include="Franz.Common.Hosting" Version="1.2.64" />
+    <PackageReference Include="Franz.Common.Http" Version="1.2.64" />
+    <PackageReference Include="Franz.Common.Http.Bootstrap" Version="1.2.64" />
+    <PackageReference Include="Franz.Common.Http.EntityFramework" Version="1.2.64" />
+    <PackageReference Include="Franz.Common.Http.Messaging" Version="1.2.64" />
     <PackageReference Include="MediatR" Version="12.4.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.1">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.1" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.2" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
   </ItemGroup>
 
