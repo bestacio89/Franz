@@ -1,0 +1,35 @@
+trigger:
+  - main  # Trigger on main branch code changes
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  AWS_REGION: "us-east-1"
+  AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+  AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+stages:
+  - stage: BuildAndPushDocker
+    displayName: "Build & Push Docker Image"
+    jobs:
+      - job: BuildDocker
+        displayName: "Build and Push to AWS ECR"
+        steps:
+          - script: |
+              aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin <AWS_ECR_URL>
+              docker build -t microservice:latest .
+              docker tag microservice:latest <AWS_ECR_URL>/microservice:latest
+              docker push <AWS_ECR_URL>/microservice:latest
+            displayName: "Build & Push Docker Image"
+
+  - stage: DeployMicroservice
+    displayName: "Deploy to AWS"
+    dependsOn: BuildAndPushDocker
+    jobs:
+      - job: DeployToECS
+        displayName: "Deploy to AWS ECS"
+        steps:
+          - script: |
+              aws ecs update-service --cluster ecs-microservice-cluster --service microservice-service --force-new-deployment
+            displayName: "Deploy to ECS"
