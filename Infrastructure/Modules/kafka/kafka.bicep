@@ -26,5 +26,6 @@ resource kafkaTopic 'Microsoft.EventHub/namespaces/eventHubs@2021-11-01' = {
   }
 }
 
+// Output Kafka resource IDs
 output kafkaNamespaceId string = kafkaNamespace.id
 output kafkaTopicId string = kafkaTopic.id
