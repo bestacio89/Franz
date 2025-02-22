@@ -18,44 +18,38 @@ stages:
   - stage: DeployInfrastructure
     displayName: "Deploy AWS Infrastructure"
     jobs:
-      - job: TerraformDeployment
-        displayName: "Terraform Infrastructure Deployment"
+
+      # ========================================
+      # ✅ 1. Terraform Initialization
+      # ========================================
+      - job: Terraform_Init
+        displayName: "Terraform Init"
         steps:
-          # ✅ Install Terraform
-          - task: TerraformInstaller@1
-            displayName: "Install Terraform"
-            inputs:
-              terraformVersion: '1.5.0'
+          - template: jobs/terraform-init.yml  # Calls the separate job file
 
-          # ✅ Authenticate with AWS using Azure DevOps secrets
-          - script: |
-              aws configure set aws_access_key_id $(AWS_ACCESS_KEY_ID)
-              aws configure set aws_secret_access_key $(AWS_SECRET_ACCESS_KEY)
-              aws configure set region $(AWS_REGION)
-            displayName: "Authenticate with AWS"
+      # ========================================
+      # ✅ 2. Terraform Validate
+      # ========================================
+      - job: Terraform_Validate
+        displayName: "Terraform Validate"
+        dependsOn: Terraform_Init
+        steps:
+          - template: jobs/terraform-validate.yml
 
-          # ✅ Terraform Init (Remote State with S3 & DynamoDB)
-          - script: |
-              terraform init
-            displayName: "Initialize Terraform Backend (S3)"
+      # ========================================
+      # ✅ 3. Terraform Plan
+      # ========================================
+      - job: Terraform_Plan
+        displayName: "Terraform Plan"
+        dependsOn: Terraform_Validate
+        steps:
+          - template: jobs/terraform-plan.yml
 
-          # ✅ Terraform Validate (Ensure correctness)
-          - script: |
-              terraform validate
-            displayName: "Validate Terraform Configuration"
-
-          # ✅ Terraform Plan (Show what will change)
-          - script: |
-              terraform plan -out=tfplan
-            displayName: "Terraform Plan"
-            env:
-              AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
-              AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
-
-          # ✅ Terraform Apply (Deploy AWS infrastructure)
-          - script: |
-              terraform apply -auto-approve tfplan
-            displayName: "Terraform Apply"
-            env:
-              AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
-              AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+      # ========================================
+      # ✅ 4. Terraform Apply
+      # ========================================
+      - job: Terraform_Apply
+        displayName: "Terraform Apply"
+        dependsOn: Terraform_Plan
+        steps:
+          - template: jobs/terraform-apply.yml

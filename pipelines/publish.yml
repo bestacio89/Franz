@@ -29,7 +29,7 @@ parameters:
       - ASP.NET
 
 variables:
-  - group: AzureVariables  # 🔥 Loads environment-specific Azure variables
+  - group: "Azure Variables"  # 🔥 Loads environment-specific Azure variables
 
   frontendPaths:
     Angular: 
