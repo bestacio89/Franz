@@ -1,17 +1,20 @@
+pr: none  # ❌ Prevent auto-trigger on pull requests
+trigger: none  # ❌ Ensure manual execution
+
 parameters:
   - name: repository
-    displayName: Repository name
+    displayName: Repository Name
     default: Franz
   - name: major
-    displayName: Major {x.0.0}
+    displayName: Major Version {x.0.0}
     type: number
     default: 2
   - name: minor
-    displayName: Minor {1.x.0}
+    displayName: Minor Version {1.x.0}
     type: number
     default: 1
   - name: patch
-    displayName: Patch {1.0.x}
+    displayName: Patch Version {1.0.x}
     type: string
     default: 5
   - name: frontEndType
@@ -24,23 +27,12 @@ parameters:
       - ASP.NET
 
 variables:
-  - group: "Azure Variables"  # 🔥 Loads environment-specific Azure variables
-
-  frontendPaths:
-    Angular: 
-      dockerfilePath: 'src/FranzFront.Angular/Dockerfile'
-      buildContext: 'src/FranzFront.Angular'
-    Blazor: 
-      dockerfilePath: 'src/FranzFront.Blazor/Client/Dockerfile'
-      buildContext: 'src/FranzFront.Blazor'
-    ASP.NET: 
-      dockerfilePath: 'src/FranzFront.ASPNET/Dockerfile'
-      buildContext: 'src/FranzFront.ASPNET'
-
-  dockerfilePath: $[variables['frontendPaths'][parameters.frontEndType].dockerfilePath]
-  buildContext: $[variables['frontendPaths'][parameters.frontEndType].buildContext]
+  - group: "Azure Variables"  # ✅ Load environment-specific variables
 
 stages:
+# ========================================
+# ✅ BUILD FRONTEND STAGE
+# ========================================
 - stage: "Build_Frontend"
   displayName: "Build Frontend"
   jobs:
@@ -49,16 +41,32 @@ stages:
       pool:
         vmImage: 'ubuntu-latest'
       steps:
+        - script: |
+            if [ "${{ parameters.frontEndType }}" == "Angular" ]; then
+              echo "##vso[task.setvariable variable=dockerfilePath]sources/front/FranzFront.Angular/Dockerfile"
+              echo "##vso[task.setvariable variable=buildContext]sources/front/FranzFront.Angular"
+            elif [ "${{ parameters.frontEndType }}" == "Blazor" ]; then
+              echo "##vso[task.setvariable variable=dockerfilePath]sources/front/FranzFront.Blazor/Client/Dockerfile"
+              echo "##vso[task.setvariable variable=buildContext]sources/front/FranzFront.Blazor"
+            else
+              echo "##vso[task.setvariable variable=dockerfilePath]sources/front/FranzFront.ASPNET/Dockerfile"
+              echo "##vso[task.setvariable variable=buildContext]sources/front/FranzFront.ASPNET"
+            fi
+          displayName: "Set Docker Build Context Variables"
+
         - task: Docker@2
-          displayName: 'Build Docker image for selected front-end'
+          displayName: "Build Docker image for selected front-end"
           inputs:
             containerRegistry: $(AZURE_CONTAINER_REGISTRY)
-            repository: '${{ parameters.repository }}-frontend-${{ parameters.frontEndType }}'
-            dockerfile: ${{ variables.dockerfilePath }}
-            buildContext: ${{ variables.buildContext }}
+            repository: "${{ parameters.repository }}-frontend-${{ parameters.frontEndType }}"
+            dockerfile: "$(dockerfilePath)"
+            buildContext: "$(buildContext)"
             tags: |
-              ${{ parameters.Major }}.${{ parameters.Minor }}.${{ parameters.patch }}
+              ${{ parameters.major }}.${{ parameters.minor }}.${{ parameters.patch }}
 
+# ========================================
+# ✅ BUILD BACKEND STAGE
+# ========================================
 - stage: "Build_Backend"
   displayName: "Build Backend"
   jobs:
@@ -68,25 +76,28 @@ stages:
         vmImage: 'ubuntu-latest'
       steps:
         - task: Docker@2
-          displayName: 'Build Docker image for API'
+          displayName: "Build Docker image for API"
           inputs:
             containerRegistry: $(AZURE_CONTAINER_REGISTRY)
-            repository: '${{ parameters.repository }}-api'
-            dockerfile: 'src/Franz.Backend/Api/Dockerfile'
-            buildContext: 'src/Franz.Backend/Api'
+            repository: "${{ parameters.repository }}-api"
+            dockerfile: "sources/back/Franz.Api/Dockerfile"
+            buildContext: "sources/back/Franz.Api"
             tags: |
-              ${{ parameters.Major }}.${{ parameters.Minor }}.${{ parameters.patch }}
+              ${{ parameters.major }}.${{ parameters.minor }}.${{ parameters.patch }}
 
         - task: Docker@2
-          displayName: 'Build Docker image for Consumer'
+          displayName: "Build Docker image for Consumer"
           inputs:
             containerRegistry: $(AZURE_CONTAINER_REGISTRY)
-            repository: '${{ parameters.repository }}-consumer'
-            dockerfile: 'src/Franz.Backend/Consumer/Dockerfile'
-            buildContext: 'src/Franz.Backend/Consumer'
+            repository: "${{ parameters.repository }}-consumer"
+            dockerfile: "sources/back/Franz.Backend/Consumer/Dockerfile"
+            buildContext: "sources/back/Franz.Backend/Consumer"
             tags: |
-              ${{ parameters.Major }}.${{ parameters.Minor }}.${{ parameters.patch }}
+              ${{ parameters.major }}.${{ parameters.minor }}.${{ parameters.patch }}
 
+# ========================================
+# ✅ DEPLOY INFRASTRUCTURE STAGE
+# ========================================
 - stage: "Deploy_Infrastructure"
   displayName: "Deploy Azure Infrastructure"
   jobs:
@@ -96,7 +107,7 @@ stages:
         vmImage: 'ubuntu-latest'
       steps:
         - task: AzureCLI@2
-          displayName: 'Login to Azure'
+          displayName: "Login to Azure"
           inputs:
             azureSubscription: $(AZURE_SUBSCRIPTION_ID)
             scriptType: bash
@@ -105,7 +116,7 @@ stages:
               az login --service-principal -u $(AZURE_CLIENT_ID) -p $(AZURE_CLIENT_SECRET) --tenant $(AZURE_TENANT_ID)
 
         - task: AzureCLI@2
-          displayName: 'Deploy infrastructure using Bicep'
+          displayName: "Deploy Infrastructure using Bicep"
           inputs:
             azureSubscription: $(AZURE_SUBSCRIPTION_ID)
             scriptType: bash
@@ -114,7 +125,7 @@ stages:
               az config set bicep.use_binary_from_path=false
               az deployment group create \
                 --resource-group $(AZURE_RESOURCE_GROUP) \
-                --template-file src/infrastructure/main.bicep \
+                --template-file Infrastructure/main.bicep \
                 --parameters location=$(AZURE_REGION) \
                              frontendClientId="$(frontendClientId)" \
                              backendClientId="$(backendClientId)" \
