@@ -1,60 +1,38 @@
-param frontEndType string
-param databaseType string
-param eventStorageType string
-param entityStorageType string
-param environment string  // Added environment parameter
+param kafkanms string
+param databaseType string  // "single" or "multi"
+param eventStorageType string  // "Kafka", "CosmosDB", "MongoDB"
+param entityStorageType string  // "PostgreSQL", "MariaDB", "MySQL", "SQLServer", "Oracle"
+param environment string
 
-module kafkaModule './kafka.bicep' = if (databaseType == 'multi') {
+// ✅ Deploy Kafka Module Only for Multi-DB Mode
+module kafkaModule './Modules/kafka/kafka.bicep' = if (databaseType == 'multi') {
   name: 'kafkaDeployment'
   params: {
     location: resourceGroup().location
-    environment: environment
+    kafkaNamespaceName: kafkanms
   }
 }
 
-module multiDbModule './multi-db.bicep' = if (databaseType == 'multi') {
+// ✅ Deploy Multi-DB Module If Multi-DB is Selected
+module multiDbModule './modules/Multi/multi-db.bicep' = if (databaseType == 'multi') {
   name: 'multiDbDeployment'
   params: {
     location: resourceGroup().location
     eventStorageType: eventStorageType
     entityStorageType: entityStorageType
-    environment: environment
   }
 }
 
-module apiModule './api.bicep' = {
-  name: 'apiDeployment'
+// ✅ Deploy Single-DB Module If Single-DB is Selected
+module singleDbModule './modules/Single/single-db.bicep' = if (databaseType == 'single') {
+  name: 'singleDbDeployment'
   params: {
     location: resourceGroup().location
-    environment: environment
+    entityStorageType: entityStorageType
   }
 }
 
-module frontEndModule './frontend.bicep' = if (frontEndType == 'Blazor') {
-  name: 'blazorFrontEndDeployment'
-  params: {
-    location: resourceGroup().location
-    frontEndType: 'Blazor'
-    environment: environment
-  }
-} else if (frontEndType == 'Angular') {
-  name: 'angularFrontEndDeployment'
-  params: {
-    location: resourceGroup().location
-    frontEndType: 'Angular'
-    environment: environment
-  }
-} else if (frontEndType == 'ASP.NET') {
-  name: 'aspNetFrontEndDeployment'
-  params: {
-    location: resourceGroup().location
-    frontEndType: 'ASP.NET'
-    environment: environment
-  }
-}
-
-// Outputs
-output kafkaResourceId string = kafkaModule.outputs.kafkaResourceId
-output eventStorageResourceId string = multiDbModule.outputs.eventStorageResourceId
-output entityStorageResourceId string = multiDbModule.outputs.entityStorageResourceId
-output frontEndUrl string = frontEndModule.outputs.frontEndAppUrl
+// ✅ Outputs (Select from the Correct Module)
+output kafkaResourceId string = databaseType == 'multi' ? kafkaModule.outputs.kafkaNamespaceId : ''
+output eventStorageResourceId string = databaseType == 'multi' ? multiDbModule.outputs.eventStorageResourceId : ''
+output entityStorageResourceId string = databaseType == 'multi' ? multiDbModule.outputs.entityStorageResourceId : singleDbModule.outputs.entityStorageResourceId
