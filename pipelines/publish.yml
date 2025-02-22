@@ -1,7 +1,5 @@
-trigger:
-  branches:
-    include:
-      - main  # Adjust this based on your branch strategy
+pr: none  # ❌ Prevent triggering on pull requests
+trigger: none  # ❌ Prevent triggering on any commit to main
 
 parameters:
   - name: repository
