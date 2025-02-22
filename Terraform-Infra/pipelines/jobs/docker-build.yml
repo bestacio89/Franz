@@ -14,7 +14,7 @@ jobs:
     - task: Docker@2
       displayName: "Build Docker Image"
       inputs:
-        repository: "microservice-api"
+        repository: "Franz"
         dockerfile: "./services/api/Dockerfile"
         buildContext: "./services/api"
         tags: "$(Build.BuildId)"
