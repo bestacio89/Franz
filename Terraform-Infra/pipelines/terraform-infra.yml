@@ -1,10 +1,5 @@
-trigger:
-  branches:
-    include:
-      - main
-  paths:
-    include:
-      - terraform-infra/**  # Only trigger if Terraform files change
+pr: none  # ❌ Prevent triggering on pull requests
+trigger: none  # ❌ Prevent automatic execution
 
 pool:
   vmImage: 'ubuntu-latest'
