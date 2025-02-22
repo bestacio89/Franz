@@ -1,6 +1,3 @@
-pr: none  # ❌ Prevent triggering on pull requests
-trigger: none  # ❌ Prevent triggering on any commit to main
-
 parameters:
   - name: repository
     displayName: Repository name
