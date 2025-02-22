@@ -1,0 +1,10 @@
+jobs:
+- job: deploy
+  displayName: "Deploy Microservices"
+  dependsOn: docker-build
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - script: |
+        aws ecs update-service --cluster $(ecsClusterName) --service microservice-api --force-new-deployment
+      displayName: "Update AWS ECS Service"

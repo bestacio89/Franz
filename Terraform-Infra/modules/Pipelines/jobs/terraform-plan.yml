@@ -1,0 +1,10 @@
+jobs:
+- job: terraform-plan
+  displayName: "Terraform Plan"
+  dependsOn: terraform-init
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - script: |
+        terraform plan -var-file="terraform-$(environment).tfvars"
+      displayName: "Generate Terraform Plan"

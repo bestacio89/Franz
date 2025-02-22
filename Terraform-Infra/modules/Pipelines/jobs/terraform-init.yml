@@ -1,0 +1,14 @@
+jobs:
+- job: terraform-init
+  displayName: "Terraform Init"
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - task: TerraformInstaller@1
+      displayName: "Install Terraform"
+      inputs:
+        terraformVersion: "1.4.6"
+
+    - script: |
+        terraform init -backend-config="backend-$(environment).tfvars"
+      displayName: "Initialize Terraform Backend"
