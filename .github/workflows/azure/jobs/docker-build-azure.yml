@@ -1,0 +1,25 @@
+name: "Azure Docker Build & Push"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker-build:
+    name: "Build & Push Docker Image to Azure"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v3
+
+      - name: "Login to Azure Container Registry"
+        run: |
+          az acr login --name ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+
+      - name: "Build Docker Image"
+        run: docker build -t ${{ secrets.SERVICE_NAME }}:latest sources/back/Franz.Api
+
+      - name: "Tag Docker Image"
+        run: docker tag ${{ secrets.SERVICE_NAME }}:latest ${{ secrets.AZURE_CONTAINER_REGISTRY }}/${{ secrets.SERVICE_NAME }}:latest
+
+      - name: "Push Docker Image"
+        run: docker push ${{ secrets.AZURE_CONTAINER_REGISTRY }}/${{ secrets.SERVICE_NAME }}:latest

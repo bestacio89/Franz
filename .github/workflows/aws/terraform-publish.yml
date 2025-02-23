@@ -1,0 +1,20 @@
+name: "Terraform Publish & Deploy"
+
+on:
+  workflow_dispatch:  # ✅ Manual trigger
+
+jobs:
+  # ========================================
+  # ✅ BUILD & PUSH DOCKER IMAGE (Reusing Job)
+  # ========================================
+  build-and-push-docker:
+    name: "Build & Push Docker Image"
+    uses: ./.github/workflows/aws/jobs/docker-build.yml  # ✅ Calls separate job
+
+  # ========================================
+  # ✅ DEPLOY MICROSERVICE TO AWS ECS (Reusing Job)
+  # ========================================
+  deploy-microservice:
+    name: "Deploy to AWS ECS"
+    needs: build-and-push-docker  # ✅ Runs after Docker build
+    uses: ./.github/workflows/aws/jobs/deploy-ecs.yml  # ✅ Calls separate job

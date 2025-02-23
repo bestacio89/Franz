@@ -1,0 +1,48 @@
+name: "Build and Test .NET Solution"
+
+on:
+  push:
+    branches:
+      - Develop  # ✅ Only trigger on changes to the 'Develop' branch
+  pull_request:
+    branches:
+      - Develop  # ✅ Run on PRs targeting 'Develop'
+  workflow_dispatch:  # ✅ Allow manual triggering
+
+env:
+  BUILD_PLATFORM: "Any CPU"
+  BUILD_CONFIGURATION: "Release"
+
+jobs:
+  build-and-test:
+    name: "Build, Test, and Docker Build"
+    runs-on: windows-latest
+
+    steps:
+      # Step 1: Checkout Repository
+      - name: "Checkout Repository"
+        uses: actions/checkout@v3
+
+      # Step 2: Setup NuGet
+      - name: "Setup NuGet"
+        uses: nuget/setup-nuget@v1
+
+      # Step 3: Restore NuGet Packages
+      - name: "Restore NuGet Packages"
+        run: nuget restore **/*.sln
+
+      # Step 4: Setup .NET SDK (Ensures Correct Version)
+      - name: "Setup .NET SDK"
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: "6.0.x"  # Adjust to match your .NET version
+
+      # Step 5: Build Solution
+      - name: "Build Solution"
+        run: |
+          msbuild **/*.sln /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:Platform="${{ env.BUILD_PLATFORM }}" /p:ExcludeProjects="**/Franz.DockerCompose/Franz.DockerCompose.dcproj"
+
+      # Step 6: Run Automated Tests
+      - name: "Run Automated Tests"
+        run: |
+          dotnet test **/*.sln --configuration ${{ env.BUILD_CONFIGURATION }} --logger trx --results-directory TestResults

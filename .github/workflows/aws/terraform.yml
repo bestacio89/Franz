@@ -1,0 +1,81 @@
+name: "Manual AWS Infrastructure Deployment"
+
+on:
+  workflow_dispatch:
+    inputs:
+      databaseType:
+        description: "Database Type"
+        required: true
+        default: "single"
+        type: choice
+        options:
+          - single
+          - multi
+      eventStorageType:
+        description: "Event Storage Type (Only for Multi-DB)"
+        required: false
+        default: "Kafka"
+        type: choice
+        options:
+          - Kafka
+          - CosmosDB
+          - MongoDB
+      entityStorageType:
+        description: "Entity Storage Type"
+        required: true
+        default: "SQLServer"
+        type: choice
+        options:
+          - PostgreSQL
+          - MariaDB
+          - MySQL
+          - SQLServer
+          - Oracle
+
+env:
+  AWS_REGION: "us-east-1"
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+jobs:
+  deploy-infrastructure:
+    name: "Deploy AWS Infrastructure"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v3
+
+      # ========================================
+      # ✅ 1. Terraform Initialization
+      # ========================================
+      - name: "Terraform Init"
+        uses: ./.github/workflows/aws/jobs/terraform-init.yml
+
+      # ========================================
+      # ✅ 2. Terraform Validate
+      # ========================================
+      - name: "Terraform Validate"
+        needs: deploy-infrastructure
+        uses: ./.github/workflows/aws/jobs/terraform-validate.yml
+
+      # ========================================
+      # ✅ 3. Terraform Plan
+      # ========================================
+      - name: "Terraform Plan"
+        needs: deploy-infrastructure
+        uses: ./.github/workflows/aws/jobs/terraform-plan.yml
+        with:
+          databaseType: ${{ github.event.inputs.databaseType }}
+          eventStorageType: ${{ github.event.inputs.eventStorageType }}
+          entityStorageType: ${{ github.event.inputs.entityStorageType }}
+
+      # ========================================
+      # ✅ 4. Terraform Apply
+      # ========================================
+      - name: "Terraform Apply"
+        needs: deploy-infrastructure
+        uses: ./.github/workflows/aws/jobs/terraform-apply.yml
+        with:
+          databaseType: ${{ github.event.inputs.databaseType }}
+          eventStorageType: ${{ github.event.inputs.eventStorageType }}
+          entityStorageType: ${{ github.event.inputs.entityStorageType }}

@@ -1,0 +1,36 @@
+name: "Terraform Apply"
+runs-on: ubuntu-latest
+
+env:
+  AWS_REGION: "us-east-1"
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  KAFKA_CLUSTER_NAME: ${{ secrets.KAFKA_CLUSTER_NAME }}
+
+steps:
+  - name: "Checkout Repository"
+    uses: actions/checkout@v3
+
+  - name: "Setup Terraform"
+    uses: hashicorp/setup-terraform@v2
+    with:
+      terraform_version: 1.5.0
+
+  - name: "Check if Kafka Hub Exists"
+    id: check_kafka
+    run: |
+      echo "Checking if Kafka Hub already exists..."
+      EXISTING_KAFKA=$(aws kafka list-clusters --region $AWS_REGION --query "ClusterInfoList[?ClusterName=='$KAFKA_CLUSTER_NAME'].ClusterName" --output text)
+
+      if [ -n "$EXISTING_KAFKA" ]; then
+        echo "Kafka Hub already exists: $EXISTING_KAFKA"
+        echo "::set-output name=kafka_exists::true"
+      else
+        echo "Kafka Hub does not exist. It will be created."
+        echo "::set-output name=kafka_exists::false"
+      fi
+
+  - name: "Terraform Apply"
+    if: steps.check_kafka.outputs.kafka_exists == 'false'
+    run: terraform apply -auto-approve tfplan
+    working-directory: Terraform-Infra

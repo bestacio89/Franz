@@ -1,0 +1,33 @@
+name: "Azure Bicep Deployment"
+
+on:
+  workflow_dispatch:
+
+env:
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+jobs:
+  deploy-azure:
+    name: "Deploy Bicep Infrastructure"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v3
+
+      - name: "Login to Azure"
+        run: |
+          az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+
+      - name: "Deploy Infrastructure"
+        run: |
+          az deployment group create \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --template-file Infrastructure/main.bicep \
+            --parameters location=${{ secrets.AZURE_REGION }} \
+                         frontendClientId="${{ secrets.AZURE_FRONTEND_CLIENT_ID }}" \
+                         backendClientId="${{ secrets.AZURE_BACKEND_CLIENT_ID }}" \
+                         databaseType="${{ secrets.AZURE_DATABASE_TYPE }}" \
+            --mode Incremental

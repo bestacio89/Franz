@@ -1,0 +1,14 @@
+name: "Terraform Plan"
+runs-on: ubuntu-latest
+steps:
+  - name: "Checkout Repository"
+    uses: actions/checkout@v3
+
+  - name: "Setup Terraform"
+    uses: hashicorp/setup-terraform@v2
+    with:
+      terraform_version: 1.5.0
+
+  - name: "Terraform Plan"
+    run: terraform plan -var-file="terraform-${{ secrets.ENVIRONMENT }}.tfvars"
+    working-directory: Terraform-Infra  # ✅ Ensures Terraform runs inside Terraform-Infra
