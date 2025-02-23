@@ -1,10 +1,18 @@
-jobs:
-- job: deploy
-  displayName: "Deploy Microservices"
-  dependsOn: docker-build
-  pool:
-    vmImage: 'ubuntu-latest'
-  steps:
-    - script: |
-        aws ecs update-service --cluster $(ecsClusterName) --service microservice-api --force-new-deployment
-      displayName: "Update AWS ECS Service"
+name: "Deploy Microservice to AWS ECS"
+runs-on: ubuntu-latest
+
+env:
+  AWS_REGION: "us-east-1"
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  ECS_CLUSTER_NAME: ${{ secrets.ECS_CLUSTER_NAME }}  # Set this in GitHub Secrets
+  SERVICE_NAME: ${{ secrets.SERVICE_NAME }}  # Set this in GitHub Secrets
+
+steps:
+  - name: "Checkout Repository"
+    uses: actions/checkout@v3
+
+  - name: "Deploy Microservice to AWS ECS"
+    run: |
+      echo "Updating AWS ECS service $SERVICE_NAME in cluster $ECS_CLUSTER_NAME..."
+      aws ecs update-service --cluster $ECS_CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment

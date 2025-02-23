@@ -1,50 +1,81 @@
-pr: none  # ❌ Prevent triggering on pull requests
-trigger: none  # ❌ Prevent automatic execution
+name: "Manual AWS Infrastructure Deployment"
 
-pool:
-  vmImage: 'ubuntu-latest'
+on:
+  workflow_dispatch:
+    inputs:
+      databaseType:
+        description: "Database Type"
+        required: true
+        default: "single"
+        type: choice
+        options:
+          - single
+          - multi
+      eventStorageType:
+        description: "Event Storage Type (Only for Multi-DB)"
+        required: false
+        default: "Kafka"
+        type: choice
+        options:
+          - Kafka
+          - CosmosDB
+          - MongoDB
+      entityStorageType:
+        description: "Entity Storage Type"
+        required: true
+        default: "SQLServer"
+        type: choice
+        options:
+          - PostgreSQL
+          - MariaDB
+          - MySQL
+          - SQLServer
+          - Oracle
 
-variables:
+env:
   AWS_REGION: "us-east-1"
-  AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)   # Stored in Azure DevOps secrets
-  AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)  # Stored in Azure DevOps secrets
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-stages:
-  - stage: DeployInfrastructure
-    displayName: "Deploy AWS Infrastructure"
-    jobs:
+jobs:
+  deploy-infrastructure:
+    name: "Deploy AWS Infrastructure"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v3
 
       # ========================================
       # ✅ 1. Terraform Initialization
       # ========================================
-      - job: Terraform_Init
-        displayName: "Terraform Init"
-        steps:
-          - template: jobs/terraform-init.yml  # Calls the separate job file
+      - name: "Terraform Init"
+        uses: ./.github/workflows/aws/jobs/terraform-init.yml
 
       # ========================================
       # ✅ 2. Terraform Validate
       # ========================================
-      - job: Terraform_Validate
-        displayName: "Terraform Validate"
-        dependsOn: Terraform_Init
-        steps:
-          - template: jobs/terraform-validate.yml
+      - name: "Terraform Validate"
+        needs: deploy-infrastructure
+        uses: ./.github/workflows/aws/jobs/terraform-validate.yml
 
       # ========================================
       # ✅ 3. Terraform Plan
       # ========================================
-      - job: Terraform_Plan
-        displayName: "Terraform Plan"
-        dependsOn: Terraform_Validate
-        steps:
-          - template: jobs/terraform-plan.yml
+      - name: "Terraform Plan"
+        needs: deploy-infrastructure
+        uses: ./.github/workflows/aws/jobs/terraform-plan.yml
+        with:
+          databaseType: ${{ github.event.inputs.databaseType }}
+          eventStorageType: ${{ github.event.inputs.eventStorageType }}
+          entityStorageType: ${{ github.event.inputs.entityStorageType }}
 
       # ========================================
       # ✅ 4. Terraform Apply
       # ========================================
-      - job: Terraform_Apply
-        displayName: "Terraform Apply"
-        dependsOn: Terraform_Plan
-        steps:
-          - template: jobs/terraform-apply.yml
+      - name: "Terraform Apply"
+        needs: deploy-infrastructure
+        uses: ./.github/workflows/aws/jobs/terraform-apply.yml
+        with:
+          databaseType: ${{ github.event.inputs.databaseType }}
+          eventStorageType: ${{ github.event.inputs.eventStorageType }}
+          entityStorageType: ${{ github.event.inputs.entityStorageType }}
