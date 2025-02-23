@@ -32,9 +32,7 @@ parameters:
       - Oracle
 
 variables:
-  AWS_REGION: "us-east-1"
-  AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)   # Stored in Azure DevOps secrets
-  AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)  # Stored in Azure DevOps secrets
+  - group: AWS_Variables  # ✅ Load AWS credentials & region from Azure DevOps Library
 
 stages:
   - stage: DeployInfrastructure

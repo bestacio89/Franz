@@ -1,0 +1,12 @@
+parameters:
+  serviceName: ""
+
+steps:
+  - script: |
+      echo "Authenticating with AWS..."
+      aws eks update-kubeconfig --region $(AWS_REGION) --name $(EKS_CLUSTER_NAME)
+
+      echo "Deploying to EKS..."
+      kubectl set image deployment/${{ parameters.serviceName }} ${{ parameters.serviceName }}=$(AWS_ECR_URL)/${{ parameters.serviceName }}:latest
+      kubectl rollout status deployment/${{ parameters.serviceName }}
+    displayName: "Deploy to EKS"

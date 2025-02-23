@@ -14,19 +14,22 @@ parameters:
   - name: awsEcrUrl
     displayName: "AWS ECR URL"
     type: string
-    default: "<AWS_ECR_URL>"  # 🔥 Replace with your actual AWS ECR registry
+    default: "<AWS_ECR_URL>"  # 🔥 Replace with actual AWS ECR registry
+
+  - name: deployToEKS
+    displayName: "Deploy to EKS (true) or ECS (false)"
+    type: boolean
+    default: false
 
 pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  AWS_REGION: "us-east-1"
-  AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
-  AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+  - group: AWS_Variables  # ✅ Load AWS environment variables from DevOps Library
 
 stages:
 # ========================================
-# ✅ BUILD & PUSH DOCKER IMAGE
+# ✅ BUILD & PUSH DOCKER IMAGE TO AWS ECR
 # ========================================
   - stage: BuildAndPushDocker
     displayName: "Build & Push Docker Image"
@@ -34,33 +37,30 @@ stages:
       - job: BuildDocker
         displayName: "Build and Push to AWS ECR"
         steps:
-          - script: |
-              echo "Logging in to AWS ECR..."
-              aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin ${{ parameters.awsEcrUrl }}
-
-              echo "Building Docker image..."
-              docker build -t ${{ parameters.serviceName }}:latest .
-
-              echo "Tagging Docker image..."
-              docker tag ${{ parameters.serviceName }}:latest ${{ parameters.awsEcrUrl }}/${{ parameters.serviceName }}:latest
-
-              echo "Pushing Docker image to AWS ECR..."
-              docker push ${{ parameters.awsEcrUrl }}/${{ parameters.serviceName }}:latest
-            displayName: "Build & Push Docker Image"
+          - template: jobs/docker-build-aws.yml
+            parameters:
+              serviceName: ${{ parameters.serviceName }}
+              awsEcrUrl: ${{ parameters.awsEcrUrl }}
 
 # ========================================
-# ✅ DEPLOY MICROSERVICE TO AWS ECS
+# ✅ DEPLOY MICROSERVICE TO AWS ECS or EKS
 # ========================================
   - stage: DeployMicroservice
     displayName: "Deploy to AWS"
     dependsOn: BuildAndPushDocker
     jobs:
-      - job: DeployToECS
-        displayName: "Deploy to AWS ECS"
+      - job: DeployToEKS
+        condition: eq(${{ parameters.deployToEKS }}, true)
+        displayName: "Deploy to EKS"
         steps:
-          - script: |
-              echo "Deploying service ${{ parameters.serviceName }} to ECS..."
-              aws ecs update-service --cluster ecs-${{ parameters.repository }}-cluster \
-                --service ${{ parameters.serviceName }}-service \
-                --force-new-deployment
-            displayName: "Deploy to ECS"
+          - template: jobs/deploy-eks.yml
+            parameters:
+              serviceName: ${{ parameters.serviceName }}
+
+      - job: DeployToECS
+        condition: eq(${{ parameters.deployToEKS }}, false)
+        displayName: "Deploy to ECS"
+        steps:
+          - template: jobs/deploy-ecs.yml
+            parameters:
+              serviceName: ${{ parameters.serviceName }}
