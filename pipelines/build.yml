@@ -1,7 +1,6 @@
-trigger:
-  branches:
-    include:
-      - Develop  # Only trigger on changes to the 'Develop' branch in the Franz repo
+# ❌ Prevent Auto-Triggers
+pr: none
+trigger: none  # 🔥 Ensures the pipeline is only triggered manually
 
 pool:
   vmImage: 'windows-latest'
