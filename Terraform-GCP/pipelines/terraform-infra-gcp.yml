@@ -1,0 +1,85 @@
+# ✅ Prevent Auto-Triggers
+pr: none
+trigger: none  # ❌ Prevent automatic execution
+
+parameters:
+  - name: databaseType
+    displayName: "Database Type"
+    type: string
+    default: "single"
+    values:
+      - single
+      - multi
+
+  - name: eventStorageType
+    displayName: "Event Storage Type (Only for Multi-DB)"
+    type: string
+    default: "Kafka"
+    values:
+      - Kafka
+      - Firestore
+      - MongoDB
+
+  - name: entityStorageType
+    displayName: "Entity Storage Type"
+    type: string
+    default: "SQLServer"
+    values:
+      - PostgreSQL
+      - MariaDB
+      - MySQL
+      - SQLServer
+      - MongoDB
+
+variables:
+  GCP_REGION: "us-central1"
+  GCP_PROJECT_ID: $(GCP_PROJECT_ID)  # ✅ Stored in Azure DevOps secrets
+  GCP_SERVICE_ACCOUNT_KEY: $(GCP_SERVICE_ACCOUNT_KEY)  # ✅ Stored in Azure DevOps secrets
+
+stages:
+  - stage: DeployInfrastructure
+    displayName: "Deploy GCP Infrastructure"
+    jobs:
+
+      # ========================================
+      # ✅ 1. Terraform Initialization
+      # ========================================
+      - job: Terraform_Init
+        displayName: "Terraform Init"
+        steps:
+          - template: jobs/terraform-init.yml  # Calls the separate job file
+
+      # ========================================
+      # ✅ 2. Terraform Validate
+      # ========================================
+      - job: Terraform_Validate
+        displayName: "Terraform Validate"
+        dependsOn: Terraform_Init
+        steps:
+          - template: jobs/terraform-validate.yml
+
+      # ========================================
+      # ✅ 3. Terraform Plan
+      # ========================================
+      - job: Terraform_Plan
+        displayName: "Terraform Plan"
+        dependsOn: Terraform_Validate
+        steps:
+          - template: jobs/terraform-plan.yml
+            parameters:
+              databaseType: ${{ parameters.databaseType }}
+              eventStorageType: ${{ parameters.eventStorageType }}
+              entityStorageType: ${{ parameters.entityStorageType }}
+
+      # ========================================
+      # ✅ 4. Terraform Apply
+      # ========================================
+      - job: Terraform_Apply
+        displayName: "Terraform Apply"
+        dependsOn: Terraform_Plan
+        steps:
+          - template: jobs/terraform-apply.yml
+            parameters:
+              databaseType: ${{ parameters.databaseType }}
+              eventStorageType: ${{ parameters.eventStorageType }}
+              entityStorageType: ${{ parameters.entityStorageType }}

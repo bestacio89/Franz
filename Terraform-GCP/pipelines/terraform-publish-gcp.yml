@@ -1,0 +1,93 @@
+trigger: none  # 🔥 Prevent auto-trigger, run manually
+
+parameters:
+  - name: repository
+    displayName: "Repository Name"
+    type: string
+    default: "Franz"
+
+  - name: serviceName
+    displayName: "Microservice Name"
+    type: string
+    default: "microservice"
+
+  - name: gcpArtifactRegistry
+    displayName: "GCP Artifact Registry URL"
+    type: string
+    default: "<GCP_ARTIFACT_REGISTRY>"  # 🔥 Replace with your actual GCP Artifact Registry
+
+  - name: deployToGKE
+    displayName: "Deploy to GKE (true) or Cloud Run (false)"
+    type: boolean
+    default: false
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  GCP_PROJECT_ID: $(GCP_PROJECT_ID)
+  GCP_REGION: "us-central1"
+  GCP_SERVICE_ACCOUNT_KEY: $(GCP_SERVICE_ACCOUNT_KEY)
+
+stages:
+# ========================================
+# ✅ BUILD & PUSH DOCKER IMAGE TO GCP ARTIFACT REGISTRY
+# ========================================
+  - stage: BuildAndPushDocker
+    displayName: "Build & Push Docker Image"
+    jobs:
+      - job: BuildDocker
+        displayName: "Build and Push to GCP Artifact Registry"
+        steps:
+          - script: |
+              echo "Authenticating to Google Cloud..."
+              echo "$GCP_SERVICE_ACCOUNT_KEY" | gcloud auth activate-service-account --key-file=-
+
+              echo "Configuring Docker for GCP Artifact Registry..."
+              gcloud auth configure-docker $GCP_REGION-docker.pkg.dev
+
+              echo "Building Docker image..."
+              docker build -t ${{ parameters.gcpArtifactRegistry }}/${{ parameters.serviceName }}:latest .
+
+              echo "Pushing Docker image to GCP Artifact Registry..."
+              docker push ${{ parameters.gcpArtifactRegistry }}/${{ parameters.serviceName }}:latest
+            displayName: "Build & Push Docker Image"
+
+# ========================================
+# ✅ DEPLOY MICROSERVICE TO GCP (GKE OR CLOUD RUN)
+# ========================================
+  - stage: DeployMicroservice
+    displayName: "Deploy to GCP"
+    dependsOn: BuildAndPushDocker
+    jobs:
+      - job: DeployToGKE
+        condition: eq(${{ parameters.deployToGKE }}, true)
+        displayName: "Deploy to GKE"
+        steps:
+          - script: |
+              echo "Authenticating to Google Cloud..."
+              echo "$GCP_SERVICE_ACCOUNT_KEY" | gcloud auth activate-service-account --key-file=-
+
+              echo "Connecting to GKE Cluster..."
+              gcloud container clusters get-credentials gke-${{ parameters.repository }}-cluster --region $GCP_REGION
+
+              echo "Deploying to GKE..."
+              kubectl set image deployment/${{ parameters.serviceName }} ${{ parameters.serviceName }}=${{ parameters.gcpArtifactRegistry }}/${{ parameters.serviceName }}:latest
+              kubectl rollout status deployment/${{ parameters.serviceName }}
+            displayName: "Deploy to GKE"
+
+      - job: DeployToCloudRun
+        condition: eq(${{ parameters.deployToGKE }}, false)
+        displayName: "Deploy to Cloud Run"
+        steps:
+          - script: |
+              echo "Authenticating to Google Cloud..."
+              echo "$GCP_SERVICE_ACCOUNT_KEY" | gcloud auth activate-service-account --key-file=-
+
+              echo "Deploying to Cloud Run..."
+              gcloud run deploy ${{ parameters.serviceName }} \
+                --image=${{ parameters.gcpArtifactRegistry }}/${{ parameters.serviceName }}:latest \
+                --region=$GCP_REGION \
+                --platform=managed \
+                --allow-unauthenticated
+            displayName: "Deploy to Cloud Run"

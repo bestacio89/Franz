@@ -1,0 +1,27 @@
+- job: Terraform_Apply
+  displayName: "Terraform Apply"
+  dependsOn: Terraform_Plan
+  steps:
+    - script: |
+        echo "Checking if Kafka Hub already exists..."
+        EXISTING_KAFKA=$(aws kafka list-clusters --region $(AWS_REGION) --query "ClusterInfoList[?ClusterName=='$(KAFKA_CLUSTER_NAME)'].ClusterName" --output text)
+
+        if [ -n "$EXISTING_KAFKA" ]; then
+          echo "Kafka Hub already exists: $EXISTING_KAFKA"
+          echo "##vso[task.setvariable variable=KAFKA_EXISTS;]true"
+        else
+          echo "Kafka Hub does not exist. It will be created."
+          echo "##vso[task.setvariable variable=KAFKA_EXISTS;]false"
+        fi
+      displayName: "Check if Kafka Hub Exists"
+
+    - script: |
+        if [ "$(KAFKA_EXISTS)" == "true" ]; then
+          echo "Skipping Kafka Creation in Terraform."
+        else
+          terraform apply -auto-approve tfplan
+        fi
+      displayName: "Terraform Apply"
+      env:
+        AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+        AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)

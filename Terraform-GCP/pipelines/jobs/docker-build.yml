@@ -1,0 +1,27 @@
+jobs:
+- job: docker-build
+  displayName: "Docker Build & Push"
+  dependsOn: terraform-apply
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - task: Docker@2
+      displayName: "Login to AWS ECR"
+      inputs:
+        command: "login"
+        containerRegistry: "$(awsEcrRegistry)"
+
+    - task: Docker@2
+      displayName: "Build Docker Image"
+      inputs:
+        repository: "${{ parameters.repository }}"
+        dockerfile: "sources/back/Franz.Api/Dockerfile"  # ✅ Fixed Path
+        buildContext: "sources/back/Franz.Api"           # ✅ Fixed Path
+        tags: "$(Build.BuildId)"
+
+    - task: Docker@2
+      displayName: "Push Docker Image to AWS ECR"
+      inputs:
+        command: "push"
+        repository: "microservice-api"
+        tags: "$(Build.BuildId)"

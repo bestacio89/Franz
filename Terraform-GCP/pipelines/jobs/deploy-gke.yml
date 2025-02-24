@@ -1,0 +1,22 @@
+name: "Deploy to GKE"
+runs-on: ubuntu-latest
+
+steps:
+  - name: "Authenticate with Google Cloud"
+    uses: google-github-actions/auth@v1
+    with:
+      credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+  - name: "Set up Google Cloud SDK"
+    uses: google-github-actions/setup-gcloud@v1
+    with:
+      project_id: ${{ env.GCP_PROJECT_ID }}
+
+  - name: "Connect to GKE Cluster"
+    run: |
+      gcloud container clusters get-credentials ${{ env.GKE_CLUSTER_NAME }} --region ${{ env.GCP_REGION }}
+
+  - name: "Deploy to GKE"
+    run: |
+      kubectl set image deployment/${{ env.SERVICE_NAME }} ${{ env.SERVICE_NAME }}=gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.SERVICE_NAME }}:latest
+      kubectl rollout status deployment/${{ env.SERVICE_NAME }}
