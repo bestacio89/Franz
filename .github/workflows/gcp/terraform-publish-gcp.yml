@@ -1,0 +1,56 @@
+name: "Deploy to GCP"
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: "Repository Name"
+        required: true
+        default: "Franz"
+      serviceName:
+        description: "Microservice Name"
+        required: true
+        default: "microservice"
+      gcpArtifactRegistry:
+        description: "GCP Artifact Registry URL"
+        required: true
+        default: "<GCP_ARTIFACT_REGISTRY>"
+      deployToGKE:
+        description: "Deploy to GKE (true) or Cloud Run (false)"
+        required: true
+        type: boolean
+        default: false
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: "us-central1"
+  GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+
+jobs:
+  # ============================================
+  # ✅ BUILD & PUSH DOCKER IMAGE TO GCP ARTIFACT REGISTRY
+  # ============================================
+  build-and-push:
+    uses: ./.github/workflows/gcp/jobs/build-and-push-gcp.yml
+    with:
+      serviceName: ${{ github.event.inputs.serviceName }}
+      gcpArtifactRegistry: ${{ github.event.inputs.gcpArtifactRegistry }}
+
+  # ============================================
+  # ✅ DEPLOY MICROSERVICE TO GCP (GKE OR CLOUD RUN)
+  # ============================================
+  deploy-to-gcp:
+    needs: build-and-push
+    if: github.event.inputs.deployToGKE == 'true'
+    uses: ./.github/workflows/jobs/deploy-to-gke.yml
+    with:
+      serviceName: ${{ github.event.inputs.serviceName }}
+      gcpArtifactRegistry: ${{ github.event.inputs.gcpArtifactRegistry }}
+
+  deploy-to-cloudrun:
+    needs: build-and-push
+    if: github.event.inputs.deployToGKE == 'false'
+    uses: ./.github/workflows/jobs/deploy-to-cloudrun.yml
+    with:
+      serviceName: ${{ github.event.inputs.serviceName }}
+      gcpArtifactRegistry: ${{ github.event.inputs.gcpArtifactRegistry }}

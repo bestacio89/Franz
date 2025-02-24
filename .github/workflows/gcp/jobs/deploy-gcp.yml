@@ -1,0 +1,28 @@
+name: "Build & Push Docker Image to GCP"
+runs-on: ubuntu-latest
+
+inputs:
+  serviceName:
+    required: true
+  gcpArtifactRegistry:
+    required: true
+
+steps:
+  - name: "Checkout Repository"
+    uses: actions/checkout@v3
+
+  - name: "Authenticate with Google Cloud"
+    uses: google-github-actions/auth@v1
+    with:
+      credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+  - name: "Build & Push Docker Image"
+    run: |
+      echo "Configuring Docker for GCP Artifact Registry..."
+      gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+
+      echo "Building Docker image..."
+      docker build -t ${{ inputs.gcpArtifactRegistry }}/${{ inputs.serviceName }}:latest .
+
+      echo "Pushing Docker image to GCP Artifact Registry..."
+      docker push ${{ inputs.gcpArtifactRegistry }}/${{ inputs.serviceName }}:latest

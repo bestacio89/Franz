@@ -1,0 +1,22 @@
+name: "Deploy to Cloud Run"
+runs-on: ubuntu-latest
+
+inputs:
+  serviceName:
+    required: true
+  gcpArtifactRegistry:
+    required: true
+
+steps:
+  - name: "Authenticate with Google Cloud"
+    uses: google-github-actions/auth@v1
+    with:
+      credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+  - name: "Deploy to Cloud Run"
+    run: |
+      gcloud run deploy ${{ inputs.serviceName }} \
+        --image=${{ inputs.gcpArtifactRegistry }}/${{ inputs.serviceName }}:latest \
+        --region=${{ secrets.GCP_REGION }} \
+        --platform=managed \
+        --allow-unauthenticated

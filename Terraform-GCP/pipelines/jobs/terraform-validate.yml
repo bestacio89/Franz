@@ -15,4 +15,4 @@ jobs:
     - script: |
         terraform validate
       displayName: "Validate Terraform Configuration"
-      workingDirectory: Terraform-Infra  # ✅ Ensures Terraform runs in the correct directory
+      workingDirectory: Terraform-GCP  # ✅ Ensures Terraform runs in the correct directory

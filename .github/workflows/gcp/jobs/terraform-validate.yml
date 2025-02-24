@@ -1,0 +1,21 @@
+name: "Terraform Validate"
+
+on:
+  workflow_call:  # ✅ Allows this job to be called from other workflows
+
+jobs:
+  terraform-validate:
+    name: "Terraform Validate"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v3
+
+      - name: "Setup Terraform"
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: "1.5.0"
+
+      - name: "Validate Terraform Configuration"
+        run: terraform validate
+        working-directory: Terraform-GCP # ✅ Ensures Terraform runs in the correct directory

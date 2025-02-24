@@ -1,0 +1,27 @@
+name: "Terraform Init"
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "Deployment Environment"
+        required: true
+        type: string
+
+jobs:
+  terraform-init:
+    name: "Terraform Init"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v3
+
+      - name: "Setup Terraform"
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: "1.4.6"
+
+      - name: "Initialize Terraform Backend"
+        run: |
+          terraform init -backend-config="backend-${{ inputs.environment }}.tfvars"
+        working-directory: Terraform-GCP  # ✅ Ensures Terraform runs in the correct directory

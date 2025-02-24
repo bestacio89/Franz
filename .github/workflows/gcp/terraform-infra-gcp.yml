@@ -1,0 +1,93 @@
+name: "Manual GCP Infrastructure Deployment"
+
+on:
+  workflow_dispatch:
+    inputs:
+      databaseType:
+        description: "Database Type"
+        required: true
+        default: "single"
+        type: choice
+        options:
+          - single
+          - multi
+      eventStorageType:
+        description: "Event Storage Type (Only for Multi-DB)"
+        required: false
+        default: "Kafka"
+        type: choice
+        options:
+          - Kafka
+          - Firestore
+          - MongoDB
+      entityStorageType:
+        description: "Entity Storage Type"
+        required: true
+        default: "SQLServer"
+        type: choice
+        options:
+          - PostgreSQL
+          - MariaDB
+          - MySQL
+          - SQLServer
+          - MongoDB
+
+env:
+  GCP_REGION: "us-central1"
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+jobs:
+  # ========================================
+  # ✅ 1. Terraform Initialization
+  # ========================================
+  terraform-init:
+    name: "Terraform Init"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v3
+
+      - name: "Terraform Init"
+        uses: ./.github/workflows/gcp/jobs/terraform-init.yml
+
+  # ========================================
+  # ✅ 2. Terraform Validate
+  # ========================================
+  terraform-validate:
+    name: "Terraform Validate"
+    needs: terraform-init
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Terraform Validate"
+        uses: ./.github/workflows/gcp/jobs/terraform-validate.yml
+
+  # ========================================
+  # ✅ 3. Terraform Plan
+  # ========================================
+  terraform-plan:
+    name: "Terraform Plan"
+    needs: terraform-validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Terraform Plan"
+        uses: ./.github/workflows/gcp/jobs/terraform-plan.yml
+        with:
+          databaseType: ${{ github.event.inputs.databaseType }}
+          eventStorageType: ${{ github.event.inputs.eventStorageType }}
+          entityStorageType: ${{ github.event.inputs.entityStorageType }}
+
+  # ========================================
+  # ✅ 4. Terraform Apply
+  # ========================================
+  terraform-apply:
+    name: "Terraform Apply"
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Terraform Apply"
+        uses: ./.github/workflows/gcp/jobs/terraform-apply.yml
+        with:
+          databaseType: ${{ github.event.inputs.databaseType }}
+          eventStorageType: ${{ github.event.inputs.eventStorageType }}
+          entityStorageType: ${{ github.event.inputs.entityStorageType }}

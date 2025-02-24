@@ -1,0 +1,23 @@
+name: "Deploy to GKE"
+runs-on: ubuntu-latest
+
+inputs:
+  serviceName:
+    required: true
+  gcpArtifactRegistry:
+    required: true
+
+steps:
+  - name: "Authenticate with Google Cloud"
+    uses: google-github-actions/auth@v1
+    with:
+      credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+  - name: "Connect to GKE Cluster"
+    run: |
+      gcloud container clusters get-credentials gke-${{ secrets.GCP_PROJECT_ID }}-cluster --region ${{ secrets.GCP_REGION }}
+
+  - name: "Deploy to GKE"
+    run: |
+      kubectl set image deployment/${{ inputs.serviceName }} ${{ inputs.serviceName }}=${{ inputs.gcpArtifactRegistry }}/${{ inputs.serviceName }}:latest
+      kubectl rollout status deployment/${{ inputs.serviceName }}
