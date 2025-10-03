@@ -1,49 +1,33 @@
-# ❌ Prevent Auto-Triggers
-pr: none
-trigger: none  # 🔥 Ensures the pipeline is only triggered manually
+# ✅ GitLab CI/CD - Manual Build & Test Pipeline
+workflow:
+  rules:
+    - when: manual  # 🔥 Ensures manual execution
 
-pool:
-  vmImage: 'windows-latest'
+image: mcr.microsoft.com/dotnet/sdk:6.0  # ✅ Use Official .NET SDK Image
 
 variables:
-  solution: '**/*.sln'  # Solution files to be restored
-  buildPlatform: 'Any CPU'  # Platform for building
-  buildConfiguration: 'Release'  # Build configuration
+  SOLUTION: "**/*.sln"  # Solution files to be restored
+  BUILD_PLATFORM: "Any CPU"  # Platform for building
+  BUILD_CONFIGURATION: "Release"  # Build configuration
 
-jobs:
-  - job: BuildAndTest
-    displayName: 'Build, Test and Docker Build'
-    steps:
-      # Step 1: Install NuGet tool
-      - task: NuGetToolInstaller@1
-        displayName: 'Install NuGet Tool Installer'
+stages:
+  - build-test
 
-      # Step 2: Restore NuGet Packages
-      - task: NuGetCommand@2
-        displayName: 'Restore NuGet Packages'
-        inputs:
-          restoreSolution: '$(solution)'
-          feedsToUse: 'config'
-          nugetConfigPath: 'nuget.config'
+build-test:
+  stage: build-test
+  tags:
+    - windows  # ✅ Ensures runner supports Windows builds
+  script:
+    - echo "Installing NuGet dependencies..."
+    - nuget restore $SOLUTION -ConfigFile nuget.config
 
-      # Step 3: Build the Solution
-      - task: VSBuild@1
-        displayName: 'Build the Solution'
-        inputs:
-          solution: '$(solution)'
-          platform: '$(buildPlatform)'
-          configuration: '$(buildConfiguration)'
-          msbuildArgs: '/p:ExcludeProjects="**/Franz.DockerCompose/Franz.DockerCompose.dcproj"'
+    - echo "Building .NET Solution..."
+    - msbuild $SOLUTION /p:Platform="$BUILD_PLATFORM" /p:Configuration="$BUILD_CONFIGURATION" /p:ExcludeProjects="**/Franz.DockerCompose/Franz.DockerCompose.dcproj"
 
-      # Step 4: Run Automated Tests
-      - task: VSTest@2
-        displayName: 'Run Automated Tests'
-        inputs:
-          testSelector: 'testAssemblies'
-          testAssemblyVer2: |
-            **\*test*.dll
-            !**\*TestAdapter.dll
-            !**\obj\**
-          searchFolder: '$(System.DefaultWorkingDirectory)'
-          platform: '$(buildPlatform)'
-          configuration: '$(buildConfiguration)'
+    - echo "Running Automated Tests..."
+    - vstest.console.exe $(find . -name "*test*.dll" ! -name "*TestAdapter.dll" ! -path "*/obj/*")
+  artifacts:
+    paths:
+      - "**/*.dll"
+      - "**/*.exe"
+      - "**/*.pdb"
