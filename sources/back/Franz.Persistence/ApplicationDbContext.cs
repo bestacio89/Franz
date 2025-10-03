@@ -2,13 +2,14 @@ using Microsoft.EntityFrameworkCore;
 using Franz.Common.Business.Domain;
 using Franz.Common.EntityFramework;
 using MediatR;
+using Franz.Common.Mediator.Dispatchers;
 
 namespace Franz.Persistence
 {
   public class ApplicationDbContext : DbContextBase
     
   {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> dbContextOptions, IMediator mediator)
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> dbContextOptions, IDispatcher mediator)
         : base(dbContextOptions, mediator)
     {
     }

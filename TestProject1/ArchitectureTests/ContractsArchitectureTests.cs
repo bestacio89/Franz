@@ -1,13 +1,12 @@
 ﻿using ArchUnitNET.Domain;
 using ArchUnitNET.Fluent;
-using ArchUnitNET.Fluent.Conditions;
-using ArchUnitNET.Fluent.Syntax.Elements.Types;
+
 using ArchUnitNET.xUnit;
-using JetBrains.Annotations;
-using Franz.Common.Business.Commands;
+
 using Franz.Common.Business.Domain;
-using Franz.Common.Business.Queries;
+
 using Franz.Common.DependencyInjection;
+using Franz.Common.Mediator.Messages;
 using FranzTesting;
 using Interface = System.Reflection.TypeInfo;
 
@@ -28,7 +27,7 @@ namespace Franz.Testing.ArchitectureTests
     public void QueryNameConventionIsCorrect()
     {
       ArchRuleDefinition.
-      Classes().That().AreAssignableTo(typeof(IQueryRequest<>))
+      Classes().That().AreAssignableTo(typeof(IQuery<>))
       .Should()
       .HaveNameEndingWith("Query")
       .Check(BaseArchitecture);
@@ -39,7 +38,7 @@ namespace Franz.Testing.ArchitectureTests
 
     {
       ArchRuleDefinition.
-      Classes().That().AreAssignableTo(typeof(ICommandBaseRequest))
+      Classes().That().AreAssignableTo(typeof(ICommand))
        .Should()
        .HaveNameEndingWith("Command")
        .Check(BaseArchitecture);
@@ -83,7 +82,7 @@ namespace Franz.Testing.ArchitectureTests
         .Should()
         .BeAssignableTo(typeof(IReadRepository<>))
         .OrShould()
-        .BeAssignableTo(typeof(IAggregateRepository<>))
+        .BeAssignableTo(typeof(IAggregateRepository<,>))
         .AndShould()
         .HaveNameEndingWith("Repository")
         .Because("Generic Microservice Persistence logic is handled in the Read/Aggregate Repositories")
@@ -98,7 +97,7 @@ namespace Franz.Testing.ArchitectureTests
       ArchRuleDefinition.Classes()
           .That().Are(typeof(Interface))
           .And().AreNot(typeof(IReadRepository<>)) // Exclude IReadRepository
-          .And().AreNot(typeof(IAggregateRepository<>)) // Exclude IAggregateRepository
+          .And().AreNot(typeof(IAggregateRepository<,>)) // Exclude IAggregateRepository
           .And().HaveNameEndingWith("Repository") // Naming convention for custom repositories
           .Should()
           .BeAssignableTo(typeof(IScopedDependency)) // Enforce IScopedDependency

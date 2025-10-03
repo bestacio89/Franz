@@ -2,10 +2,11 @@
 using ArchUnitNET;
 using Xunit;
 using ArchUnitNET.Fluent;
-using Franz.Common.Business.Commands;
+
 using ArchUnitNET.xUnit;
 using Microsoft.AspNetCore.Mvc;
 using ControllerBase =  Microsoft.AspNetCore.Mvc.ControllerBase;
+using Franz.Common.Mediator.Messages;
 
 namespace Franz.Testing.ArchitectureTests;
 public class ApiArchitectureTests : BaseArchitectureTest
@@ -38,7 +39,7 @@ public class ApiArchitectureTests : BaseArchitectureTest
     ArchRuleDefinition
     .Classes()
     .That()
-    .AreAssignableTo(typeof(ICommandRequest<>))
+    .AreAssignableTo(typeof(ICommand<>))
     .Should()
     .ResideInAssembly("Franz.Contracts")
     .Check(BaseArchitecture);

@@ -1,13 +1,18 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Franz.Common.Mediator.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
+
 namespace Franz.Application;
-public static class RegisterApplicationServices
+public static class ApplicationServiceCollectionExtensions
 {
-  public static IServiceCollection RegisterServices(this IServiceCollection collection)
+  public static IServiceCollection RegisterApplicationServices(this IServiceCollection collection)
   {
 
-    collection.AddMediator(Assembly.GetAssembly(typeof(RegisterApplicationServices)));
+
+   collection.AddFranzMapping(Assembly.GetExecutingAssembly());
+
+
     return collection;
   }
 

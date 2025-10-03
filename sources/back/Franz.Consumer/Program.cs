@@ -9,6 +9,7 @@ using Franz.Consumer.Services;
 using Franz.Persistence;
 using Franz.Common.Messaging.Delegating;
 using Franz.Consumer.Handlers;
+using Franz.Common.Messaging.Bootstrap.Extenstions;
 
 var builder = Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration((context, config) =>

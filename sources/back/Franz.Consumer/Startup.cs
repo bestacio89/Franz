@@ -5,6 +5,8 @@ using Franz.Persistence;
 using Franz.Common.Business.Domain;
 using Franz.Common.EntityFramework;
 using Franz.Common.EntityFramework.SQLServer.Extensions;
+using Franz.Common.Messaging.Bootstrap.Extenstions;
+using Franz.Common.Messaging.Kafka.Extensions;
 
 namespace Franz.Consumer
 {

@@ -1,2 +1,2 @@
-global using Franz.Common.Business.Commands;
-global using Franz.Common.Business.Queries;
+global using Franz.Common.Mediator.Handlers;
+global using Franz.Common.Mediator.Dispatchers;

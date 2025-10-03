@@ -1,11 +1,10 @@
 ﻿using ArchUnitNET.Domain;
 using ArchUnitNET.Fluent;
 using ArchUnitNET.xUnit;
-using MediatR;
-using Franz.Common.Business.Commands;
 using Franz.Common.Business.Domain;
-using Franz.Common.Business.Queries;
+using Franz.Common.Mediator.Handlers;
 using FranzTesting.TestingConditions;
+using MediatR;
 using System.Data;
 using Xunit;
 
@@ -95,28 +94,22 @@ public class ApplicationArchitectureTests : BaseArchitectureTest
         .Types().That().Are(ApplicationLayer)
         
         .Should()
-        .BeAssignableTo(typeof(ICommandBaseRequest))
-        .OrShould()
         .BeAssignableTo(typeof(IEntity))
         .OrShould()
-        .BeAssignableTo(typeof(IAggregateRoot))
+        .BeAssignableTo(typeof(IAggregateRoot<>))
         .OrShould()
         .DependOnAnyTypesThat()
         .ResideInNamespace("Franz.Common.Business.Events")
         .OrShould().DependOnAnyTypesThat()
         .ResideInNamespace("Franz.Common.Business.Domain")
         .OrShould().DependOnAnyTypesThat()
-        .ResideInNamespace("Franz.Common.Business.Commands")
-        .OrShould().DependOnAnyTypesThat()
-        .ResideInNamespace("Franz.Common.Business.Queries")
-        .OrShould().DependOnAnyTypesThat()
-        .ResideInNamespace("MediatR")
+        .ResideInNamespace("Franz.Common.Mediator.Handlers")
         .OrShould().DependOnAnyTypesThat()
         .ResideInNamespace("System")
         .OrShould().DependOnAnyTypesThat()
-        .ResideInNamespace("AutoMapper")
+        .ResideInNamespace("Franz.Common.Mapping")
 
-        .Because("Application layer should utilize shared business logic components from the Franz.Common.Business namespace, ensuring consistent business logic implementation across applications.");
+        .Because("Application layer should utilize shared business logic components from the Franz.Common.Business and Franz.Common.Mediator namespaces, ensuring consistent business logic implementation across applications.");
     
     rule.Check(BaseArchitecture);
   }

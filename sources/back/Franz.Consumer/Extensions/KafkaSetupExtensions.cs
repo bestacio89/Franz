@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Franz.Common.Messaging.Kafka;
 using Franz.Consumer.Services;
+using Franz.Common.Messaging.Kafka.Extensions;
 
 namespace Franz.Consumer.Extensions
 {

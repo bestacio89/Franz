@@ -1,12 +1,14 @@
 ﻿using ArchUnitNET.Loader;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
-using Franz.Common.Business.Commands;
+
 using Franz.Common.Business.Domain;
 using Franz.Common.EntityFramework;
 using Assembly = System.Reflection.Assembly;
 using ArchUnitNET.Domain;
 using ArchUnitNET.Fluent;
-using Franz.Common.Business.Queries;
+
+using Franz.Common.Mediator.Handlers;
+using Franz.Common.Mediator.Messages;
 
 namespace Franz.Testing;
 
@@ -18,7 +20,7 @@ public abstract class BaseTests
   protected static readonly Assembly ApplicationAssembly = typeof(ICommandHandler<,>).Assembly;
   protected static readonly Assembly PersistenceAssembly = typeof(DbContextBase).Assembly;
   protected static readonly Assembly ApiAssembly = typeof(Program).Assembly;
-  protected static readonly Assembly ContractsAssembly = typeof(IQueryRequest<>).Assembly;
+  protected static readonly Assembly ContractsAssembly = typeof(IQuery<>).Assembly;
 }
 public abstract class BaseArchitectureTest : BaseTests
 

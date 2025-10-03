@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Franz.Common.Errors;
+using System;
 using System.Linq;
 using System.Reflection;
 
@@ -22,7 +23,7 @@ namespace Franz.API.Helpers
       {
         // Handle any exceptions that may occur during assembly loading.
         // You can log the exception details or take appropriate action.
-        return null; // Return null if the assembly couldn't be loaded.
+        throw new TechnicalException( "Assemblies not loaded correctly", ex.InnerException); // Return null if the assembly couldn't be loaded.
       }
     }
 
@@ -42,7 +43,7 @@ namespace Franz.API.Helpers
       {
         // Handle any exceptions that may occur during assembly loading.
         // You can log the exception details or take appropriate action.
-        return null; // Return null if the assembly couldn't be loaded.
+        throw new TechnicalException("Assembly not found, oor not loaded correctly", ex.InnerException); // Return null if the assembly couldn't be loaded.
       }
     }
   }

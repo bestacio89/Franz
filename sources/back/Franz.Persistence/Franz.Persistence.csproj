@@ -4,15 +4,17 @@
 
   <ItemGroup>
 	 
-	  <PackageReference Include="Franz.Common.EntityFramework.SQLServer" Version="1.2.64" />
+	  <PackageReference Include="Franz.Common.Caching" Version="1.6.2" />
 	 
-	  <PackageReference Include="Franz.Common.Hosting" Version="1.2.64" />
+	  <PackageReference Include="Franz.Common.EntityFramework.SQLServer" Version="1.6.2" />
 	 
-	  <PackageReference Include="MediatR" Version="12.4.1" />
+	  <PackageReference Include="Franz.Common.Hosting" Version="1.6.2" />
+	 
+	  <PackageReference Include="MediatR" Version="13.0.0" />
 	 
 	  <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
 	  
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.2">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

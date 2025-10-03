@@ -1,97 +1,105 @@
-using AspNetCoreRateLimit;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Franz.API.Helpers;
-using Franz.Persistence;
-using Franz.Common.Business.Domain;
-using Franz.Common.Business.Events;
-using Franz.Common.EntityFramework.SQLServer.Extensions;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Builder;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using Franz.API.Extensions;
 using Franz.Application;
-using MediatR;
+using Franz.Common.Http.Bootstrap.Extensions;
+using Franz.Common.Http.Client.Extensions;
+using Franz.Common.Http.EntityFramework.Extensions;
+using Franz.Common.Http.Messaging.Extensions;
+using Franz.Common.Http.Refit.Extensions;
+using Franz.Common.Logging.Extensions;
+using Franz.Common.Mediator.Extensions;
+
+using Franz.Common.Mediator.Polly;
+
+using Franz.Persistence; // our new cowboy helper
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var productName = "Franz"; // Replace with your product name
-var applicationAssemblyName = Path.Combine(Directory.GetCurrentDirectory(), @"bin\Debug\net8.0", $"{productName}.Application.dll");
-var contractsAssemblyName = Path.Combine(Directory.GetCurrentDirectory(), @"bin\Debug\net8.0", $"{productName}.Contracts.dll");
-var apiAssemblyName = Path.Combine(Directory.GetCurrentDirectory(), @"bin\Debug\net8.0", $"{productName}.Api.dll");
-// Get all loaded assemblies in the current AppDomain
+// --- Logging (env-aware Serilog via UseHybridLog) ---
+builder.Host.UseHybridLog();
 
-Assembly applicationAssembly = Assembly.LoadFile(applicationAssemblyName);
-Assembly contractsAssembly = Assembly.LoadFile(contractsAssemblyName);
-Assembly  apiassembly = Assembly.LoadFile(apiAssemblyName);
-// Register ApplicationAssembly and ContractsAssembly in the DI container
-builder.Services.AddSingleton(applicationAssembly);
-  builder.Services.AddSingleton(contractsAssembly);
+// --- Core services ---
+builder.Services.AddControllers();
+builder.Services.AddOpenApi();
 
-  var isApplicationAssemblyLoaded = applicationAssembly != null;
-  var isContractsAssemblyLoaded = contractsAssembly != null;
-
-  Console.WriteLine($"Is {applicationAssemblyName} loaded: {isApplicationAssemblyLoaded}");
-  Console.WriteLine($"Is {contractsAssemblyName} loaded: {isContractsAssemblyLoaded}");
-
-// Read TId type name from configuration
-
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
-builder.Services.AddHttpArchitecture(
-    builder.Environment,
-    builder.Configuration);
-// Create the generic types
-
-
-// Register persistence services
+// --- Application & Persistence ---
+builder.Services.RegisterApplicationServices();
 builder.Services.RegisterPersistenceServices<ApplicationDbContext>(builder.Configuration);
+builder.Services.AddDatabase<ApplicationDbContext>(builder.Environment, builder.Configuration);
 
-// Add rate limiting
-builder.Services.AddMemoryCache();
-builder.Services.Configure<IpRateLimitOptions>(builder =>
-{
-    builder.GeneralRules = new List<RateLimitRule>
-    {
-        new RateLimitRule
-        {
-            Endpoint = "*",
-            Limit = 100, // Adjust the limit as per your needs
-            Period = "1m" // Adjust the period as per your needs (1 minute in this example)
-        }
-    };
-});
-builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
-builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
-builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+// --- Http Architecture ---
+builder.Services.AddHttpArchitecture(builder.Environment, builder.Configuration);
 
-// Add CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", builder =>
-    {
-        builder
-            .AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader();
-    });
-});
+// --- Messaging ---
+builder.Services.AddMessagingInHttpContext(builder.Configuration);
 
-// Add API versioning
+// --- HttpClients / Refit ---
+builder.Services.AddHttpServices(builder.Configuration, TimeSpan.FromSeconds(30));
+builder.Services.AddExternalServices(builder.Configuration);
+
+// --- Mediator + Pipelines ---
+builder.Services.AddFranzMediatorDefault();
+builder.Services
+    .AddFranzEventValidationPipeline()
+    .AddMediatorOpenTelemetry()
+    .AddMediatorEventOpenTelemetry(new System.Diagnostics.ActivitySource("Franz.Mediator"));
+
+// --- Resilience (Polly) ---
+builder.Services.AddFranzResilience(builder.Configuration);
+
+// --- API Versioning & CORS ---
 builder.Services.AddApiVersioning(options =>
 {
-    options.DefaultApiVersion = new ApiVersion(1, 0);
-    options.AssumeDefaultVersionWhenUnspecified = true;
-    options.ReportApiVersions = true;
+  options.DefaultApiVersion = new ApiVersion(1, 0);
+  options.AssumeDefaultVersionWhenUnspecified = true;
+  options.ReportApiVersions = true;
+});
+builder.Services.AddCors(options =>
+{
+  options.AddPolicy("AllowAll", policy =>
+      policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 
 var app = builder.Build();
 
-app.Initialize(); // Initialize your application
+// --- DB Initialization ---
+using (var scope = app.Services.CreateScope())
+{
+  var env = scope.ServiceProvider.GetRequiredService<IHostEnvironment>();
+  var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-app.UseCors("AllowAll"); // Enable CORS
+  if (env.IsDevelopment())
+  {
+    db.Database.EnsureDeleted();
+    db.Database.EnsureCreated();
+  }
+  else
+  {
+    db.Database.Migrate();
+  }
+}
 
+// Ensure Serilog flushes
+app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
+
+// --- Middleware ---
+app.UseCors("AllowAll");
 app.UseHttpArchitecture();
 
+if (app.Environment.IsDevelopment())
+{
+  app.MapOpenApi();
+  app.UseSwagger();
+  app.UseSwaggerUI(c =>
+  {
+    c.SwaggerEndpoint("/openapi/v1.json", "Franz API v1");
+    c.RoutePrefix = "swagger";
+  });
+}
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
 app.Run();
