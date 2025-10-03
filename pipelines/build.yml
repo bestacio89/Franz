@@ -1,33 +1,50 @@
-# ✅ GitLab CI/CD - Manual Build & Test Pipeline
-workflow:
-  rules:
-    - when: manual  # 🔥 Ensures manual execution
+# azure-pipelines.yml
+# Pipeline triggered by commits to the 'develop' branch
 
-image: mcr.microsoft.com/dotnet/sdk:6.0  # ✅ Use Official .NET SDK Image
+# 1. Trigger: Switch from 'trigger: none' to specifying the branch
+trigger:
+  branches:
+    include:
+      - develop  # ✅ The pipeline will now run on every commit to 'develop'
+pr: none         # Still prevents running on Pull Request creation
 
+# 2. Agent/Runner: Use a Microsoft-hosted Windows Agent
+pool:
+  vmImage: 'windows-latest'
+
+# 3. Variables
 variables:
-  SOLUTION: "**/*.sln"  # Solution files to be restored
-  BUILD_PLATFORM: "Any CPU"  # Platform for building
-  BUILD_CONFIGURATION: "Release"  # Build configuration
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
 
-stages:
-  - build-test
+# 4. Jobs and Steps
+jobs:
+- job: BuildAndTest
+  displayName: 'Build and Test Job'
 
-build-test:
-  stage: build-test
-  tags:
-    - windows  # ✅ Ensures runner supports Windows builds
-  script:
-    - echo "Installing NuGet dependencies..."
-    - nuget restore $SOLUTION -ConfigFile nuget.config
+  steps:
+  
+  # ------------------ Restore Dependencies (NuGet) ------------------
+  - task: DotNetCoreCLI@2
+    displayName: '1. NuGet Restore'
+    inputs:
+      command: 'restore'
+      projects: '$(solution)'
 
-    - echo "Building .NET Solution..."
-    - msbuild $SOLUTION /p:Platform="$BUILD_PLATFORM" /p:Configuration="$BUILD_CONFIGURATION" /p:ExcludeProjects="**/Franz.DockerCompose/Franz.DockerCompose.dcproj"
+  # ------------------ Build Solution ------------------
+  - task: DotNetCoreCLI@2
+    displayName: '2. Build Solution'
+    inputs:
+      command: 'build'
+      projects: '$(solution)'
+      arguments: '/p:Platform="$(buildPlatform)" /p:Configuration="$(buildConfiguration)"'
 
-    - echo "Running Automated Tests..."
-    - vstest.console.exe $(find . -name "*test*.dll" ! -name "*TestAdapter.dll" ! -path "*/obj/*")
-  artifacts:
-    paths:
-      - "**/*.dll"
-      - "**/*.exe"
-      - "**/*.pdb"
+  # ------------------ Run Automated Tests ------------------
+  - task: DotNetCoreCLI@2
+    displayName: '3. Run Automated Tests'
+    inputs:
+      command: 'test'
+      projects: '$(solution)'
+      arguments: '--configuration $(buildConfiguration) --no-build'
+
