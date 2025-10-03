@@ -27,7 +27,7 @@ stages:
     - task: NuGetCommand@2
       inputs:
         restoreSolution: '$(solution)'
-        feedsToUse: config
+        feedsToUse: 'config'
         nugetConfigPath: 'nuget.config'
       displayName: "Restore NuGet Packages"
 
