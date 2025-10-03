@@ -1,50 +1,50 @@
-# azure-pipelines.yml
-# Pipeline triggered by commits to the 'develop' branch
-
-# 1. Trigger: Switch from 'trigger: none' to specifying the branch
+# Azure DevOps Pipeline - Build & Test
 trigger:
   branches:
     include:
       - develop  # ✅ The pipeline will now run on every commit to 'develop'
 pr: none         # Still prevents running on Pull Request creation
 
-# 2. Agent/Runner: Use a Microsoft-hosted Windows Agent
-pool:
-  vmImage: 'windows-latest'
 
-# 3. Variables
+pool:
+  vmImage: 'windows-latest'   # ✅ Windows agent (supports msbuild & vstest)
+
 variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
-# 4. Jobs and Steps
-jobs:
-- job: BuildAndTest
-  displayName: 'Build and Test Job'
+stages:
+- stage: BuildAndTest
+  displayName: "Build and Test"
+  jobs:
+  - job: BuildTest
+    displayName: "Build & Run Tests"
+    steps:
+    - task: NuGetToolInstaller@1
+      displayName: "Install NuGet"
 
-  steps:
-  
-  # ------------------ Restore Dependencies (NuGet) ------------------
-  - task: DotNetCoreCLI@2
-    displayName: '1. NuGet Restore'
-    inputs:
-      command: 'restore'
-      projects: '$(solution)'
+    - task: NuGetCommand@2
+      inputs:
+        restoreSolution: '$(solution)'
+        feedsToUse: config
+        nugetConfigPath: 'nuget.config'
+      displayName: "Restore NuGet Packages"
 
-  # ------------------ Build Solution ------------------
-  - task: DotNetCoreCLI@2
-    displayName: '2. Build Solution'
-    inputs:
-      command: 'build'
-      projects: '$(solution)'
-      arguments: '/p:Platform="$(buildPlatform)" /p:Configuration="$(buildConfiguration)"'
+    - task: VSBuild@1
+      inputs:
+        solution: '$(solution)'
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+        msbuildArgs: '/p:ExcludeProjects="**/Franz.DockerCompose/Franz.DockerCompose.dcproj"'
+      displayName: "Build Solution"
 
-  # ------------------ Run Automated Tests ------------------
-  - task: DotNetCoreCLI@2
-    displayName: '3. Run Automated Tests'
-    inputs:
-      command: 'test'
-      projects: '$(solution)'
-      arguments: '--configuration $(buildConfiguration) --no-build'
-
+    - task: VSTest@2
+      inputs:
+        testAssemblyVer2: |
+          **\*test*.dll
+          !**\*TestAdapter.dll
+          !**\obj\**
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+      displayName: "Run Unit Tests"
