@@ -1,0 +1,33 @@
+# ✅ GitLab CI/CD - Manual Build & Test Pipeline
+workflow:
+  rules:
+    - when: manual  # 🔥 Ensures manual execution
+
+image: mcr.microsoft.com/dotnet/sdk:6.0  # ✅ Use Official .NET SDK Image
+
+variables:
+  SOLUTION: "**/*.sln"  # Solution files to be restored
+  BUILD_PLATFORM: "Any CPU"  # Platform for building
+  BUILD_CONFIGURATION: "Release"  # Build configuration
+
+stages:
+  - build-test
+
+build-test:
+  stage: build-test
+  tags:
+    - windows  # ✅ Ensures runner supports Windows builds
+  script:
+    - echo "Installing NuGet dependencies..."
+    - nuget restore $SOLUTION -ConfigFile nuget.config
+
+    - echo "Building .NET Solution..."
+    - msbuild $SOLUTION /p:Platform="$BUILD_PLATFORM" /p:Configuration="$BUILD_CONFIGURATION" /p:ExcludeProjects="**/Franz.DockerCompose/Franz.DockerCompose.dcproj"
+
+    - echo "Running Automated Tests..."
+    - vstest.console.exe $(find . -name "*test*.dll" ! -name "*TestAdapter.dll" ! -path "*/obj/*")
+  artifacts:
+    paths:
+      - "**/*.dll"
+      - "**/*.exe"
+      - "**/*.pdb"

@@ -1,0 +1,38 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    id: frontend
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        if [[ "$FRONTEND_TYPE" == "Angular" ]]; then
+          DOCKERFILE_PATH="sources/front/FranzFront.Angular/Dockerfile"
+          BUILD_CONTEXT="sources/front/FranzFront.Angular"
+        elif [[ "$FRONTEND_TYPE" == "Blazor" ]]; then
+          DOCKERFILE_PATH="sources/front/FranzFront.Blazor/Client/Dockerfile"
+          BUILD_CONTEXT="sources/front/FranzFront.Blazor"
+        else
+          DOCKERFILE_PATH="sources/front/FranzFront.ASPNET/Dockerfile"
+          BUILD_CONTEXT="sources/front/FranzFront.ASPNET"
+        fi
+
+        echo "Building Frontend Image..."
+        docker build -t $REGION-docker.pkg.dev/$GOOGLE_PROJECT_ID/$REPOSITORY/$REPOSITORY-frontend-$FRONTEND_TYPE:$VERSION -f $DOCKERFILE_PATH $BUILD_CONTEXT
+        docker push $REGION-docker.pkg.dev/$GOOGLE_PROJECT_ID/$REPOSITORY/$REPOSITORY-frontend-$FRONTEND_TYPE:$VERSION
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: backend
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        echo "Building API Image..."
+        docker build -t $REGION-docker.pkg.dev/$GOOGLE_PROJECT_ID/$REPOSITORY/$REPOSITORY-api:$VERSION -f sources/back/Franz.Api/Dockerfile sources/back/Franz.Api
+        docker push $REGION-docker.pkg.dev/$GOOGLE_PROJECT_ID/$REPOSITORY/$REPOSITORY-api:$VERSION
+
+        echo "Building Consumer Image..."
+        docker build -t $REGION-docker.pkg.dev/$GOOGLE_PROJECT_ID/$REPOSITORY/$REPOSITORY-consumer:$VERSION -f sources/back/Franz.Backend/Consumer/Dockerfile sources/back/Franz.Backend/Consumer
+        docker push $REGION-docker.pkg.dev/$GOOGLE_PROJECT_ID/$REPOSITORY/$REPOSITORY-consumer:$VERSION
+
+options:
+  logging: CLOUD_LOGGING_ONLY

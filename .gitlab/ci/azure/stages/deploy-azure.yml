@@ -1,0 +1,29 @@
+# ✅ GitLab CI/CD - Deploy Azure Infrastructure (Reusable Job)
+.deploy-azure:
+  script:
+    - echo "Authenticating with Azure..."
+    - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+
+    - echo "Fetching Database Connection String from Key Vault..."
+    - export DB_CONNECTION_STRING=$(az keyvault secret show --name DBConnectionString --vault-name $AZURE_KEYVAULT_NAME --query value -o tsv)
+
+    - echo "Starting deployment with selected parameters:"
+    - echo "Database Mode: $DATABASE_TYPE"
+    - echo "Event Storage: $EVENT_STORAGE_TYPE"
+    - echo "Entity Storage: $ENTITY_STORAGE_TYPE"
+
+    - echo "Deploying Infrastructure using Bicep..."
+    - az deployment group create \
+        --resource-group $AZURE_RESOURCE_GROUP \
+        --template-file infrastructure/azure/main.bicep \
+        --parameters databaseType=$DATABASE_TYPE \
+                     eventStorageType=$EVENT_STORAGE_TYPE \
+                     entityStorageType=$ENTITY_STORAGE_TYPE \
+                     environment="dev" \
+                     DBConnectionString=$DB_CONNECTION_STRING \
+        --mode Incremental
+  variables:
+    DATABASE_TYPE: ${DATABASE_TYPE}
+    EVENT_STORAGE_TYPE: ${EVENT_STORAGE_TYPE}
+    ENTITY_STORAGE_TYPE: ${ENTITY_STORAGE_TYPE}
+  image: mcr.microsoft.com/azure-cli  # ✅ Use Azure CLI Image

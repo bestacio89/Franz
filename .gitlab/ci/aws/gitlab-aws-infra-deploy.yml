@@ -1,0 +1,23 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: "us-east-1"
+
+phases:
+  install:
+    commands:
+      - echo "Installing AWS CLI v2..."
+      - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+      - unzip awscliv2.zip
+      - sudo ./aws/install
+
+  build:
+    commands:
+      - echo "Starting AWS Infrastructure Deployment..."
+      # Replace with your infra tool: e.g. CloudFormation or Terraform
+      - aws cloudformation deploy \
+          --template-file infrastructure/template.yml \
+          --stack-name franz-infrastructure \
+          --region $AWS_REGION \
+          --capabilities CAPABILITY_IAM

@@ -1,0 +1,37 @@
+version: 0.2
+
+env:
+  variables:
+    SOLUTION: "**/*.sln"
+    BUILD_PLATFORM: "Any CPU"
+    BUILD_CONFIGURATION: "Release"
+
+phases:
+  install:
+    runtime-versions:
+      dotnet: 6.0
+    commands:
+      - echo "Installing NuGet CLI..."
+      - dotnet tool install --global NuGet.CommandLine
+      - export PATH="$PATH:/root/.dotnet/tools"
+
+  build:
+    commands:
+      - echo "Restoring NuGet dependencies..."
+      - nuget restore $SOLUTION -ConfigFile nuget.config
+
+      - echo "Building .NET Solution..."
+      - msbuild $SOLUTION /p:Platform="$BUILD_PLATFORM" /p:Configuration="$BUILD_CONFIGURATION" /p:ExcludeProjects="**/Franz.DockerCompose/Franz.DockerCompose.dcproj"
+
+  post_build:
+    commands:
+      - echo "Running Automated Tests..."
+      - |
+        find . -name "*test*.dll" ! -name "*TestAdapter.dll" ! -path "*/obj/*" \
+          | xargs -I {} dotnet test {}
+
+artifacts:
+  files:
+    - "**/*.dll"
+    - "**/*.exe"
+    - "**/*.pdb"

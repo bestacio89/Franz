@@ -1,0 +1,17 @@
+steps:
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+    id: deploy
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        echo "Starting GCP Infrastructure Deployment..."
+        gcloud auth activate-service-account $GOOGLE_CLIENT_EMAIL --key-file=$GOOGLE_KEY_FILE
+        gcloud config set project $GOOGLE_PROJECT_ID
+        gcloud config set compute/region us-east1
+        # Example: Deploy via Deployment Manager
+        gcloud deployment-manager deployments create franz-infrastructure \
+          --config infrastructure/config.yaml
+
+options:
+  logging: CLOUD_LOGGING_ONLY

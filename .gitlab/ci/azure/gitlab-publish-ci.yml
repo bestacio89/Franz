@@ -1,0 +1,60 @@
+# ✅ Prevent Auto-Triggers: Only runs manually
+workflow:
+  rules:
+    - when: manual
+
+variables:
+  AZURE_SUBSCRIPTION_ID: $AZURE_SUBSCRIPTION_ID
+  AZURE_CLIENT_ID: $AZURE_CLIENT_ID
+  AZURE_CLIENT_SECRET: $AZURE_CLIENT_SECRET
+  AZURE_TENANT_ID: $AZURE_TENANT_ID
+  AZURE_RESOURCE_GROUP: $AZURE_RESOURCE_GROUP
+  AZURE_REGION: "eastus"
+  AZURE_CONTAINER_REGISTRY: $AZURE_CONTAINER_REGISTRY
+
+stages:
+  - build-frontend
+  - build-backend
+  - deploy-infrastructure
+
+# ========================================
+# ✅ 1. BUILD FRONTEND STAGE
+# ========================================
+build-frontend:
+  stage: build-frontend
+  script:
+    - |
+      if [[ "$FRONTEND_TYPE" == "Angular" ]]; then
+        DOCKERFILE_PATH="sources/front/FranzFront.Angular/Dockerfile"
+        BUILD_CONTEXT="sources/front/FranzFront.Angular"
+      elif [[ "$FRONTEND_TYPE" == "Blazor" ]]; then
+        DOCKERFILE_PATH="sources/front/FranzFront.Blazor/Client/Dockerfile"
+        BUILD_CONTEXT="sources/front/FranzFront.Blazor"
+      else
+        DOCKERFILE_PATH="sources/front/FranzFront.ASPNET/Dockerfile"
+        BUILD_CONTEXT="sources/front/FranzFront.ASPNET"
+      fi
+
+      echo "Building Frontend Docker Image..."
+      docker build -t $AZURE_CONTAINER_REGISTRY/$REPOSITORY-frontend-$FRONTEND_TYPE:$VERSION -f $DOCKERFILE_PATH $BUILD_CONTEXT
+      docker push $AZURE_CONTAINER_REGISTRY/$REPOSITORY-frontend-$FRONTEND_TYPE:$VERSION
+  only:
+    - manual
+
+# ========================================
+# ✅ 2. BUILD BACKEND STAGE
+# ========================================
+build-backend:
+  stage: build-backend
+  script:
+    - echo "Building API Docker Image..."
+    - docker build -t $AZURE_CONTAINER_REGISTRY/$REPOSITORY-api:$VERSION -f sources/back/Franz.Api/Dockerfile sources/back/Franz.Api
+    - docker push $AZURE_CONTAINER_REGISTRY/$REPOSITORY-api:$VERSION
+
+    - echo "Building Consumer Docker Image..."
+    - docker build -t $AZURE_CONTAINER_REGISTRY/$REPOSITORY-consumer:$VERSION -f sources/back/Franz.Backend/Consumer/Dockerfile sources/back/Franz.Backend/Consumer
+    - docker push $AZURE_CONTAINER_REGISTRY/$REPOSITORY-consumer:$VERSION
+  only:
+    - manual
+
+

@@ -1,0 +1,20 @@
+# ✅ GitLab CI/CD - Publish Docker Image to Azure ACR (Reusable Job)
+.publish-docker:
+  script:
+    - echo "Authenticating with Azure..."
+    - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+
+    - echo "Logging into Azure Container Registry..."
+    - az acr login --name $AZURE_REGISTRY
+
+    - echo "Building Docker image..."
+    - docker build -t $AZURE_REGISTRY.azurecr.io/$IMAGE_NAME:$IMAGE_VERSION -f $DOCKERFILE_PATH $WORKDIR
+
+    - echo "Pushing Docker image to Azure ACR..."
+    - docker push $AZURE_REGISTRY.azurecr.io/$IMAGE_NAME:$IMAGE_VERSION
+  variables:
+    IMAGE_NAME: ${IMAGE_NAME}
+    DOCKERFILE_PATH: ${DOCKERFILE_PATH}
+    WORKDIR: ${WORKDIR}
+    IMAGE_VERSION: ${IMAGE_VERSION}
+  image: mcr.microsoft.com/azure-cli  # ✅ Use Azure CLI Image
