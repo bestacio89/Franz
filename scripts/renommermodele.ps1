@@ -1,7 +1,7 @@
 param (
     [Alias('sp')]
     [parameter(
-        HelpMessage = "Nom du projet existant (Hubbix.Exemple par défault).",
+        HelpMessage = "Name of the existing project (Franz by default).",
         Mandatory = $false,
         ValueFromPipeline = $false)]
     [ValidateScript({            
@@ -9,112 +9,108 @@ param (
                 return $true 
             } 
             else { 
-                throw "La solution modèle du projet n'existe pas ou été renommé : \MicroserviceArchitecture\$_.sln." 
+                throw "The project solution template does not exist or has been renamed: \Something\$_.sln." 
             }
         })]
-    [string]$NomProjetSource = "Minerva",
+    [string]$SourceProjectName = "Franz",
     
     [Alias('tp')]
     [parameter(
-        HelpMessage = "Nom du nouveau projet.",
+        HelpMessage = "Name of the new project.",
         Mandatory = $false,
         ValueFromPipeline = $false)]
  
-    [string]$NomProjetCible = "Franz" ,
+    [string]$TargetProjectName = "Something" ,
     
     [Alias('odtp')]
     [parameter(
-        HelpMessage = "Chemin de sortie du nouveau projet. (par défault: ../) ",
+        HelpMessage = "Output directory for the new project (default: ../).",
         Mandatory = $false,
         ValueFromPipeline = $false)]
-    [string]$RepertoireRacineSortieProjetCible = "",
+    [string]$TargetProjectRootOutputDir = "",
 
     [Alias('ai')]
     [parameter(
-        HelpMessage = "Chemin relatif vers AssemblyInfo.cs file, e.g. "".\Properties\AssemblyInfo.cs"".`nSpecifier chaine vide par ne pas traiter l'AssemblyInfo.",
+        HelpMessage = "Relative path to the AssemblyInfo.cs file, e.g. "".\Properties\AssemblyInfo.cs"".`nSpecify empty string to skip AssemblyInfo processing.",
         Mandatory = $false,
         ValueFromPipeline = $false)]
     [AllowEmptyString()]
-    [string]$CheminRelatifVersAssemblyInfo = ""
+    [string]$RelativePathToAssemblyInfo = ""
 )
 
-$NomProjetSource = $NomProjetSource.Trim().Trim("")
-$NomProjetSourceComplet = "$(Resolve-Path "..")\"
-$CheminCompletSolutionSource = "$NomProjetSourceComplet$NomProjetSource.sln"
-$NomProjetCible = $NomProjetCible.Trim().Trim("")
+$SourceProjectName = $SourceProjectName.Trim().Trim("")
+$SourceProjectFullPath = "$(Resolve-Path "..")\"
+$SourceSolutionFullPath = "$SourceProjectFullPath$SourceProjectName.sln"
+$TargetProjectName = $TargetProjectName.Trim().Trim("")
 
-
-if ($isSameSourceAndCibleProjet = ($RepertoireRacineSortieProjetCible.Trim() -eq "") ) {    
-    $NomProjetCibleComplet = "..\"
+if ($isSameSourceAndTargetProject = ($TargetProjectRootOutputDir.Trim() -eq "") ) {    
+    $TargetProjectFullPath = "..\"
 }
 else {
-    $NomProjetCibleComplet = "$RepertoireRacineSortieProjetCible$NomProjetCible\"
+    $TargetProjectFullPath = "$TargetProjectRootOutputDir$TargetProjectName\"
 }
 
-$CheminCompletSolutionCible = "$NomProjetCibleComplet$NomProjetCible.sln"
+$TargetSolutionFullPath = "$TargetProjectFullPath$TargetProjectName.sln"
 
-if ( (Test-Path $CheminCompletSolutionSource -PathType Leaf) -ne $true) {
-    throw "Le fichier de solution source n'a pas été trouvé : $CheminCompletSolutionSource"
+if ( (Test-Path $SourceSolutionFullPath -PathType Leaf) -ne $true) {
+    throw "The source solution file was not found: $SourceSolutionFullPath"
 }
 
 function Start-ProceedOrExit {
     [OutputType([System.Void])]
     param
     (
-        [string]$nomEtapeEnCours
+        [string]$currentStepName
     )
-    if ($?) { Write-Output "$nomEtapeEnCours - OK" } else { Write-Output "Script EN ERREUR ! Sortie du traitement."; exit 1 } 
+    if ($?) { Write-Output "$currentStepName - OK" } else { Write-Output "SCRIPT ERROR! Exiting."; exit 1 } 
 }
-
 
 function Rename-Solution {
     [OutputType([System.Void])]
     param (
-        [string]$nomProjetCibleComplet,
-        [string]$nomProjetSource,
-        [string]$nomProjetCible
+        [string]$targetProjectFullPath,
+        [string]$sourceProjectName,
+        [string]$targetProjectName
     )       
 
-    Get-ChildItem -Path "$nomProjetCibleComplet" -Include "$nomProjetSource.*" -Recurse  -File `
+    Get-ChildItem -Path "$targetProjectFullPath" -Include "$sourceProjectName.*" -Recurse  -File `
     | ForEach-Object {
-        $AncienNom = $_.Name;
-        $NouveauNom = $_.Name -replace "^$nomProjetSource\b", "$nomProjetCible";
+        $OldName = $_.Name;
+        $NewName = $_.Name -replace "^$sourceProjectName\b", "$targetProjectName";
         
-        if ($AncienNom -ne $NouveauNom) {
-            Rename-Item -Path $_.PSPath -NewName $NouveauNom;
+        if ($OldName -ne $NewName) {
+            Rename-Item -Path $_.PSPath -NewName $NewName;
         }
     };
 
-    Get-ChildItem -Path "$nomProjetCibleComplet" -Include "$nomProjetSource.*" -Recurse  -Directory `
+    Get-ChildItem -Path "$targetProjectFullPath" -Include "$sourceProjectName.*" -Recurse  -Directory `
     | ForEach-Object {
-        $AncienNom = $_.Name;
-        $NouveauNom = $_.Name -replace "^$nomProjetSource\b", "$nomProjetCible";
+        $OldName = $_.Name;
+        $NewName = $_.Name -replace "^$sourceProjectName\b", "$targetProjectName";
         
-        if ($AncienNom -ne $NouveauNom) {
-            Rename-Item -Path $_.PSPath -NewName $NouveauNom;
+        if ($OldName -ne $NewName) {
+            Rename-Item -Path $_.PSPath -NewName $NewName;
         }
     };
-    
 }
 
 function Copy-BaseSolution {
     [OutputType([string])]
     param (
-        [string] $nomProjetSourceComplet,
-        [string] $nomProjetCibleComplet
+        [string] $sourceProjectFullPath,
+        [string] $targetProjectFullPath
     )
 
-    if ($nomProjetSourceComplet -ne $nomProjetCibleComplet) {
-        New-Item $nomProjetCibleComplet -ItemType Directory -Force | Out-Null;
+    if ($sourceProjectFullPath -ne $targetProjectFullPath) {
+        New-Item $targetProjectFullPath -ItemType Directory -Force | Out-Null;
         
-        Copy-Item -Path "$nomProjetSourceComplet*" $nomProjetCibleComplet -Recurse -Force -Exclude @(".git","scripts") | Out-Null;
+        Copy-Item -Path "$sourceProjectFullPath*" $targetProjectFullPath -Recurse -Force -Exclude @(".git","scripts") | Out-Null;
         
-        return $nomProjetCibleComplet;
+        return $targetProjectFullPath;
     }
 
-    return $nomProjetSourceComplet;
+    return $sourceProjectFullPath;
 }
-
 
 function Save-CurrentDirectory {
     [OutputType([string])]
@@ -135,58 +131,57 @@ function Restore-CurrentDirectory {
 function Rename-ReferencesInSolution {
     [OutputType([System.Void])]
     param (
-        [string]$cheminCompletSolutionCible, 
-        [string]$nomProjetSourceComplet, 
-        [string]$nomProjetCible
+        [string]$targetSolutionFullPath, 
+        [string]$sourceProjectFullPath, 
+        [string]$targetProjectName
     )     
 
-    $SolutionMiseAJour = Get-Content -Path $cheminCompletSolutionCible `
+    $UpdatedSolution = Get-Content -Path $targetSolutionFullPath `
     | ForEach-Object { 
-        if ($_ -match ("\b(" + $nomProjetSourceComplet + ")\b")) {             
-            $_ -replace $($matches[1]), $nomProjetCible 
+        if ($_ -match ("\b(" + $sourceProjectFullPath + ")\b")) {             
+            $_ -replace $($matches[1]), $targetProjectName 
         } 
         else { 
             $_ 
         } 
     }
-    Set-Content -Path $cheminCompletSolutionCible -Value $SolutionMiseAJour -Encoding unicode;    
+    Set-Content -Path $targetSolutionFullPath -Value $UpdatedSolution -Encoding unicode;    
 }
 
 function Rename-AssemblyNameAndRootNamespace {
     [OutputType([System.Void])]
     param (
-        [string]$cheminCompletSolutionCible,
-        [string]$nomProjetSourceComplet, 
-        [string]$nomProjetCible
+        [string]$targetSolutionFullPath,
+        [string]$sourceProjectFullPath, 
+        [string]$targetProjectName
     ) 
 
-    $pattern = "$nomProjetSourceComplet"
+    $pattern = "$sourceProjectFullPath"
 
-    Get-ChildItem -Path "$cheminCompletSolutionCible\*" -Recurse -Include *.csproj `
+    Get-ChildItem -Path "$targetSolutionFullPath\*" -Recurse -Include *.csproj `
     | Select-Object @{ label = 'Path'; expression = { ($_.FullName) } }, @{ label = 'Content'; expression = { (Get-Content $_.FullName) } } `
     | ForEach-Object {            
-            
         if ($_.Content -match ($pattern)) { 
-            Set-Content -Path ($_.Path) -Value ($_.Content -replace $nomProjetSourceComplet, $nomProjetCible )
+            Set-Content -Path ($_.Path) -Value ($_.Content -replace $sourceProjectFullPath, $targetProjectName )
         }
     } 
 }
 
-function Rename-NamespaceAndUsingFromClass {
+function Rename-NamespacesAndUsingsFromClasses {
     [OutputType([System.Void])]
     param (
-        [string]$cheminCompletSolutionCible,
-        [string]$nomProjetSourceComplet, 
-        [string]$nomProjetCible
+        [string]$targetSolutionFullPath,
+        [string]$sourceProjectFullPath, 
+        [string]$targetProjectName
     )
 
-    $pattern = "(?:namespace|using)\W(\b$nomProjetSourceComplet)"
+    $pattern = "(?:namespace|using)\W(\b$sourceProjectFullPath)"
 
-    Get-ChildItem -Path "$cheminCompletSolutionCible\*" -Recurse -Include *.cs `
+    Get-ChildItem -Path "$targetSolutionFullPath\*" -Recurse -Include *.cs `
     | Select-Object @{ label = 'Path'; expression = { ($_.FullName) } }, @{ label = 'Content'; expression = { (Get-Content $_.FullName) } } `
     | ForEach-Object {                        
         if ($_.Content -match ($pattern)) { 
-            Set-Content -Path ($_.Path) -Value ($_.Content -replace $nomProjetSourceComplet, $nomProjetCible )
+            Set-Content -Path ($_.Path) -Value ($_.Content -replace $sourceProjectFullPath, $targetProjectName )
         }
     } 
 }
@@ -194,46 +189,46 @@ function Rename-NamespaceAndUsingFromClass {
 function Rename-AssemblyInfo {
     [OutputType([System.Void])]
     param (
-        [string]$cheminCompletSolutionCible,
-        [string]$nomProjetSourceComplet, 
-        [string]$nomProjetCible
+        [string]$targetSolutionFullPath,
+        [string]$sourceProjectFullPath, 
+        [string]$targetProjectName
     )
 
-    $CheminRelatifVersAssemblyInfo = $CheminRelatifVersAssemblyInfo.Trim().Trim('"')
+    $RelativePathToAssemblyInfo = $RelativePathToAssemblyInfo.Trim().Trim('"')
     
-    if ($CheminRelatifVersAssemblyInfo) {
-        $CheminRelatifVersAssemblyInfo = "$cheminCompletSolutionCible$CheminRelatifVersAssemblyInfo".Trim().Trim('"')
-        if (!(Test-Path $CheminRelatifVersAssemblyInfo)) { throw "Le chemin n'existe pas. $CheminRelatifVersAssemblyInfo." }
+    if ($RelativePathToAssemblyInfo) {
+        $RelativePathToAssemblyInfo = "$targetSolutionFullPath$RelativePathToAssemblyInfo".Trim().Trim('"')
+        if (!(Test-Path $RelativePathToAssemblyInfo)) { throw "The path does not exist: $RelativePathToAssemblyInfo." }
         else {
-            (Get-Content $CheminRelatifVersAssemblyInfo) |
-            ForEach-Object { if ($_ -match "\b$nomProjetSourceComplet") { $_ -replace $nomProjetSourceComplet, $nomProjetCible } else { $_ } } |
-            Set-Content $CheminRelatifVersAssemblyInfo
+            (Get-Content $RelativePathToAssemblyInfo) |
+            ForEach-Object { if ($_ -match "\b$sourceProjectFullPath") { $_ -replace $sourceProjectFullPath, $targetProjectName } else { $_ } } |
+            Set-Content $RelativePathToAssemblyInfo
         }
     }
 }
 
-Write-Host "=====---- Début de configuration de votre modèle."
+Write-Host "=====---- Starting configuration of your template."
 
-$RepertoireCourant = Save-CurrentDirectory
+$CurrentDirectory = Save-CurrentDirectory
 
-Start-ProceedOrExit "---------.... Copie si la cible est différente de la destination.";
-$NomProjetSourceComplet = Copy-BaseSolution $NomProjetSourceComplet $NomProjetCibleComplet;
+Start-ProceedOrExit "---------.... Copying if target is different from source."
+$SourceProjectFullPath = Copy-BaseSolution $SourceProjectFullPath $TargetProjectFullPath;
 
-Start-ProceedOrExit "---------.... Renommage des fichiers et répertoires de la nouvelle solution : $NomProjetSource vers $NomProjetCible."
-Rename-Solution $NomProjetCibleComplet $NomProjetSource $NomProjetCible
+Start-ProceedOrExit "---------.... Renaming files and directories in the new solution: $SourceProjectName to $TargetProjectName."
+Rename-Solution $TargetProjectFullPath $SourceProjectName $TargetProjectName
 
-Start-ProceedOrExit "---------.... Renommage des références dans le fichier de solution cible : $CheminCompletSolutionCible."
-Rename-ReferencesInSolution $CheminCompletSolutionCible $NomProjetSource $NomProjetCible
+Start-ProceedOrExit "---------.... Updating references in the target solution file: $TargetSolutionFullPath."
+Rename-ReferencesInSolution $TargetSolutionFullPath $SourceProjectName $TargetProjectName
 
-Start-ProceedOrExit "---------.... Renommage des assemblies et namespace des projets dans la cible : $NomProjetCibleComplet."
-Rename-AssemblyNameAndRootNamespace $NomProjetCibleComplet $NomProjetSource $NomProjetCible
+Start-ProceedOrExit "---------.... Renaming assemblies and root namespaces in target: $TargetProjectFullPath."
+Rename-AssemblyNameAndRootNamespace $TargetProjectFullPath $SourceProjectName $TargetProjectName
 
-Start-ProceedOrExit "---------.... Renommage des namespaces et using des fichiers cs dans la cible : $NomProjetCibleComplet."
-Rename-NamespaceAndUsingFromClass $NomProjetCibleComplet $NomProjetSource $NomProjetCible
+Start-ProceedOrExit "---------.... Renaming namespaces and usings in cs files: $TargetProjectFullPath."
+Rename-NamespacesAndUsingsFromClasses $TargetProjectFullPath $SourceProjectName $TargetProjectName
 
-Start-ProceedOrExit "---------.... Mise à jour de l'assemblie info si il existe dans la cible : $NomProjetCibleComplet."
-Rename-AssemblyInfo $NomProjetCibleComplet $NomProjetSource $NomProjetCible
+Start-ProceedOrExit "---------.... Updating AssemblyInfo if it exists: $TargetProjectFullPath."
+Rename-AssemblyInfo $TargetProjectFullPath $SourceProjectName $TargetProjectName
 
-Restore-CurrentDirectory $RepertoireCourant
+Restore-CurrentDirectory $CurrentDirectory
 
-Write-Host "=====---- Fin de configuration de votre modèle."
+Write-Host "=====---- Template configuration completed."

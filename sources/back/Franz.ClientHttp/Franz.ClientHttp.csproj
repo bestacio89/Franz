@@ -3,8 +3,8 @@
   <Import Project="../../../common.targets" />
 
   <ItemGroup>
-    <PackageReference Include="Franz.Common.DependencyInjection" Version="1.2.64" />
-    <PackageReference Include="Franz.Common.Http.Client" Version="1.2.64" />
+    <PackageReference Include="Franz.Common.DependencyInjection" Version="1.6.2" />
+    <PackageReference Include="Franz.Common.Http.Client" Version="1.6.2" />
   </ItemGroup>
 
   <ItemGroup>
