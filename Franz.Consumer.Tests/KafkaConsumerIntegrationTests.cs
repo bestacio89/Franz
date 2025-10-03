@@ -33,13 +33,13 @@ namespace Franz.Consumer.Tests
     }
 
     [Fact]
+    [Trait("Category", "Integration")]   // 👈 Mark this as Integration
     public async Task KafkaConsumer_ShouldProcessMessage()
     {
       // Arrange
       var services = new ServiceCollection();
       var messageProcessedEvent = new ManualResetEvent(false);
 
-      // Register dependencies
       services.AddLogging();
       services.AddSingleton<IMessageHandler>(provider =>
           new TestMessageHandler(messageProcessedEvent));
@@ -55,17 +55,14 @@ namespace Franz.Consumer.Tests
       // Act
       var host = serviceProvider.GetRequiredService<IHostedService>() as KafkaConsumerService;
 
-      // Start Kafka consumer service
       var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
       await host!.StartAsync(cancellationTokenSource.Token);
 
-      // Publish a message to Kafka
       await ProduceMessageAsync(_topicName, "test-key", "{\"Id\":123,\"Name\":\"Test\"}");
 
-      // Wait for the message to be processed
-      Assert.True(messageProcessedEvent.WaitOne(TimeSpan.FromSeconds(5)), "Message was not processed in time");
+      Assert.True(messageProcessedEvent.WaitOne(TimeSpan.FromSeconds(5)),
+          "Message was not processed in time");
 
-      // Cleanup
       await host.StopAsync(cancellationTokenSource.Token);
     }
 
@@ -73,14 +70,18 @@ namespace Franz.Consumer.Tests
     {
       var adminConfig = new AdminClientConfig { BootstrapServers = _kafkaContainer.BootstrapServers };
       using var adminClient = new AdminClientBuilder(adminConfig).Build();
-      await adminClient.CreateTopicsAsync(new[] { new TopicSpecification { Name = topicName, NumPartitions = 1, ReplicationFactor = 1 } });
+      await adminClient.CreateTopicsAsync(new[]
+      {
+        new TopicSpecification { Name = topicName, NumPartitions = 1, ReplicationFactor = 1 }
+      });
     }
 
     private async Task ProduceMessageAsync(string topicName, string key, string value)
     {
       var producerConfig = new ProducerConfig { BootstrapServers = _kafkaContainer.BootstrapServers };
       using var producer = new ProducerBuilder<string, string>(producerConfig).Build();
-      await producer.ProduceAsync(topicName, new Message<string, string> { Key = key, Value = value });
+      await producer.ProduceAsync(topicName,
+          new Message<string, string> { Key = key, Value = value });
     }
 
     private class TestMessageHandler : IMessageHandler
@@ -97,8 +98,6 @@ namespace Franz.Consumer.Tests
         Assert.Equal("{\"Id\":123,\"Name\":\"Test\"}", message.Body);
         _messageProcessedEvent.Set();
       }
-
     }
   }
-
 }

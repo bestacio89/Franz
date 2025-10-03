@@ -11,7 +11,7 @@ namespace FranzTesting.TestingConditions
 {
   public class CallIAggregateRepositoryMethodCondition : ICondition<IMember>
   {
-    public string Description => "Should call method of IAggregateRepository<>";
+    public string Description => "Should call method of IAggregateRepository<,>";
 
     public IEnumerable<ConditionResult> Check(IEnumerable<IMember> members, Architecture architecture)
     {
