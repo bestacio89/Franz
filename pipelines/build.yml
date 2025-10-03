@@ -40,12 +40,12 @@ stages:
       displayName: "Build Solution"
 
     - task: VSTest@2
-  inputs:
-    testAssemblyVer2: |
-      **\*test*.dll
-      !**\*TestAdapter.dll
-      !**\obj\**
-    testFiltercriteria: 'Category!=Integration'   # 👈 skip Integration tests
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-  displayName: "Run Unit Tests (skip Integration)"
+      inputs:
+        testAssemblyVer2: |
+          **\*test*.dll
+          !**\*TestAdapter.dll
+          !**\obj\**
+        testFiltercriteria: 'Category!=Integration'   # 👈 skip Integration tests
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+      displayName: "Run Unit Tests (skip Integration)"
