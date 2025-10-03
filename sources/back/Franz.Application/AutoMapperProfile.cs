@@ -1,5 +1,5 @@
 namespace Franz.Application;
-public class AutoMapperProfile : Profile
+public class AutoMapperProfile : FranzMapProfile
 {
   public AutoMapperProfile()
   {
