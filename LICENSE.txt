@@ -1,0 +1,36 @@
+DictaFranz License Agreement
+Copyright (c) 2025 Bernardo Estacio Abreu
+All rights reserved.
+
+This software (the "Template") is proprietary and confidential. By accessing
+or using the Template, you agree to the following conditions:
+
+1. Grant of Use
+   - You are granted a non-transferable, non-exclusive license to use the
+     Template solely within your organization for internal development and
+     deployment.
+   - You may not sublicense, rent, lease, distribute, or resell the Template
+     in whole or in part.
+
+2. Restrictions
+   - You may not copy, modify, reverse engineer, or create derivative works
+     of the Template without prior written consent from the copyright holder.
+   - Redistribution of the Template, whether modified or unmodified, is
+     strictly prohibited.
+
+3. Ownership
+   - All rights, title, and interest in the Template remain the exclusive
+     property of Bernardo Estacio Abreu.
+   - No ownership rights are transferred under this agreement.
+
+4. Warranty Disclaimer
+   - The Template is provided "AS IS" without warranty of any kind. You
+     assume all risks associated with its use.
+
+5. Termination
+   - Any violation of this agreement immediately terminates your license to
+     use the Template. Upon termination, you must destroy all copies in your
+     possession.
+
+For licensing inquiries, custom agreements, or enterprise support, contact:
+bernardo.estacio89@gmail.com
