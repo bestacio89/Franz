@@ -7,6 +7,7 @@ using Franz.Common.Business.Domain;
 using ArchUnitNET.xUnit;
 using Franz.Common.Business.Events;
 using MediatR;
+using Franz.Common.Mediator.Messages;
 
 namespace Franz.Testing.ArchitectureTests;
 
@@ -35,8 +36,8 @@ public class DomainArchitectureTests : BaseArchitectureTest
       .That()
       .ResideInNamespace("Franz.Domain.Events")
       .And()
-      .AreAssignableTo(typeof(INotification))
-      .Or().AreAssignableTo(typeof(BaseEvent))
+      .AreAssignableTo(typeof(IEvent))
+      .Or().AreAssignableTo(typeof(IDomainEvent))
       .Should()
       .HaveNameEndingWith("Event")
       .Check(BaseArchitecture);

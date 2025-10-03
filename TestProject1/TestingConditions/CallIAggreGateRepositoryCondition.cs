@@ -19,7 +19,7 @@ namespace FranzTesting.TestingConditions
       foreach (var member in members.OfType<MethodMember>()) // Ensure it only checks methods
       {
         // Check if the method calls any IAggregateRepository<> method
-        bool callsAggregateRepositoryMethod = member.DeclaringType.GetType() == typeof(IAggregateRepository<>);
+        bool callsAggregateRepositoryMethod = member.DeclaringType.GetType() == typeof(IAggregateRepository<,>);
 
         if (!callsAggregateRepositoryMethod)
         {
