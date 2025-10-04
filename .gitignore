@@ -1,5 +1,8 @@
 # Visual Studio Code
-.vscode
+.vscode/*
+!.vscode/extensions.json
+!.vscode/tasks.json
+
 
 # User-specific files
 *.user

@@ -45,8 +45,6 @@ Open [http://localhost:5000/swagger](http://localhost:5000/swagger) to explore t
 
 ## 🧩 Bootstrap Code
 
-The API is bootstrapped with Franz defaults:
-
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,8 +84,6 @@ app.Run();
 
 ## 🔄 CI/CD
 
-The API inherits Franz’s **multi-CI/CD matrix**:
-
 | CI/CD Provider     | Location             | Notes                                |
 | ------------------ | -------------------- | ------------------------------------ |
 | **Azure DevOps**   | `pipelines/`         | Build, Infra, Publish YAML templates |
@@ -99,8 +95,6 @@ The API inherits Franz’s **multi-CI/CD matrix**:
 ---
 
 ## ☁ Infrastructure as Code
-
-Infrastructure is reproducible across providers:
 
 * **Terraform (GCP modules)** → `cloudrun`, `gke`, `kafka`, `networking`, `database`.
 * **Terraform (Infra boilerplate)** → backends, outputs, variables. Extendable to AWS + Azure.
@@ -115,8 +109,6 @@ docker build -t api-project .
 docker run -p 8080:80 api-project
 ```
 
-Includes:
-
 * Multi-stage build (`sdk → publish → runtime`)
 * Healthcheck endpoint (`/health`)
 * Non-root user runtime
@@ -124,8 +116,6 @@ Includes:
 ---
 
 ## 🧪 Architecture Tests
-
-All critical conventions are enforced via `Franz.Testing`:
 
 * ✅ Command handlers must end with `CommandHandler` and implement `ICommandHandler<,>`.
 * ✅ Query handlers must end with `QueryHandler` and implement `IQueryHandler<,>`.
@@ -137,8 +127,6 @@ No PR merges unless architecture tests pass.
 ---
 
 ## 📦 Messaging Example
-
-### Kafka Consumer
 
 ```csharp
 public class KafkaConsumerService : IHostedService
@@ -217,8 +205,6 @@ F         R    R   A     A  N   N   ZZZZZZZ
 5. **Tests never lie.** If you drift, the failing suite will expose your laziness.
 6. **Creativity is welcome — as long as it doesn’t look like spaghetti.**
 
----
-
 ⚡ **This API is not just written — it’s enforced. Comply, or the tests will slap you back into line.**
 
 ---
@@ -241,8 +227,6 @@ C4Context
     Rel(api, ext, "Integrates with")
 ```
 
----
-
 ### C2: Containers
 
 ```mermaid
@@ -262,9 +246,7 @@ C4Container
     Rel(web, ext, "Integrates with")
 ```
 
----
-
-### C3: Components (Inside API)
+### C3: Components
 
 ```mermaid
 C4Component
@@ -280,12 +262,29 @@ C4Component
     Rel(handler, repo, "Uses")
 ```
 
----
-
-### 📌 Notes
+📌 **Notes**:
 
 * **Enforcement**: Architecture tests ensure handlers, DTOs, and repositories follow rules.
 * **Scalability**: Kafka/RabbitMQ allows scaling beyond REST.
 * **Extensibility**: External services plug into Franz via HTTP + Resilience pipelines.
 
+---
+
+## 🛠 Developer Environment (IDE-as-Code)
+
+This project ships with **VS Code recommendations** to ensure every machine has the same cockpit instantly.
+
+Copy the repo → open in VS Code → install recommended extensions. Done.
+
+### Recommended Extensions
+
+* **Git & CI/CD**: GitLens, Git Graph, GitHub Actions
+* **IaC**: Terraform, Bicep, ARM, Ansible, YAML
+* **Cloud Toolkits**: Azure, AWS, GCP
+* **Containers**: Docker, Kubernetes, Helm
+* **Languages**: C#, Python, Go, PowerShell
+* **Docs & Visualization**: Markdown Preview Mermaid, REST Client, Draw.io
+* **AI/Assistants**: GitHub Copilot, Windows AI Studio
+
+⚡ **IDE-as-Code**: No excuses, no wasted days configuring. Your dev environment is dictated, just like the architecture.
 
