@@ -2,7 +2,7 @@
 # ✅ Prevent Auto-Triggers
 # ==========================
 pr: none
-trigger: none  # Prevent automatic runs; only manual or scheduled
+trigger: none   # Prevent automatic runs; only manual or scheduled
 
 # ==========================
 # ✅ Parameters
@@ -12,48 +12,42 @@ parameters:
     displayName: "Database Type"
     type: string
     default: "single"
-    values:
-      - single
-      - multi
+    values: [ single, multi ]
 
   - name: eventStorageType
     displayName: "Event Storage Type (Only for Multi-DB)"
     type: string
     default: "Kafka"
-    values:
-      - Kafka
-      - CosmosDB
-      - MongoDB
+    values: [ Kafka, CosmosDB, MongoDB ]
 
   - name: entityStorageType
     displayName: "Entity Storage Type"
     type: string
     default: "SQLServer"
-    values:
-      - PostgreSQL
-      - MariaDB
-      - MySQL
-      - SQLServer
-      - Oracle
+    values: [ PostgreSQL, MariaDB, MySQL, SQLServer, Oracle ]
 
   - name: messagingType
     displayName: "Messaging Layer"
     type: string
     default: "Kafka"
-    values:
-      - Kafka
-      - RabbitMQ
-      - Both
+    values: [ Kafka, RabbitMQ, Both, None ]
+
+  - name: environment
+    displayName: "Target Environment"
+    type: string
+    default: "dev"
+    values: [ dev, staging, prod ]
 
 # ==========================
 # ✅ Global Variables
 # ==========================
 variables:
-  - group: AWS_Variables   # Load AWS credentials/region from Library
+  # 👇 Environment-specific variable group (AWS-Dev, AWS-Prod, etc.)
+  - group: AWS-${{ parameters.environment }}
   - name: TF_VERSION
-    value: "1.9.6"         # Pin Terraform version for consistency
+    value: "1.9.6"          # Pin Terraform version
   - name: WORKING_DIR
-    value: "infra/aws"     # Path to Terraform root module
+    value: "infra/aws"      # Path to Terraform root module
 
 # ==========================
 # ✅ Stages
@@ -109,6 +103,12 @@ stages:
               eventStorageType: ${{ parameters.eventStorageType }}
               entityStorageType: ${{ parameters.entityStorageType }}
               messagingType: ${{ parameters.messagingType }}
+              environment: ${{ parameters.environment }}
+
+          # 📦 Save plan as artifact for traceability
+          - publish: $(Build.SourcesDirectory)/terraform.tfplan
+            artifact: terraform-plan-${{ parameters.environment }}
+            displayName: "📦 Publish Terraform Plan"
 
       # ----------------------------
       # ✅ 4. Terraform Apply
@@ -119,12 +119,12 @@ stages:
         pool:
           vmImage: ubuntu-latest
         steps:
-          # Protect Apply with manual approval
+          # 🔒 Protect Apply with manual approval
           - task: ManualValidation@0
             displayName: "🔒 Approve Terraform Apply"
             inputs:
               notifyUsers: "devops-team@example.com"
-              instructions: "Please review the Terraform Plan in Azure DevOps before approving Apply."
+              instructions: "Please review the Terraform Plan artifact before approving Apply."
 
           - template: jobs/terraform-apply.yml
             parameters:
@@ -133,3 +133,14 @@ stages:
               eventStorageType: ${{ parameters.eventStorageType }}
               entityStorageType: ${{ parameters.entityStorageType }}
               messagingType: ${{ parameters.messagingType }}
+              environment: ${{ parameters.environment }}
+
+          # 📤 Capture Outputs
+          - script: |
+              echo "📤 Capturing Terraform Outputs..."
+              terraform output -json > $(Build.ArtifactStagingDirectory)/terraform-outputs.json
+            displayName: "📤 Capture Terraform Outputs"
+
+          - publish: $(Build.ArtifactStagingDirectory)/terraform-outputs.json
+            artifact: terraform-outputs-${{ parameters.environment }}
+            displayName: "📦 Publish Terraform Outputs"

@@ -12,54 +12,49 @@ parameters:
     displayName: "Database Type"
     type: string
     default: "single"
-    values:
-      - single
-      - multi
+    values: [ single, multi ]
 
   - name: eventStorageType
     displayName: "Event Storage Type (Only for Multi-DB)"
     type: string
     default: "Kafka"
-    values:
-      - Kafka
-      - Firestore
-      - MongoDB
-      - RabbitMQ
+    values: [ Kafka, Firestore, MongoDB, RabbitMQ ]
 
   - name: entityStorageType
     displayName: "Entity Storage Type"
     type: string
     default: "SQLServer"
-    values:
-      - PostgreSQL
-      - MariaDB
-      - MySQL
-      - SQLServer
-      - MongoDB
+    values: [ PostgreSQL, MariaDB, MySQL, SQLServer, MongoDB ]
 
   - name: messagingType
     displayName: "Messaging Broker"
     type: string
     default: "Kafka"
-    values:
-      - Kafka
-      - RabbitMQ
-      - Both
+    values: [ Kafka, RabbitMQ, Both, None ]
+
+  - name: environment
+    displayName: "Target Environment"
+    type: string
+    default: "dev"
+    values: [ dev, staging, prod ]
 
 # ========================================
 # ✅ Variables
 # ========================================
 variables:
-  GCP_REGION: "us-central1"
-  GCP_PROJECT_ID: $(GCP_PROJECT_ID)  # ✅ Stored in Azure DevOps secrets
-  GCP_SERVICE_ACCOUNT_KEY: $(GCP_SERVICE_ACCOUNT_KEY)  # ✅ Stored in Azure DevOps secrets
+  # 👇 Environment-scoped var group (e.g. GCP-dev, GCP-prod)
+  - group: GCP-${{ parameters.environment }}
+  - name: TF_VERSION
+    value: "1.9.6"
+  - name: WORKING_DIR
+    value: "infra/gcp"
 
 # ========================================
 # ✅ Stages
 # ========================================
 stages:
   - stage: DeployInfrastructure
-    displayName: "Deploy GCP Infrastructure"
+    displayName: "🚀 Deploy GCP Infrastructure"
     jobs:
 
       # ========================================
@@ -67,8 +62,17 @@ stages:
       # ========================================
       - job: Terraform_Init
         displayName: "Terraform Init"
+        pool:
+          vmImage: ubuntu-latest
         steps:
+          - task: UseTerraform@0
+            displayName: "Install Terraform ${{ variables.TF_VERSION }}"
+            inputs:
+              terraformVersion: ${{ variables.TF_VERSION }}
+
           - template: jobs/terraform-init.yml
+            parameters:
+              workingDirectory: ${{ variables.WORKING_DIR }}
 
       # ========================================
       # ✅ 2. Terraform Validate
@@ -76,8 +80,12 @@ stages:
       - job: Terraform_Validate
         displayName: "Terraform Validate"
         dependsOn: Terraform_Init
+        pool:
+          vmImage: ubuntu-latest
         steps:
           - template: jobs/terraform-validate.yml
+            parameters:
+              workingDirectory: ${{ variables.WORKING_DIR }}
 
       # ========================================
       # ✅ 3. Terraform Plan
@@ -85,13 +93,22 @@ stages:
       - job: Terraform_Plan
         displayName: "Terraform Plan"
         dependsOn: Terraform_Validate
+        pool:
+          vmImage: ubuntu-latest
         steps:
           - template: jobs/terraform-plan.yml
             parameters:
+              workingDirectory: ${{ variables.WORKING_DIR }}
               databaseType: ${{ parameters.databaseType }}
               eventStorageType: ${{ parameters.eventStorageType }}
               entityStorageType: ${{ parameters.entityStorageType }}
               messagingType: ${{ parameters.messagingType }}
+              environment: ${{ parameters.environment }}
+
+          # 📦 Publish plan artifact for review
+          - publish: $(Build.SourcesDirectory)/terraform.tfplan
+            artifact: terraform-plan-${{ parameters.environment }}
+            displayName: "📦 Publish Terraform Plan"
 
       # ========================================
       # ✅ 4. Terraform Apply
@@ -99,10 +116,31 @@ stages:
       - job: Terraform_Apply
         displayName: "Terraform Apply"
         dependsOn: Terraform_Plan
+        pool:
+          vmImage: ubuntu-latest
         steps:
+          # 🔒 Approval before Apply
+          - task: ManualValidation@0
+            displayName: "🔒 Approve Terraform Apply"
+            inputs:
+              notifyUsers: "devops-team@example.com"
+              instructions: "Please review the Terraform Plan artifact before approving Apply."
+
           - template: jobs/terraform-apply.yml
             parameters:
+              workingDirectory: ${{ variables.WORKING_DIR }}
               databaseType: ${{ parameters.databaseType }}
               eventStorageType: ${{ parameters.eventStorageType }}
               entityStorageType: ${{ parameters.entityStorageType }}
               messagingType: ${{ parameters.messagingType }}
+              environment: ${{ parameters.environment }}
+
+          # 📤 Capture Outputs
+          - script: |
+              echo "📤 Capturing Terraform Outputs..."
+              terraform output -json > $(Build.ArtifactStagingDirectory)/terraform-outputs.json
+            displayName: "📤 Capture Terraform Outputs"
+
+          - publish: $(Build.ArtifactStagingDirectory)/terraform-outputs.json
+            artifact: terraform-outputs-${{ parameters.environment }}
+            displayName: "📦 Publish Terraform Outputs"

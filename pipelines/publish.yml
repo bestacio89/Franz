@@ -1,22 +1,26 @@
-pr: none  # ❌ Prevent auto-trigger on pull requests
-trigger: none  # ❌ Ensure manual execution
+pr: none   # ❌ Prevent auto-trigger on PRs
+trigger: none   # ❌ Ensure manual execution only
 
 parameters:
   - name: repository
     displayName: Repository Name
     default: Franz
+
   - name: major
     displayName: Major Version {x.0.0}
     type: number
     default: 2
+
   - name: minor
     displayName: Minor Version {1.x.0}
     type: number
     default: 1
+
   - name: patch
     displayName: Patch Version {1.0.x}
     type: string
     default: 5
+
   - name: frontEndType
     displayName: "Front-End Type"
     type: string
@@ -27,21 +31,24 @@ parameters:
       - ASP.NET
 
 variables:
-  - group: "Azure Variables"  # ✅ Load environment-specific variables
+  - group: "Azure Variables"  # ✅ Environment-specific vars
+  - name: imageTag
+    value: ${{ parameters.major }}.${{ parameters.minor }}.${{ parameters.patch }}
 
 stages:
 # ========================================
 # ✅ BUILD FRONTEND STAGE
 # ========================================
-- stage: "Build_Frontend"
-  displayName: "Build Frontend"
+- stage: Build_Frontend
+  displayName: "🚀 Build Frontend"
   jobs:
     - job: DockerBuildFrontend
-      displayName: "Docker Build Frontend"
+      displayName: "🐳 Docker Build & Push Frontend"
       pool:
         vmImage: 'ubuntu-latest'
       steps:
         - script: |
+            echo ">> Detecting frontend type: ${{ parameters.frontEndType }}"
             if [ "${{ parameters.frontEndType }}" == "Angular" ]; then
               echo "##vso[task.setvariable variable=dockerfilePath]sources/front/FranzFront.Angular/Dockerfile"
               echo "##vso[task.setvariable variable=buildContext]sources/front/FranzFront.Angular"
@@ -52,45 +59,69 @@ stages:
               echo "##vso[task.setvariable variable=dockerfilePath]sources/front/FranzFront.ASPNET/Dockerfile"
               echo "##vso[task.setvariable variable=buildContext]sources/front/FranzFront.ASPNET"
             fi
-          displayName: "Set Docker Build Context Variables"
+          displayName: "⚙️ Set Docker Build Context"
 
         - task: Docker@2
-          displayName: "Build Docker image for selected front-end"
+          displayName: "🐳 Build & Push Frontend Image"
           inputs:
             containerRegistry: $(AZURE_CONTAINER_REGISTRY)
-            repository: "${{ parameters.repository }}-frontend-${{ parameters.frontEndType }}"
+            repository: "${{ parameters.repository }}-frontend-${{ parameters.frontEndType | toLower }}"
             dockerfile: "$(dockerfilePath)"
             buildContext: "$(buildContext)"
+            command: buildAndPush
             tags: |
-              ${{ parameters.major }}.${{ parameters.minor }}.${{ parameters.patch }}
+              $(imageTag)
+              latest
+
+        - script: |
+            echo "{ \"frontend\": \"${{ parameters.repository }}-frontend-${{ parameters.frontEndType | toLower }}:$(imageTag)\" }" > $(Build.ArtifactStagingDirectory)/frontend-image.json
+          displayName: "📦 Save Frontend Image Tag"
+
+        - publish: $(Build.ArtifactStagingDirectory)/frontend-image.json
+          artifact: frontend-image
 
 # ========================================
 # ✅ BUILD BACKEND STAGE
 # ========================================
-- stage: "Build_Backend"
-  displayName: "Build Backend"
+- stage: Build_Backend
+  displayName: "🚀 Build Backend"
+  dependsOn: Build_Frontend
   jobs:
     - job: DockerBuildBackend
-      displayName: "Docker Build Backend"
+      displayName: "🐳 Docker Build & Push Backend"
       pool:
         vmImage: 'ubuntu-latest'
       steps:
         - task: Docker@2
-          displayName: "Build Docker image for API"
+          displayName: "🐳 Build & Push API Image"
           inputs:
             containerRegistry: $(AZURE_CONTAINER_REGISTRY)
             repository: "${{ parameters.repository }}-api"
             dockerfile: "sources/back/Franz.Api/Dockerfile"
             buildContext: "sources/back/Franz.Api"
+            command: buildAndPush
             tags: |
-              ${{ parameters.major }}.${{ parameters.minor }}.${{ parameters.patch }}
+              $(imageTag)
+              latest
 
         - task: Docker@2
-          displayName: "Build Docker image for Consumer"
+          displayName: "🐳 Build & Push Consumer Image"
           inputs:
             containerRegistry: $(AZURE_CONTAINER_REGISTRY)
             repository: "${{ parameters.repository }}-consumer"
             dockerfile: "sources/back/Franz.Backend/Consumer/Dockerfile"
             buildContext: "sources/back/Franz.Backend/Consumer"
+            command: buildAndPush
             tags: |
-              ${{ parameters.major }}.${{ parameters.minor }}.${{ parameters.patch }}
+              $(imageTag)
+              latest
+
+        - script: |
+            echo "{ 
+              \"api\": \"${{ parameters.repository }}-api:$(imageTag)\",
+              \"consumer\": \"${{ parameters.repository }}-consumer:$(imageTag)\" 
+            }" > $(Build.ArtifactStagingDirectory)/backend-images.json
+          displayName: "📦 Save Backend Image Tags"
+
+        - publish: $(Build.ArtifactStagingDirectory)/backend-images.json
+          artifact: backend-images

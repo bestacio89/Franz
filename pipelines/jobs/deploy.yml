@@ -9,148 +9,44 @@ parameters:
   languages: ''
   mutualizeOpenAI: ''
   registrerPAL: ''
+  messagingType: 'Kafka' # 👈 extendable (Kafka | RabbitMQ | Both | None)
   actionGroupName: 'Health Check Action Group'
 
 jobs:
-- deployment: Deploy
-  environment: ${{ parameters.environmentName }}
+- job: Deploy
+  displayName: "🚀 Deploy Infra with Built Image"
   pool:
     vmImage: 'ubuntu-latest'
 
-  variables:
-    - group: franz-${{ parameters.environmentName }}
-    - group: mutualized-resources
-    - name: templateFile
-      value: '$(Build.SourcesDirectory)/infrastructure/main.bicep'
-    - name: templateParametersFile
-      value: '$(Build.SourcesDirectory)/infrastructure/parameters/${{ parameters.environmentName }}.parameters.json'
+  steps:
+    # ----------------------------------------
+    # 🔽 Download image tag artifact
+    # ----------------------------------------
+    - download: current
+      artifact: docker-image-info
+      displayName: "🔽 Download Image Tag"
 
-  strategy: 
-    runOnce:
-      deploy:
-        steps:
-        - checkout: self
+    - bash: |
+        IMAGE_TAG=$(jq -r .image docker-image-info/image-info.json)
+        echo "Using image tag: $IMAGE_TAG"
+        echo "##vso[task.setvariable variable=IMAGE_TAG]$IMAGE_TAG"
+      displayName: "📤 Extract Image Tag"
 
-        # Step 1: Check if Action Group Exists
-        - task: AzureCLI@2
-          displayName: 'Check if ${{ parameters.actionGroupName }} Exists'
-          inputs:
-            azureSubscription:  ${{ parameters.azureServiceConnection }}
-            scriptType: 'bash'
-            scriptLocation: 'inlineScript'
-            inlineScript: |
-                if az monitor action-group show --name '${{ parameters.actionGroupName }}' --resource-group '${{ parameters.resourceGroupName }}'; then
-                    echo "The ${{ parameters.actionGroupName }} exists."
-                    echo "##vso[task.setvariable variable=actionGroupExists;isOutput=true]true"
-                else
-                    echo "The ${{ parameters.actionGroupName }} does not exist."
-                    echo "##vso[task.setvariable variable=actionGroupExists;isOutput=true]false"
-                fi
-          name: CheckActionGroup
+    # ----------------------------------------
+    # 🚀 Deploy Bicep with exact image
+    # ----------------------------------------
+    - task: AzureCLI@2
+      displayName: "🚀 Deploy with Bicep"
+      inputs:
+        azureSubscription: ${{ parameters.azureServiceConnection }}
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          az deployment group create \
+            --resource-group ${{ parameters.resourceGroupName }} \
+            --template-file main.bicep \
+            --parameters @parameters.json \
+              containerImage="$(IMAGE_TAG)" \
+              environmentShortName="${{ parameters.environmentName }}" \
+              projectShortName="${{ parameters.projectName }}"
 
-        # Step 2: Check if Kafka Namespace Exists
-        - task: AzureCLI@2
-          displayName: 'Check if Kafka Namespace Exists'
-          inputs:
-            azureSubscription: ${{ parameters.azureServiceConnection }}
-            scriptType: bash
-            scriptLocation: inlineScript
-            inlineScript: |
-                kafkaExists=$(az resource show \
-                  --resource-group ${{ parameters.resourceGroupName }} \
-                  --name "yourKafkaNamespace" \
-                  --resource-type "Microsoft.EventHub/namespaces" \
-                  --query "id" -o tsv)
-
-                if [ -z "$kafkaExists" ]; then
-                    echo "Kafka namespace does not exist. Proceeding with Kafka deployment..."
-                    echo "##vso[task.setvariable variable=kafkaExists;isOutput=true]false"
-                else
-                    echo "Kafka namespace already exists."
-                    echo "##vso[task.setvariable variable=kafkaExists;isOutput=true]true"
-                fi
-          name: CheckKafkaExistence
-
-        # Step 3: Deploy Kafka if it doesn't exist
-        - task: AzureCLI@2
-          displayName: 'Deploy Kafka Namespace and Topic'
-          condition: eq(variables['kafkaExists'], 'false')  # Only run if Kafka doesn't exist
-          inputs:
-            azureSubscription: ${{ parameters.azureServiceConnection }}
-            scriptType: bash
-            scriptLocation: inlineScript
-            inlineScript: |
-                echo "Deploying Kafka namespace..."
-                az deployment group create \
-                  --resource-group ${{ parameters.resourceGroupName }} \
-                  --template-file src/infrastructure/kafka.bicep \
-                  --parameters kafkaNamespaceName="yourKafkaNamespace" \
-                               location="${{ parameters.resourceGroupLocation }}"
-
-        # Step 4: Deploy Infrastructure using Bicep
-        - task: AzureCLI@2
-          displayName: "Deploy Infrastructure with Bicep"
-          inputs:
-            azureSubscription:  ${{ parameters.azureServiceConnection }}
-            scriptType: bash 
-            scriptLocation: inlineScript
-            inlineScript: |
-              az config set bicep.use_binary_from_path=false
-              az deployment group create \
-                --resource-group ${{ parameters.resourceGroupName }} \
-                --template-file $(templateFile) \
-                --mode Incremental \
-                --parameters $(templateParametersFile) \
-                --parameters \
-                  projectShortName="${{ parameters.projectName }}" \
-                  environmentShortName="${{ parameters.environmentName }}" \
-                  frontendClientId="$(frontendClientId)" \
-                  frontendClientSecret="$(frontendClientSecret)" \
-                  containerRegistryPassword="$(ContainerRegistryPassword)" \
-                  developpersAdGroupId="$(developpersAdGroupId)" \
-                  mutualizeOpenAI="${{ parameters.mutualizeOpenAI }}" \
-                  existingOpenAiEndpoint="$(existingOpenAiEndpoint)" \
-                  bingSearchApiKey="$(bingSearchApiKey)" \
-                  frontendApplicationVersion="${{ parameters.repositoryName }}-frontend:${{ parameters.applicationVersion }}" \
-                  actionGroupExists="$(CheckActionGroup.actionGroupExists)" \
-                  actionGroupName="${{ parameters.actionGroupName }}"
-
-        # Step 5: Capture BICEP Outputs as Agent Variables
-        - task: AzureCLI@2
-          displayName: "Capture BICEP Outputs as Agent Variables"
-          name: 'bicepOutput'
-          inputs:
-            azureSubscription:  ${{ parameters.azureServiceConnection }}
-            scriptType: pscore
-            scriptLocation: inlineScript
-            inlineScript: |
-              $out = az deployment group show -g ${{ parameters.resourceGroupName }} -n main | convertfrom-json | foreach properties | foreach outputs
-
-              $provisionOutputs = [PSCustomObject]@{ }
-              $out | Get-Member -MemberType NoteProperty | ForEach-Object {
-                  $name = $_.name
-                  $provisionOutputs | Add-Member -MemberType NoteProperty -Name $name -value $out.$name.value
-                  Write-Host "##vso[task.setvariable variable=$($name);isOutput=true]$($out.$name.value)"
-              }
-
-              $provisionOutputs
-
-        # Step 6: Restart Web App (Optional)
-        - task: AzureCLI@2
-          displayName: "Restart Web App"
-          inputs:
-            azureSubscription:  ${{ parameters.azureServiceConnection }}
-            scriptType: pscore
-            scriptLocation: inlineScript
-            inlineScript: |
-              az webapp restart --name $(bicepOutput.frontEndServiceName) --resource-group ${{ parameters.resourceGroupName }}
-
-        # Step 7: PAL Registration (Conditional)
-        - task: AzureCLI@2
-          condition: ${{ parameters.registrerPAL }}
-          displayName: "Run PowerShell Script for PAL Registration"
-          inputs:
-            azureSubscription:  ${{ parameters.azureServiceConnection }}
-            scriptType: 'pscore'
-            scriptLocation: 'scriptPath'
-            scriptPath: 'pipelines/powershellScripts/savePAL.ps1'

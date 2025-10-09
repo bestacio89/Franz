@@ -1,31 +1,23 @@
 param location string
 param kafkaNamespaceName string
-param skuName string = 'Standard'  // Default SKU for Event Hub
-param partitionCount int = 4       // Default number of partitions
+param microserviceName string
+param environment string
+param tags object = {}
 
-// Kafka Event Hub Namespace
-resource kafkaNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
+resource kafkaNamespace 'Microsoft.EventHub/namespaces@2022-10-01-preview' = {
   name: kafkaNamespaceName
   location: location
-  properties: {
-    sku: {
-      name: skuName
-      tier: skuName
-    }
-    compatibilityLevel: 'Kafka_2_4'
+  sku: {
+    name: 'Standard'
+    tier: 'Standard'
+    capacity: 1
   }
+  properties: {
+    kafkaEnabled: true
+    isAutoInflateEnabled: true
+    maximumThroughputUnits: 4
+  }
+  tags: tags
 }
 
-// Kafka Topics (Multiple if needed)
-resource kafkaTopic 'Microsoft.EventHub/namespaces/eventHubs@2021-11-01' = {
-  name: '${kafkaNamespace.name}/eventHubTopic'
-  location: location
-  properties: {
-    partitionCount: partitionCount
-    messageRetentionInDays: 7
-  }
-}
-
-// Output Kafka resource IDs
 output kafkaNamespaceId string = kafkaNamespace.id
-output kafkaTopicId string = kafkaTopic.id

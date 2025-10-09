@@ -1,70 +1,118 @@
-# ✅ Prevent Auto-Triggers
 pr: none
-trigger: none  # Ensures the pipeline is only run manually
+trigger: none   # Manual only
 
 parameters:
   - name: databaseType
-    displayName: "Database Type"
     type: string
     default: "single"
-    values:
-      - single
-      - multi
+    values: [ single, multi ]
 
   - name: eventStorageType
-    displayName: "Event Storage Type (Only for Multi-DB)"
     type: string
     default: "Kafka"
-    values:
-      - Kafka
-      - CosmosDB
-      - MongoDB
+    values: [ Kafka, CosmosDB, MongoDB ]
 
   - name: entityStorageType
-    displayName: "Entity Storage Type"
     type: string
     default: "SQLServer"
-    values:
-      - PostgreSQL
-      - MariaDB
-      - MySQL
-      - SQLServer
-      - Oracle
+    values: [ PostgreSQL, MariaDB, MySQL, SQLServer, Oracle ]
+
+  - name: messagingType
+    type: string
+    default: "Kafka"
+    values: [ Kafka, RabbitMQ, Both, None ]
+
+  - name: environment
+    type: string
+    default: "dev"
+    values: [ dev, staging, prod ]
+
+  - name: containerImage
+    type: string
+    default: ""   # injected from build pipeline
 
 variables:
-  - group: DevVariables  # ✅ Link to environment-specific variables
+  # 👇 Dynamic environment-specific variable group
+  - group: Variables-${{ parameters.environment }}
 
 jobs:
 - job: Deploy
-  displayName: "Manual Infrastructure Deployment"
+  displayName: "🚀 Infra Deployment"
   pool:
     vmImage: 'ubuntu-latest'
-  steps:
-    - task: AzureCLI@2
-      displayName: "Fetch Secrets from Azure Key Vault"
-      inputs:
-        azureSubscription: 'your-azure-subscription'
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          echo "Fetching database connection string..."
-          DB_CONNECTION_STRING=$(az keyvault secret show --name DBConnectionString --vault-name $(keyVaultName) --query value -o tsv)
-          echo "##vso[task.setvariable variable=DB_CONNECTION_STRING]$DB_CONNECTION_STRING"
 
+  steps:
+    # 🔑 Fetch DB Secret (optional – only if not using Key Vault refs in var group)
     - task: AzureCLI@2
-      displayName: "Deploy Infrastructure"
+      displayName: "🔑 Fetch Secrets from Key Vault"
+      condition: ne('${{ parameters.environment }}','') # skip if not needed
       inputs:
         azureSubscription: 'your-azure-subscription'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          echo "Starting deployment with database mode: ${{ parameters.databaseType }}"
-          
+          DB_CONNECTION_STRING=$(az keyvault secret show \
+            --name DBConnectionString \
+            --vault-name $(keyVaultName) \
+            --query value -o tsv)
+
+          echo "##vso[task.setvariable variable=DB_CONNECTION_STRING;isSecret=true]$DB_CONNECTION_STRING"
+
+    # 🚀 Deploy with Bicep
+    - task: AzureCLI@2
+      displayName: "🚀 Deploy Infra with Bicep"
+      inputs:
+        azureSubscription: 'your-azure-subscription'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          echo "===================================="
+          echo "🌍 Env:         ${{ parameters.environment }}"
+          echo "🗄️ DB:          ${{ parameters.databaseType }}"
+          echo "📂 Event:       ${{ parameters.eventStorageType }}"
+          echo "📂 Entity:      ${{ parameters.entityStorageType }}"
+          echo "📩 Messaging:   ${{ parameters.messagingType }}"
+          echo "🐳 Image:       ${{ parameters.containerImage }}"
+          echo "===================================="
+
+          # Explicit per-environment deployment name
           az deployment group create \
             --resource-group $(resourceGroupName) \
+            --name main-${{ parameters.environment }} \
             --template-file main.bicep \
-            --parameters databaseType=${{ parameters.databaseType }} \
-                         eventStorageType=${{ parameters.eventStorageType }} \
-                         entityStorageType=${{ parameters.entityStorageType }} \
-                         environment=dev \
-                         DBConnectionString=$(DB_CONNECTION_STRING)
+            --mode Incremental \
+            --only-show-errors \
+            --parameters \
+              databaseType=${{ parameters.databaseType }} \
+              eventStorageType=${{ parameters.eventStorageType }} \
+              entityStorageType=${{ parameters.entityStorageType }} \
+              messagingType=${{ parameters.messagingType }} \
+              environment=${{ parameters.environment }} \
+              containerImage=${{ parameters.containerImage }} \
+              DBConnectionString=$(DB_CONNECTION_STRING)
+
+    # 📤 Capture Outputs
+    - task: AzureCLI@2
+      displayName: "📤 Capture Bicep Outputs"
+      inputs:
+        azureSubscription: 'your-azure-subscription'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          outputs=$(az deployment group show \
+            -g $(resourceGroupName) \
+            -n main-${{ parameters.environment }} \
+            --query properties.outputs)
+          
+          echo "🔎 Raw Outputs: $outputs"
+
+          # Export outputs as pipeline variables
+          echo $outputs | jq -r 'to_entries|.[]| "##vso[task.setvariable variable=\(.key);isOutput=true]\(.value.value)"'
+
+          # Persist outputs to artifact file
+          echo $outputs > $(Build.ArtifactStagingDirectory)/infra-outputs.json
+
+    # 📦 Publish Outputs as Artifact
+    - publish: $(Build.ArtifactStagingDirectory)/infra-outputs.json
+      artifact: infra-outputs-${{ parameters.environment }}
+      displayName: "📦 Publish Infra Outputs"

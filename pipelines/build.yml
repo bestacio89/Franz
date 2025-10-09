@@ -1,13 +1,15 @@
+# ========================================
 # Azure DevOps Pipeline - Build & Test
+# ========================================
+
 trigger:
   branches:
     include:
-      - develop  # ✅ The pipeline will now run on every commit to 'develop'
-pr: none         # Still prevents running on Pull Request creation
-
+      - develop   # ✅ Auto-run on develop commits
+pr: none          # ❌ Prevent on PR creation
 
 pool:
-  vmImage: 'windows-latest'   # ✅ Windows agent (supports msbuild & vstest)
+  vmImage: 'windows-latest'   # ✅ Windows agent for MSBuild + VSTest
 
 variables:
   solution: '**/*.sln'
@@ -16,29 +18,50 @@ variables:
 
 stages:
 - stage: BuildAndTest
-  displayName: "Build and Test"
+  displayName: "🛠️ Build and Test"
   jobs:
   - job: BuildTest
-    displayName: "Build & Run Tests"
+    displayName: "🔨 Build & Run Tests"
     steps:
-    - task: NuGetToolInstaller@1
-      displayName: "Install NuGet"
 
+    # ----------------------------------------
+    # ✅ NuGet Setup & Cache
+    # ----------------------------------------
+    - task: NuGetToolInstaller@1
+      displayName: "📦 Install NuGet"
+
+    - task: Cache@2
+      inputs:
+        key: 'nuget | "$(Agent.OS)" | **/packages.lock.json'
+        restoreKeys: |
+          nuget | "$(Agent.OS)"
+        path: $(NuGetPackageRoot)
+      displayName: "⚡ Cache NuGet Packages"
+
+    # ----------------------------------------
+    # ✅ Restore Packages
+    # ----------------------------------------
     - task: NuGetCommand@2
       inputs:
         restoreSolution: '$(solution)'
         feedsToUse: 'config'
         nugetConfigPath: 'nuget.config'
-      displayName: "Restore NuGet Packages"
+      displayName: "📦 Restore NuGet Packages"
 
+    # ----------------------------------------
+    # ✅ Build Solution
+    # ----------------------------------------
     - task: VSBuild@1
       inputs:
         solution: '$(solution)'
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
         msbuildArgs: '/p:ExcludeProjects="**/Franz.DockerCompose/Franz.DockerCompose.dcproj"'
-      displayName: "Build Solution"
+      displayName: "🔨 Build Solution"
 
+    # ----------------------------------------
+    # ✅ Run Unit Tests (skip integration)
+    # ----------------------------------------
     - task: VSTest@2
       inputs:
         testAssemblyVer2: |
@@ -48,4 +71,26 @@ stages:
         testFiltercriteria: 'Category!=Integration'   # 👈 skip Integration tests
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
-      displayName: "Run Unit Tests (skip Integration)"
+        diagnosticsEnabled: true
+      displayName: "🧪 Run Unit Tests (skip Integration)"
+
+    # ----------------------------------------
+    # ✅ Publish Test Results
+    # ----------------------------------------
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '**/TestResults/*.trx'
+        failTaskOnFailedTests: true
+      condition: succeededOrFailed()
+      displayName: "📊 Publish Test Results"
+
+    # ----------------------------------------
+    # ✅ Publish Build Artifacts
+    # ----------------------------------------
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: '$(Build.ArtifactStagingDirectory)'
+        artifactName: 'drop'
+        publishLocation: 'Container'
+      displayName: "📦 Publish Build Artifacts"
