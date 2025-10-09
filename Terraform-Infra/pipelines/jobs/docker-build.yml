@@ -1,27 +1,45 @@
 jobs:
 - job: docker-build
-  displayName: "Docker Build & Push"
+  displayName: "🐳 Docker Build & Push"
   dependsOn: terraform-apply
   pool:
     vmImage: 'ubuntu-latest'
+
+  parameters:
+    repository: ""   # ✅ Passed from pipeline parameters
+
   steps:
+    # ---------------------------
+    # ✅ Login to AWS ECR
+    # ---------------------------
     - task: Docker@2
       displayName: "Login to AWS ECR"
       inputs:
-        command: "login"
-        containerRegistry: "$(awsEcrRegistry)"
+        command: login
+        containerRegistry: "$(awsEcrRegistry)"   # ✅ Service connection to ECR
 
+    # ---------------------------
+    # ✅ Build Docker Image
+    # ---------------------------
     - task: Docker@2
       displayName: "Build Docker Image"
       inputs:
-        repository: "${{ parameters.repository }}"
-        dockerfile: "sources/back/Franz.Api/Dockerfile"  # ✅ Fixed Path
-        buildContext: "sources/back/Franz.Api"           # ✅ Fixed Path
-        tags: "$(Build.BuildId)"
+        command: build
+        repository: "${{ parameters.repository }}"  # ✅ Use pipeline param
+        dockerfile: "sources/back/Franz.Api/Dockerfile"
+        buildContext: "sources/back/Franz.Api"
+        tags: |
+          $(Build.BuildId)          # Unique build ID
+          latest                    # Optional: keep a rolling "latest" tag
 
+    # ---------------------------
+    # ✅ Push Docker Image
+    # ---------------------------
     - task: Docker@2
       displayName: "Push Docker Image to AWS ECR"
       inputs:
-        command: "push"
-        repository: "microservice-api"
-        tags: "$(Build.BuildId)"
+        command: push
+        repository: "${{ parameters.repository }}"
+        tags: |
+          $(Build.BuildId)
+          latest

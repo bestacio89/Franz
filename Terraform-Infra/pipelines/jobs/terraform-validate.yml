@@ -1,18 +1,33 @@
-jobs:
-- job: Terraform_Validate
-  displayName: "Terraform Validate"
+- job: terraform-validate
+  displayName: "✅ Terraform Validate"
   pool:
     vmImage: 'ubuntu-latest'
+
   steps:
-    - task: Checkout@1
+    # ---------------------------
+    # ✅ Checkout code
+    # ---------------------------
+    - checkout: self
       displayName: "Checkout Repository"
 
+    # ---------------------------
+    # ✅ Install pinned Terraform version
+    # ---------------------------
     - task: TerraformInstaller@1
       displayName: "Install Terraform"
       inputs:
         terraformVersion: '1.5.0'
 
+    # ---------------------------
+    # ✅ Validate Terraform configs
+    # ---------------------------
     - script: |
+        echo "📂 Switching to working directory: $(workingDirectory)"
+        cd $(workingDirectory)
+
+        echo "🧪 Running terraform validate..."
         terraform validate
       displayName: "Validate Terraform Configuration"
-      workingDirectory: Terraform-Infra  # ✅ Ensures Terraform runs in the correct directory
+      env:
+        environment: $(environment)
+      workingDirectory: $(workingDirectory)

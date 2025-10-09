@@ -1,14 +1,45 @@
 jobs:
 - job: terraform-init
-  displayName: "Terraform Init"
+  displayName: "⚙️ Terraform Init"
   pool:
     vmImage: 'ubuntu-latest'
+
+  parameters:
+    environment: ""          # e.g. dev, qa, prod
+    workingDirectory: "."    # relative to repo root
+    backendConfigDir: "backends"  # directory where backend-*.tfvars are stored
+
   steps:
+    # ---------------------------
+    # ✅ Install Terraform
+    # ---------------------------
     - task: TerraformInstaller@1
       displayName: "Install Terraform"
       inputs:
         terraformVersion: "1.4.6"
 
+    # ---------------------------
+    # ✅ Change to working directory
+    # ---------------------------
     - script: |
-        terraform init -backend-config="backend-$(environment).tfvars"
+        echo "📂 Switching to working directory: ${{ parameters.workingDirectory }}"
+        cd ${{ parameters.workingDirectory }}
+        ls -la
+      displayName: "Set Working Directory"
+
+    # ---------------------------
+    # ✅ Init Terraform backend
+    # ---------------------------
+    - script: |
+        echo "🔎 Environment: ${{ parameters.environment }}"
+        BACKEND_FILE="${{ parameters.backendConfigDir }}/backend-${{ parameters.environment }}.tfvars"
+
+        if [ ! -f "$BACKEND_FILE" ]; then
+          echo "❌ Backend config not found: $BACKEND_FILE"
+          exit 1
+        fi
+
+        echo "🚀 Initializing Terraform with backend: $BACKEND_FILE"
+        terraform init -backend-config="$BACKEND_FILE"
       displayName: "Initialize Terraform Backend"
+      workingDirectory: ${{ parameters.workingDirectory }}

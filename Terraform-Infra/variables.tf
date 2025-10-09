@@ -1,50 +1,68 @@
-# Database Selection
-variable "database_type" {
-  description = "Choose RDS Engine: postgres, mysql, mariadb, oracle-se2, sqlserver-ex, dynamodb"
+#######################################
+# Global
+#######################################
+variable "aws_region" {
+  description = "AWS region"
   type        = string
-  default     = "postgres"
 }
 
-# Database Configurations
-variable "db_version" {
-  description = "Database engine version"
+variable "microservice_name" {
+  description = "Name of the microservice (used in resource naming)"
   type        = string
-  default     = "13.4"  # PostgreSQL default
 }
 
-variable "db_instance_class" {
-  description = "Instance type for RDS"
+variable "common_tags" {
+  description = "Tags applied to all resources"
+  type        = map(string)
+  default     = {}
+}
+
+#######################################
+# Messaging
+#######################################
+variable "messaging_type" {
+  description = "Messaging layer to deploy: Kafka, RabbitMQ, Both, or None"
   type        = string
-  default     = "db.t3.micro"
+  default     = "None"
 }
 
-variable "db_allocated_storage" {
-  description = "Storage size in GB"
-  type        = number
-  default     = 20
+variable "use_msk" {
+  description = "Use Amazon MSK for Kafka (true) or self-managed alternative (false)"
+  type        = bool
+  default     = true
 }
 
-variable "db_name" {
-  description = "Database name"
-  type        = string
-  default     = "microservice_db"
-}
-
-variable "db_username" {
-  description = "Database username"
+variable "rabbitmq_user" {
+  description = "RabbitMQ admin username"
   type        = string
   default     = "admin"
 }
 
-variable "db_password" {
-  description = "Database password"
+variable "rabbitmq_password" {
+  description = "RabbitMQ admin password"
   type        = string
-  default     = "password123"
+  sensitive   = true
 }
 
-# DynamoDB Configuration
-variable "dynamodb_table_name" {
-  description = "DynamoDB table name"
+#######################################
+# Database
+#######################################
+variable "database_type" {
+  description = "Database type: postgres, mysql, mariadb, oracle, mssql, dynamodb"
   type        = string
-  default     = "microservice-table"
+}
+
+variable "multi_db" {
+  description = "Enable multiple databases support (true/false)"
+  type        = bool
+  default     = false
+}
+
+#######################################
+# Compute
+#######################################
+variable "use_eks" {
+  description = "If true, deploy EKS. If false, deploy ECS"
+  type        = bool
+  default     = true
 }

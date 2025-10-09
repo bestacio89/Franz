@@ -1,5 +1,12 @@
-trigger: none  # 🔥 Prevent auto-trigger, run manually
+# ========================================
+# ✅ Prevent auto-triggers
+# ========================================
+trigger: none   # Run manually or via pipeline resource
+pr: none        # Prevent PR auto-runs
 
+# ========================================
+# ✅ Parameters
+# ========================================
 parameters:
   - name: repository
     displayName: "Repository Name"
@@ -14,53 +21,103 @@ parameters:
   - name: awsEcrUrl
     displayName: "AWS ECR URL"
     type: string
-    default: "<AWS_ECR_URL>"  # 🔥 Replace with actual AWS ECR registry
+    default: "<AWS_ECR_URL>"   # Replace with actual registry (e.g., <account>.dkr.ecr.<region>.amazonaws.com)
 
   - name: deployToEKS
     displayName: "Deploy to EKS (true) or ECS (false)"
     type: boolean
     default: false
 
+# ========================================
+# ✅ Pool
+# ========================================
 pool:
   vmImage: 'ubuntu-latest'
 
+# ========================================
+# ✅ Global Variables
+# ========================================
 variables:
-  - group: AWS_Variables  # ✅ Load AWS environment variables from DevOps Library
+  - group: AWS_Variables   # Load AWS credentials/region from DevOps Library
+  - name: DOCKER_BUILDKIT
+    value: "1"             # Enable Docker BuildKit for faster builds
+  - name: IMAGE_TAG
+    value: "$(Build.BuildId)"  # Use build ID as image tag (unique)
 
+# ========================================
+# ✅ Stages
+# ========================================
 stages:
-# ========================================
-# ✅ BUILD & PUSH DOCKER IMAGE TO AWS ECR
-# ========================================
+
+  # ========================================
+  # ✅ 1. Build & Push Docker Image
+  # ========================================
   - stage: BuildAndPushDocker
-    displayName: "Build & Push Docker Image"
+    displayName: "🐳 Build & Push Docker Image to AWS ECR"
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main') # Only on main branch
     jobs:
       - job: BuildDocker
-        displayName: "Build and Push to AWS ECR"
+        displayName: "Build & Push to AWS ECR"
         steps:
+          # 🔑 Reusable job template
           - template: jobs/docker-build-aws.yml
             parameters:
               serviceName: ${{ parameters.serviceName }}
               awsEcrUrl: ${{ parameters.awsEcrUrl }}
+              imageTag: $(IMAGE_TAG)
 
-# ========================================
-# ✅ DEPLOY MICROSERVICE TO AWS ECS or EKS
-# ========================================
+          # ✅ Save Docker image tag for next stage
+          - script: |
+              echo "$(IMAGE_TAG)" > $(Build.ArtifactStagingDirectory)/imagetag.txt
+            displayName: "Save Docker image tag"
+          
+          - publish: $(Build.ArtifactStagingDirectory)/imagetag.txt
+            artifact: imagetag
+            displayName: "Publish image tag artifact"
+
+  # ========================================
+  # ✅ 2. Deploy Microservice
+  # ========================================
   - stage: DeployMicroservice
-    displayName: "Deploy to AWS"
+    displayName: "🚀 Deploy Microservice to AWS"
     dependsOn: BuildAndPushDocker
+    condition: succeeded()
     jobs:
+
+      # ----------------------------
+      # ✅ Deploy to EKS
+      # ----------------------------
       - job: DeployToEKS
         condition: eq(${{ parameters.deployToEKS }}, true)
         displayName: "Deploy to EKS"
         steps:
+          - download: current
+
+          - script: |
+              IMAGE_TAG=$(cat imagetag/imagetag.txt)
+              echo "Deploying image ${IMAGE_TAG} to EKS..."
+            displayName: "Read Image Tag"
+
           - template: jobs/deploy-eks.yml
             parameters:
               serviceName: ${{ parameters.serviceName }}
+              imageTag: "$(cat imagetag/imagetag.txt)"
 
+      # ----------------------------
+      # ✅ Deploy to ECS
+      # ----------------------------
       - job: DeployToECS
         condition: eq(${{ parameters.deployToEKS }}, false)
         displayName: "Deploy to ECS"
         steps:
+          - download: current
+
+          - script: |
+              IMAGE_TAG=$(cat imagetag/imagetag.txt)
+              echo "Deploying image ${IMAGE_TAG} to ECS..."
+            displayName: "Read Image Tag"
+
           - template: jobs/deploy-ecs.yml
             parameters:
               serviceName: ${{ parameters.serviceName }}
+              imageTag: "$(cat imagetag/imagetag.txt)"

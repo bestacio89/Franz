@@ -1,7 +1,12 @@
+# ==========================
 # ✅ Prevent Auto-Triggers
+# ==========================
 pr: none
-trigger: none  # ❌ Prevent automatic execution
+trigger: none  # Prevent automatic runs; only manual or scheduled
 
+# ==========================
+# ✅ Parameters
+# ==========================
 parameters:
   - name: databaseType
     displayName: "Database Type"
@@ -31,53 +36,100 @@ parameters:
       - SQLServer
       - Oracle
 
-variables:
-  - group: AWS_Variables  # ✅ Load AWS credentials & region from Azure DevOps Library
+  - name: messagingType
+    displayName: "Messaging Layer"
+    type: string
+    default: "Kafka"
+    values:
+      - Kafka
+      - RabbitMQ
+      - Both
 
+# ==========================
+# ✅ Global Variables
+# ==========================
+variables:
+  - group: AWS_Variables   # Load AWS credentials/region from Library
+  - name: TF_VERSION
+    value: "1.9.6"         # Pin Terraform version for consistency
+  - name: WORKING_DIR
+    value: "infra/aws"     # Path to Terraform root module
+
+# ==========================
+# ✅ Stages
+# ==========================
 stages:
   - stage: DeployInfrastructure
-    displayName: "Deploy AWS Infrastructure"
+    displayName: "🚀 Deploy AWS Infrastructure"
     jobs:
 
-      # ========================================
+      # ----------------------------
       # ✅ 1. Terraform Initialization
-      # ========================================
+      # ----------------------------
       - job: Terraform_Init
         displayName: "Terraform Init"
+        pool:
+          vmImage: ubuntu-latest
         steps:
-          - template: jobs/terraform-init.yml  # Calls the separate job file
+          - task: UseTerraform@0
+            displayName: "Install Terraform ${{ variables.TF_VERSION }}"
+            inputs:
+              terraformVersion: ${{ variables.TF_VERSION }}
 
-      # ========================================
+          - template: jobs/terraform-init.yml
+            parameters:
+              workingDirectory: ${{ variables.WORKING_DIR }}
+
+      # ----------------------------
       # ✅ 2. Terraform Validate
-      # ========================================
+      # ----------------------------
       - job: Terraform_Validate
         displayName: "Terraform Validate"
         dependsOn: Terraform_Init
+        pool:
+          vmImage: ubuntu-latest
         steps:
           - template: jobs/terraform-validate.yml
+            parameters:
+              workingDirectory: ${{ variables.WORKING_DIR }}
 
-      # ========================================
+      # ----------------------------
       # ✅ 3. Terraform Plan
-      # ========================================
+      # ----------------------------
       - job: Terraform_Plan
         displayName: "Terraform Plan"
         dependsOn: Terraform_Validate
+        pool:
+          vmImage: ubuntu-latest
         steps:
           - template: jobs/terraform-plan.yml
             parameters:
+              workingDirectory: ${{ variables.WORKING_DIR }}
               databaseType: ${{ parameters.databaseType }}
               eventStorageType: ${{ parameters.eventStorageType }}
               entityStorageType: ${{ parameters.entityStorageType }}
+              messagingType: ${{ parameters.messagingType }}
 
-      # ========================================
+      # ----------------------------
       # ✅ 4. Terraform Apply
-      # ========================================
+      # ----------------------------
       - job: Terraform_Apply
         displayName: "Terraform Apply"
         dependsOn: Terraform_Plan
+        pool:
+          vmImage: ubuntu-latest
         steps:
+          # Protect Apply with manual approval
+          - task: ManualValidation@0
+            displayName: "🔒 Approve Terraform Apply"
+            inputs:
+              notifyUsers: "devops-team@example.com"
+              instructions: "Please review the Terraform Plan in Azure DevOps before approving Apply."
+
           - template: jobs/terraform-apply.yml
             parameters:
+              workingDirectory: ${{ variables.WORKING_DIR }}
               databaseType: ${{ parameters.databaseType }}
               eventStorageType: ${{ parameters.eventStorageType }}
               entityStorageType: ${{ parameters.entityStorageType }}
+              messagingType: ${{ parameters.messagingType }}
