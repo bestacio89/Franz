@@ -12,15 +12,15 @@
 
   <ItemGroup>
     <PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
-    <PackageReference Include="Franz.Common.Hosting" Version="1.6.2" />
-    <PackageReference Include="Franz.Common.Http" Version="1.6.2" />
-    <PackageReference Include="Franz.Common.Http.Bootstrap" Version="1.6.2" />
-    <PackageReference Include="Franz.Common.Http.Client" Version="1.6.2" />
-    <PackageReference Include="Franz.Common.Http.EntityFramework" Version="1.6.2" />
-    <PackageReference Include="Franz.Common.Http.Messaging" Version="1.6.2" />
-    <PackageReference Include="Franz.Common.Http.Refit" Version="1.6.2" />
-    <PackageReference Include="Franz.Common.Mediator.Polly" Version="1.6.2" />
-    <PackageReference Include="Franz.Common.Mediator.OpenTelemetry" Version="1.6.2" />
+    <PackageReference Include="Franz.Common.Hosting" Version="1.6.3" />
+    <PackageReference Include="Franz.Common.Http" Version="1.6.3" />
+    <PackageReference Include="Franz.Common.Http.Bootstrap" Version="1.6.3" />
+    <PackageReference Include="Franz.Common.Http.Client" Version="1.6.3" />
+    <PackageReference Include="Franz.Common.Http.EntityFramework" Version="1.6.3" />
+    <PackageReference Include="Franz.Common.Http.Messaging" Version="1.6.3" />
+    <PackageReference Include="Franz.Common.Http.Refit" Version="1.6.3" />
+    <PackageReference Include="Franz.Common.Mediator.Polly" Version="1.6.3" />
+    <PackageReference Include="Franz.Common.Mediator.OpenTelemetry" Version="1.6.3" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.9" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
