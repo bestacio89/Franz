@@ -1,6 +1,3 @@
-output "kafka_gke_service_ip" {
-  value = kubernetes_service.kafka_service.status[0].load_balancer[0].ingress[0].ip
-}
 variable "gcp_region" {
   description = "GCP region where the GKE cluster will be deployed"
   type        = string
@@ -29,4 +26,3 @@ variable "disk_size_gb" {
   type        = number
   default     = 50
 }
-      

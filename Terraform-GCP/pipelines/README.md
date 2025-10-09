@@ -82,4 +82,106 @@ The pipelines are designed to be **manual-trigger only** (`trigger: none`), givi
 * Cloud-native workflow with **Terraform + Docker + GCP** integration.
 * Manual trigger only → no accidental infra changes or deployments.
 
+Absolutely 👍 A **Terraform README for “single vs multi microservices”** would be perfect. It gives anyone picking up your modules a **clear recipe** for spinning up one service, or many at once, without digging into the `.tf` guts.
+
+# 🚀 Terraform Microservices Module
+
+This module lets you deploy **microservices** on GKE (Google Kubernetes Engine) or Cloud Run, with support for **single-service** and **multi-service** configurations.
+
+---
+
+## 📦 Features
+
+* ✅ Deploy **one service** or **multiple services** in one go.
+* ✅ Parameterized container images, ports, replicas, and resources.
+* ✅ Supports both **GKE Deployments** and **Cloud Run Services**.
+* ✅ Easy integration into Franz CI/CD pipelines.
+
+---
+
+## 🛠 Usage
+
+### 🔹 Single Microservice Example
+
+```hcl
+module "microservice" {
+  source = "./modules/microservices"
+
+  microservice_name   = "orders-api"
+  container_image     = "gcr.io/my-project/orders-api:1.0.0"
+  replicas            = 3
+  container_port      = 8080
+  service_port        = 80
+  env_vars = {
+    "ASPNETCORE_ENVIRONMENT" = "Production"
+  }
+}
+```
+
+---
+
+### 🔹 Multiple Microservices Example
+
+```hcl
+module "microservices" {
+  source = "./modules/microservices"
+
+  microservices = {
+    orders = {
+      container_image = "gcr.io/my-project/orders-api:1.0.0"
+      replicas        = 3
+      container_port  = 8080
+      service_port    = 80
+      env_vars = {
+        "ASPNETCORE_ENVIRONMENT" = "Production"
+      }
+    }
+    payments = {
+      container_image = "gcr.io/my-project/payments-api:2.1.0"
+      replicas        = 2
+      container_port  = 5000
+      service_port    = 80
+      env_vars = {
+        "ASPNETCORE_ENVIRONMENT" = "Staging"
+      }
+    }
+  }
+}
+```
+
+---
+
+## ⚙️ Inputs
+
+| Name                | Type          | Default | Description                                          |
+| ------------------- | ------------- | ------- | ---------------------------------------------------- |
+| `microservice_name` | `string`      | `null`  | Name of a single microservice (used in single mode). |
+| `container_image`   | `string`      | `null`  | Docker image for the service.                        |
+| `replicas`          | `number`      | `1`     | Number of pods (for GKE).                            |
+| `container_port`    | `number`      | `80`    | Internal container port.                             |
+| `service_port`      | `number`      | `80`    | Exposed service port.                                |
+| `env_vars`          | `map(string)` | `{}`    | Environment variables for the service.               |
+| `microservices`     | `map(object)` | `{}`    | Multi-service configuration (see example).           |
+
+---
+
+## 📤 Outputs
+
+| Name               | Description                                |
+| ------------------ | ------------------------------------------ |
+| `deployment_names` | List of deployment names created in GKE.   |
+| `service_names`    | List of service names created in GKE.      |
+| `service_ips`      | Map of external IPs for deployed services. |
+| `cloud_run_urls`   | Map of URLs if deployed on Cloud Run.      |
+
+---
+
+## 🚦 Deployment Modes
+
+* **Single Mode** → Provide `microservice_name`, `container_image`, etc.
+* **Multi Mode** → Use the `microservices` map with multiple definitions.
+
+Terraform will detect which mode you’re using based on the variables provided.
+
+
 

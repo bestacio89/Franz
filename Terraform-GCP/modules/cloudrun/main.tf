@@ -1,7 +1,3 @@
-variable "gcp_region" {}
-variable "microservice_name" {}
-variable "container_image" {}
-
 resource "google_cloud_run_service" "microservice" {
   name     = var.microservice_name
   location = var.gcp_region
@@ -11,12 +7,12 @@ resource "google_cloud_run_service" "microservice" {
       containers {
         image = var.container_image
         ports {
-          container_port = 8080
+          container_port = var.container_port
         }
         resources {
           limits = {
-            cpu    = "1000m"
-            memory = "512Mi"
+            cpu    = var.cpu_limit
+            memory = var.memory_limit
           }
         }
       }
@@ -30,6 +26,7 @@ resource "google_cloud_run_service" "microservice" {
 }
 
 resource "google_cloud_run_service_iam_policy" "allow_unauthenticated" {
+  count    = var.allow_unauthenticated ? 1 : 0
   location = google_cloud_run_service.microservice.location
   service  = google_cloud_run_service.microservice.name
 

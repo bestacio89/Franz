@@ -1,11 +1,13 @@
 resource "google_storage_bucket" "terraform_state" {
-  name          = "my-terraform-state-bucket"  # 🏗️ Change this
-  location      = "US"
+  name          = "${var.project_id}-terraform-state"  # ✅ Unique & project-scoped
+  location      = var.region                           # ✅ Parametrized
   storage_class = "STANDARD"
 
   versioning {
-    enabled = true
+    enabled = true   # ✅ Protects against state corruption
   }
+
+  uniform_bucket_level_access = true   # ✅ Security best practice
 
   lifecycle_rule {
     condition {
@@ -15,14 +17,20 @@ resource "google_storage_bucket" "terraform_state" {
       type = "Delete"
     }
   }
+
+  labels = {
+    environment = var.environment
+    managed_by  = "terraform"
+    purpose     = "state-backend"
+  }
 }
 
-# ✅ Bucket Lock for State Locking (Alternative to DynamoDB)
+# ✅ Locking & Access Control (IAM Binding)
 resource "google_storage_bucket_iam_binding" "terraform_state_lock" {
   bucket = google_storage_bucket.terraform_state.name
-  role   = "roles/storage.admin"
+  role   = "roles/storage.objectAdmin"
 
   members = [
-    "serviceAccount:terraform-state@your-gcp-project.iam.gserviceaccount.com"
+    "serviceAccount:${var.terraform_sa_email}" # ✅ Parametrized service account
   ]
 }

@@ -3,9 +3,9 @@ jobs:
   displayName: "Terraform Validate"
   pool:
     vmImage: 'ubuntu-latest'
+
   steps:
-    - task: Checkout@1
-      displayName: "Checkout Repository"
+    - checkout: self   # ✅ Correct way to checkout repo
 
     - task: TerraformInstaller@1
       displayName: "Install Terraform"
@@ -13,6 +13,7 @@ jobs:
         terraformVersion: '1.5.0'
 
     - script: |
+        echo "Validating Terraform configuration in $(System.DefaultWorkingDirectory)/Terraform-GCP"
         terraform validate
       displayName: "Validate Terraform Configuration"
-      workingDirectory: Terraform-GCP  # ✅ Ensures Terraform runs in the correct directory
+      workingDirectory: Terraform-GCP

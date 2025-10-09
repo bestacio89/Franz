@@ -1,22 +1,38 @@
 name: "Deploy to GKE"
 runs-on: ubuntu-latest
 
-steps:
-  - name: "Authenticate with Google Cloud"
-    uses: google-github-actions/auth@v1
-    with:
-      credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+env:
+  GCP_REGION: "us-central1"
+  CLUSTER_NAME: "gke-franz-cluster"
+  SERVICE_NAME: "my-service"
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
 
-  - name: "Set up Google Cloud SDK"
-    uses: google-github-actions/setup-gcloud@v1
-    with:
-      project_id: ${{ env.GCP_PROJECT_ID }}
+jobs:
+  deploy:
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
 
-  - name: "Connect to GKE Cluster"
-    run: |
-      gcloud container clusters get-credentials ${{ env.GKE_CLUSTER_NAME }} --region ${{ env.GCP_REGION }}
+      - name: "Authenticate with Google Cloud"
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
-  - name: "Deploy to GKE"
-    run: |
-      kubectl set image deployment/${{ env.SERVICE_NAME }} ${{ env.SERVICE_NAME }}=gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.SERVICE_NAME }}:latest
-      kubectl rollout status deployment/${{ env.SERVICE_NAME }}
+      - name: "Setup gcloud"
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: "Get GKE Credentials"
+        run: |
+          gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
+            --region ${{ env.GCP_REGION }} \
+            --project ${{ env.GCP_PROJECT_ID }}
+
+      - name: "Update Deployment in GKE"
+        run: |
+          IMAGE=gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          echo "Deploying image $IMAGE to GKE"
+          kubectl set image deployment/${{ env.SERVICE_NAME }} \
+            ${{ env.SERVICE_NAME }}=$IMAGE
+          kubectl rollout status deployment/${{ env.SERVICE_NAME }}

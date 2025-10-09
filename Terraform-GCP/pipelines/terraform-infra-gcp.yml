@@ -1,7 +1,12 @@
+# ========================================
 # ✅ Prevent Auto-Triggers
+# ========================================
 pr: none
 trigger: none  # ❌ Prevent automatic execution
 
+# ========================================
+# ✅ Parameters
+# ========================================
 parameters:
   - name: databaseType
     displayName: "Database Type"
@@ -19,6 +24,7 @@ parameters:
       - Kafka
       - Firestore
       - MongoDB
+      - RabbitMQ
 
   - name: entityStorageType
     displayName: "Entity Storage Type"
@@ -31,11 +37,26 @@ parameters:
       - SQLServer
       - MongoDB
 
+  - name: messagingType
+    displayName: "Messaging Broker"
+    type: string
+    default: "Kafka"
+    values:
+      - Kafka
+      - RabbitMQ
+      - Both
+
+# ========================================
+# ✅ Variables
+# ========================================
 variables:
   GCP_REGION: "us-central1"
   GCP_PROJECT_ID: $(GCP_PROJECT_ID)  # ✅ Stored in Azure DevOps secrets
   GCP_SERVICE_ACCOUNT_KEY: $(GCP_SERVICE_ACCOUNT_KEY)  # ✅ Stored in Azure DevOps secrets
 
+# ========================================
+# ✅ Stages
+# ========================================
 stages:
   - stage: DeployInfrastructure
     displayName: "Deploy GCP Infrastructure"
@@ -47,7 +68,7 @@ stages:
       - job: Terraform_Init
         displayName: "Terraform Init"
         steps:
-          - template: jobs/terraform-init.yml  # Calls the separate job file
+          - template: jobs/terraform-init.yml
 
       # ========================================
       # ✅ 2. Terraform Validate
@@ -70,6 +91,7 @@ stages:
               databaseType: ${{ parameters.databaseType }}
               eventStorageType: ${{ parameters.eventStorageType }}
               entityStorageType: ${{ parameters.entityStorageType }}
+              messagingType: ${{ parameters.messagingType }}
 
       # ========================================
       # ✅ 4. Terraform Apply
@@ -83,3 +105,4 @@ stages:
               databaseType: ${{ parameters.databaseType }}
               eventStorageType: ${{ parameters.eventStorageType }}
               entityStorageType: ${{ parameters.entityStorageType }}
+              messagingType: ${{ parameters.messagingType }}

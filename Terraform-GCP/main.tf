@@ -1,76 +1,32 @@
-# ✅ Global Variables
-variable "gcp_region" {
-  description = "GCP deployment region"
-  type        = string
-}
-
-variable "database_type" {
-  description = "Choose database: cloudsql, firestore, mongo_atlas, mongo_vm"
-  type        = string
-}
-
-variable "use_gke" {
-  description = "Deploy to GKE (true) or Cloud Run (false)"
-  type        = bool
-  default     = false
-}
-
-variable "use_gke_kafka" {
-  description = "Deploy Kafka on GKE (true) or Confluent Cloud (false)"
-  type        = bool
-  default     = false
-}
-
-variable "microservice_name" {
-  description = "Name of the microservice"
-  type        = string
-}
-
-variable "container_image" {
-  description = "Container image for microservice"
-  type        = string
-}
-
-variable "kafka_cluster_name" {
-  description = "Kafka cluster name"
-  type        = string
-  default     = "microservice-kafka"
-}
-
-# ====================================
-# ✅ 1. Networking (VPC, Firewall, Subnets)
-# ====================================
-module "networking" {
-  source     = "./modules/networking"
-  gcp_region = var.gcp_region
-}
-
-# ====================================
-# ✅ 2. Database (Cloud SQL, Firestore, MongoDB)
-# ====================================
-module "database" {
-  source        = "./modules/database"
-  database_type = var.database_type
-  gcp_region    = var.gcp_region
-}
-
-# ====================================
-# ✅ 3. Kafka (Confluent Cloud OR Self-Managed Kafka on GKE)
-# ====================================
-module "kafka" {
-  source             = "./modules/kafka"
-  use_gke_kafka      = var.use_gke_kafka
-  kafka_cluster_name = var.kafka_cluster_name
-  gcp_region         = var.gcp_region
-}
-
-# ====================================
-# ✅ 4. Microservices (GKE OR Cloud Run)
-# ====================================
+# Microservices deployment - choose Cloud Run or GKE
 module "microservices" {
-  source             = "./modules/microservices"
-  use_gke           = var.use_gke
+  source = var.use_gke ? "./modules/gke" : "./modules/cloudrun"
+
+  project_id        = var.project_id
   gcp_region        = var.gcp_region
-  microservice_name = var.microservice_name
+  environment       = var.environment
+  microservice_name = "${var.microservice_name}-${var.environment}"
   container_image   = var.container_image
+  vpc_id            = module.networking.vpc_id
+}
+
+# Messaging choice
+module "kafka" {
+  count  = var.messaging_type == "kafka" || var.messaging_type == "both" ? 1 : 0
+  source = var.use_gke ? "./modules/gke-kafka" : "./modules/kafka"
+
+  project_id         = var.project_id
+  gcp_region         = var.gcp_region
+  kafka_cluster_name = "${var.kafka_cluster_name}-${var.environment}"
+}
+
+module "rabbitmq" {
+  count  = var.messaging_type == "rabbitmq" || var.messaging_type == "both" ? 1 : 0
+  source = var.use_gke ? "./modules/gke-RabbitMQ" : "./modules/RabbitMQ"
+
+  project_id  = var.project_id
+  gcp_region  = var.gcp_region
+  name        = "${var.rabbitmq_name}-${var.environment}"
+  admin_user  = var.rabbitmq_user
+  admin_pass  = var.rabbitmq_password
 }

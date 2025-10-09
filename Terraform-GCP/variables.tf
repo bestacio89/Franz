@@ -1,50 +1,94 @@
-# Database Selection
+########################################
+# 🌍 Global Variables
+########################################
+variable "project_id" {
+  description = "The GCP project ID"
+  type        = string
+}
+
+variable "gcp_region" {
+  description = "GCP deployment region"
+  type        = string
+  default     = "us-central1"
+}
+
+variable "environment" {
+  description = "Deployment environment (dev, staging, prod)"
+  type        = string
+}
+
+########################################
+# 🗄️ Database
+########################################
 variable "database_type" {
-  description = "Choose RDS Engine: postgres, mysql, mariadb, oracle-se2, sqlserver-ex, dynamodb"
+  description = "Choose database: cloudsql, firestore, mongo_atlas, mongo_vm"
   type        = string
-  default     = "postgres"
+  validation {
+    condition     = contains(["cloudsql", "firestore", "mongo_atlas", "mongo_vm"], var.database_type)
+    error_message = "Allowed values: cloudsql, firestore, mongo_atlas, mongo_vm."
+  }
 }
 
-# Database Configurations
-variable "db_version" {
-  description = "Database engine version"
+########################################
+# ☸️ Microservices
+########################################
+variable "use_gke" {
+  description = "Deploy to GKE (true) or Cloud Run (false)"
+  type        = bool
+  default     = false
+}
+
+variable "microservice_name" {
+  description = "Name of the microservice"
   type        = string
-  default     = "13.4"  # PostgreSQL default
 }
 
-variable "db_instance_class" {
-  description = "Instance type for RDS"
+variable "container_image" {
+  description = "Container image for microservice"
   type        = string
-  default     = "db.t3.micro"
 }
 
-variable "db_allocated_storage" {
-  description = "Storage size in GB"
-  type        = number
-  default     = 20
-}
-
-variable "db_name" {
-  description = "Database name"
+########################################
+# 📡 Messaging (Kafka + RabbitMQ)
+########################################
+variable "messaging_type" {
+  description = "Which messaging stack to deploy: kafka | rabbitmq | both | none"
   type        = string
-  default     = "microservice_db"
+  default     = "kafka"
+  validation {
+    condition     = contains(["kafka", "rabbitmq", "both", "none"], var.messaging_type)
+    error_message = "Allowed values: kafka, rabbitmq, both, none."
+  }
 }
 
-variable "db_username" {
-  description = "Database username"
+# Kafka
+variable "use_gke_kafka" {
+  description = "Deploy Kafka on GKE (true) or Confluent Cloud (false)"
+  type        = bool
+  default     = false
+}
+
+variable "kafka_cluster_name" {
+  description = "Kafka cluster name"
+  type        = string
+  default     = "microservice-kafka"
+}
+
+# RabbitMQ
+variable "rabbitmq_name" {
+  description = "RabbitMQ logical name"
+  type        = string
+  default     = "rabbitmq"
+}
+
+variable "rabbitmq_user" {
+  description = "RabbitMQ admin username"
   type        = string
   default     = "admin"
 }
 
-variable "db_password" {
-  description = "Database password"
+variable "rabbitmq_password" {
+  description = "RabbitMQ admin password"
   type        = string
-  default     = "password123"
-}
-
-# DynamoDB Configuration
-variable "dynamodb_table_name" {
-  description = "DynamoDB table name"
-  type        = string
-  default     = "microservice-table"
+  sensitive   = true
 }

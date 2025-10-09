@@ -4,7 +4,14 @@ jobs:
   dependsOn: terraform-init
   pool:
     vmImage: 'ubuntu-latest'
+
   steps:
+    - checkout: self
+
     - script: |
-        terraform plan -var-file="terraform-$(environment).tfvars"
+        echo "Running Terraform Plan for environment: $(environment)"
+        terraform plan \
+          -var-file="terraform-$(environment).tfvars" \
+          -out=tfplan \
+          -input=false
       displayName: "Generate Terraform Plan"

@@ -3,12 +3,19 @@ jobs:
   displayName: "Terraform Init"
   pool:
     vmImage: 'ubuntu-latest'
+
   steps:
+    - checkout: self
+
     - task: TerraformInstaller@1
       displayName: "Install Terraform"
       inputs:
         terraformVersion: "1.4.6"
 
     - script: |
-        terraform init -backend-config="backend-$(environment).tfvars"
+        echo "Initializing Terraform with backend for environment: $(environment)"
+        terraform init \
+          -backend-config="backend-$(environment).tfvars" \
+          -input=false \
+          -upgrade
       displayName: "Initialize Terraform Backend"

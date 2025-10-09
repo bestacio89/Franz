@@ -1,7 +1,3 @@
-variable "gcp_region" {}
-variable "microservice_name" {}
-variable "container_image" {}
-
 resource "google_container_cluster" "microservice_gke" {
   name     = "gke-microservice-cluster"
   location = var.gcp_region
@@ -27,7 +23,7 @@ resource "kubernetes_deployment" "microservice_deployment" {
   }
 
   spec {
-    replicas = 2
+    replicas = var.replicas
 
     selector {
       match_labels = {
@@ -46,9 +42,34 @@ resource "kubernetes_deployment" "microservice_deployment" {
         container {
           name  = var.microservice_name
           image = var.container_image
+
           ports {
-            container_port = 8080
+            container_port = var.container_port
           }
+
+          # Environment variables
+          dynamic "env" {
+            for_each = var.env_vars
+            content {
+              name  = env.key
+              value = env.value
+            }
+          }
+
+          # Secrets (envFrom style)
+          dynamic "env" {
+            for_each = var.secrets
+            content {
+              name = env.key
+              value_from {
+                secret_key_ref {
+                  name = env.value   # secret name
+                  key  = env.key     # secret key inside secret
+                }
+              }
+            }
+          }
+
           resources {
             limits = {
               cpu    = "500m"
@@ -74,8 +95,8 @@ resource "kubernetes_service" "microservice_service" {
 
     port {
       protocol    = "TCP"
-      port        = 80
-      target_port = 8080
+      port        = var.service_port
+      target_port = var.container_port
     }
 
     type = "LoadBalancer"

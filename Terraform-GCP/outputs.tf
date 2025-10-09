@@ -1,23 +1,46 @@
-# ✅ Output the VPC ID
+########################################
+# 🌍 Networking
+########################################
 output "vpc_id" {
-  value = module.networking.vpc_id
+  value       = module.networking.vpc_id
+  description = "VPC ID for networking"
 }
 
-# ✅ Output the Database Endpoint (Cloud SQL, Firestore, MongoDB)
+########################################
+# 🗄️ Database
+########################################
 output "database_endpoint" {
-  value = var.database_type == "cloudsql" ? module.database.cloudsql_endpoint :
-          var.database_type == "firestore" ? "Firestore does not have a single endpoint" :
-          var.database_type == "mongo_atlas" ? module.database.mongo_atlas_endpoint :
-          var.database_type == "mongo_vm" ? module.database.mongo_vm_ip :
-          "Database type not supported"
+  value       = module.database.db_endpoint
+  description = "Database connection endpoint"
 }
 
-# ✅ Output the Kafka Broker (Confluent Cloud OR Self-Managed Kafka on GKE)
-output "kafka_broker" {
-  value = var.use_gke_kafka ? module.kafka.kafka_gke_service_ip : module.kafka.confluent_kafka_bootstrap
+########################################
+# 📡 Messaging
+########################################
+output "messaging_summary" {
+  description = "Active messaging endpoints for this environment"
+  value = {
+    kafka = var.messaging_type == "kafka" || var.messaging_type == "both"
+      ? {
+          cluster_id         = try(module.kafka[0].kafka_cluster_id, null)
+          bootstrap_endpoint = try(module.kafka[0].kafka_bootstrap_endpoint, null)
+        }
+      : null
+    rabbitmq = var.messaging_type == "rabbitmq" || var.messaging_type == "both"
+      ? {
+          service_ip       = try(module.rabbitmq[0].rabbitmq_service_ip, null)
+          amqp_port        = try(module.rabbitmq[0].rabbitmq_amqp_port, null)
+          management_port  = try(module.rabbitmq[0].rabbitmq_management_port, null)
+          admin_user       = var.rabbitmq_user
+        }
+      : null
+  }
 }
 
-# ✅ Output the Microservice Service URL (GKE OR Cloud Run)
+########################################
+# ☸️ Microservices
+########################################
 output "microservice_url" {
-  value = var.use_gke ? module.microservices.gke_service_url : module.microservices.cloud_run_url
+  value       = module.microservices.service_url
+  description = "Microservice public URL (LoadBalancer or Cloud Run URL)"
 }
