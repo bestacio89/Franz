@@ -1,0 +1,125 @@
+name: "Docker Build & Push (Frontend + Backend)"
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: "Base repository name"
+        required: true
+        default: "Franz"
+      major:
+        description: "Major version (x.0.0)"
+        required: true
+        default: "2"
+      minor:
+        description: "Minor version (1.x.0)"
+        required: true
+        default: "1"
+      patch:
+        description: "Patch version (1.0.x)"
+        required: true
+        default: "5"
+      frontEndType:
+        description: "Frontend Type"
+        required: true
+        default: "Blazor"
+        type: choice
+        options:
+          - Angular
+          - Blazor
+          - ASP.NET
+
+env:
+  IMAGE_TAG: ${{ github.event.inputs.major }}.${{ github.event.inputs.minor }}.${{ github.event.inputs.patch }}
+  REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+
+jobs:
+  docker-build:
+    name: "🐳 Build & Push Docker Images"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "🔑 Login to ACR"
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.REGISTRY }}
+          username: ${{ secrets.AZURE_CLIENT_ID }}
+          password: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+      # ========================
+      # FRONTEND BUILD
+      # ========================
+      - name: "⚙️ Set Frontend Context"
+        id: frontend
+        run: |
+          case "${{ github.event.inputs.frontEndType }}" in
+            Angular)
+              echo "dockerfilePath=sources/front/FranzFront.Angular/Dockerfile" >> $GITHUB_OUTPUT
+              echo "buildContext=sources/front/FranzFront.Angular" >> $GITHUB_OUTPUT
+              ;;
+            Blazor)
+              echo "dockerfilePath=sources/front/FranzFront.Blazor/Client/Dockerfile" >> $GITHUB_OUTPUT
+              echo "buildContext=sources/front/FranzFront.Blazor" >> $GITHUB_OUTPUT
+              ;;
+            ASP.NET)
+              echo "dockerfilePath=sources/front/FranzFront.ASPNET/Dockerfile" >> $GITHUB_OUTPUT
+              echo "buildContext=sources/front/FranzFront.ASPNET" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: "🐳 Build & Push Frontend Image"
+        run: |
+          docker build -f "${{ steps.frontend.outputs.dockerfilePath }}" \
+            -t $REGISTRY/${{ github.event.inputs.repository }}-frontend-${{ github.event.inputs.frontEndType,, }}:${{ env.IMAGE_TAG }} \
+            -t $REGISTRY/${{ github.event.inputs.repository }}-frontend-${{ github.event.inputs.frontEndType,, }}:latest \
+            "${{ steps.frontend.outputs.buildContext }}"
+          docker push $REGISTRY/${{ github.event.inputs.repository }}-frontend-${{ github.event.inputs.frontEndType,, }}:${{ env.IMAGE_TAG }}
+          docker push $REGISTRY/${{ github.event.inputs.repository }}-frontend-${{ github.event.inputs.frontEndType,, }}:latest
+
+      - name: "📦 Save Frontend Image Tag"
+        run: |
+          echo "{ \"frontend\": \"$REGISTRY/${{ github.event.inputs.repository }}-frontend-${{ github.event.inputs.frontEndType,, }}:${{ env.IMAGE_TAG }}\" }" > frontend-image.json
+        shell: bash
+
+      - name: "⬆️ Upload Frontend Artifact"
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-image
+          path: frontend-image.json
+
+      # ========================
+      # BACKEND BUILD
+      # ========================
+      - name: "🐳 Build & Push API Image"
+        run: |
+          docker build -f sources/back/Franz.Api/Dockerfile \
+            -t $REGISTRY/${{ github.event.inputs.repository }}-api:${{ env.IMAGE_TAG }} \
+            -t $REGISTRY/${{ github.event.inputs.repository }}-api:latest \
+            sources/back/Franz.Api
+          docker push $REGISTRY/${{ github.event.inputs.repository }}-api:${{ env.IMAGE_TAG }}
+          docker push $REGISTRY/${{ github.event.inputs.repository }}-api:latest
+
+      - name: "🐳 Build & Push Consumer Image"
+        run: |
+          docker build -f sources/back/Franz.Backend/Consumer/Dockerfile \
+            -t $REGISTRY/${{ github.event.inputs.repository }}-consumer:${{ env.IMAGE_TAG }} \
+            -t $REGISTRY/${{ github.event.inputs.repository }}-consumer:latest \
+            sources/back/Franz.Backend/Consumer
+          docker push $REGISTRY/${{ github.event.inputs.repository }}-consumer:${{ env.IMAGE_TAG }}
+          docker push $REGISTRY/${{ github.event.inputs.repository }}-consumer:latest
+
+      - name: "📦 Save Backend Image Tags"
+        run: |
+          echo "{ 
+            \"api\": \"$REGISTRY/${{ github.event.inputs.repository }}-api:${{ env.IMAGE_TAG }}\",
+            \"consumer\": \"$REGISTRY/${{ github.event.inputs.repository }}-consumer:${{ env.IMAGE_TAG }}\" 
+          }" > backend-images.json
+        shell: bash
+
+      - name: "⬆️ Upload Backend Artifact"
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-images
+          path: backend-images.json

@@ -2,32 +2,88 @@ name: "Azure Bicep Deployment"
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
 
 env:
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
   AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
   AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+  LOCATION: ${{ secrets.AZURE_REGION }}
 
 jobs:
   deploy-azure:
-    name: "Deploy Bicep Infrastructure"
+    name: "🚀 Deploy Azure Bicep Infrastructure"
     runs-on: ubuntu-latest
+
     steps:
-      - name: "Checkout Repository"
-        uses: actions/checkout@v3
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
 
-      - name: "Login to Azure"
-        run: |
-          az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+      - name: "🔑 Login to Azure"
+        uses: azure/login@v1
+        with:
+          creds: |
+            {
+              "clientId": "${{ env.AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ env.AZURE_CLIENT_SECRET }}",
+              "subscriptionId": "${{ env.AZURE_SUBSCRIPTION_ID }}",
+              "tenantId": "${{ env.AZURE_TENANT_ID }}"
+            }
 
-      - name: "Deploy Infrastructure"
+      - name: "🔍 Validate Bicep Template"
         run: |
-          az deployment group create \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+          echo "Validating Bicep template..."
+          az bicep build --file Infrastructure/main.bicep
+          az deployment group validate \
+            --resource-group "$RESOURCE_GROUP" \
             --template-file Infrastructure/main.bicep \
-            --parameters location=${{ secrets.AZURE_REGION }} \
-                         frontendClientId="${{ secrets.AZURE_FRONTEND_CLIENT_ID }}" \
-                         backendClientId="${{ secrets.AZURE_BACKEND_CLIENT_ID }}" \
-                         databaseType="${{ secrets.AZURE_DATABASE_TYPE }}" \
+            --parameters \
+              location="$LOCATION" \
+              frontendClientId="${{ secrets.AZURE_FRONTEND_CLIENT_ID }}" \
+              backendClientId="${{ secrets.AZURE_BACKEND_CLIENT_ID }}" \
+              databaseType="${{ secrets.AZURE_DATABASE_TYPE }}" \
+              environment="${{ github.event.inputs.environment }}" \
             --mode Incremental
+
+      - name: "🚀 Deploy Infrastructure"
+        run: |
+          DEPLOY_NAME="bicep-deploy-$(date +'%Y%m%d%H%M%S')"
+          echo "Starting deployment: $DEPLOY_NAME"
+          az deployment group create \
+            --name "$DEPLOY_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --template-file Infrastructure/main.bicep \
+            --parameters \
+              location="$LOCATION" \
+              frontendClientId="${{ secrets.AZURE_FRONTEND_CLIENT_ID }}" \
+              backendClientId="${{ secrets.AZURE_BACKEND_CLIENT_ID }}" \
+              databaseType="${{ secrets.AZURE_DATABASE_TYPE }}" \
+              environment="${{ github.event.inputs.environment }}" \
+            --mode Incremental \
+            --only-show-errors
+
+      - name: "📦 Save Deployment Outputs"
+        run: |
+          az deployment group show \
+            --name "$DEPLOY_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --query properties.outputs > deployment-outputs.json
+        continue-on-error: true
+
+      - name: "⬆️ Upload Deployment Outputs"
+        uses: actions/upload-artifact@v3
+        with:
+          name: azure-bicep-outputs
+          path: deployment-outputs.json
+          retention-days: 7

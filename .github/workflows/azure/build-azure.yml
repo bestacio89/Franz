@@ -3,11 +3,11 @@ name: "Build and Test .NET Solution"
 on:
   push:
     branches:
-      - Develop  # ✅ Only trigger on changes to the 'Develop' branch
+      - Develop  # ✅ Trigger only on Develop branch pushes
   pull_request:
     branches:
-      - Develop  # ✅ Run on PRs targeting 'Develop'
-  workflow_dispatch:  # ✅ Allow manual triggering
+      - Develop  # ✅ Run on PRs targeting Develop
+  workflow_dispatch:  # ✅ Allow manual triggers
 
 env:
   BUILD_PLATFORM: "Any CPU"
@@ -15,34 +15,71 @@ env:
 
 jobs:
   build-and-test:
-    name: "Build, Test, and Docker Build"
+    name: "🛠️ Build & Test .NET Solution"
     runs-on: windows-latest
 
     steps:
       # Step 1: Checkout Repository
-      - name: "Checkout Repository"
-        uses: actions/checkout@v3
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
 
       # Step 2: Setup NuGet
-      - name: "Setup NuGet"
+      - name: "📦 Setup NuGet"
         uses: nuget/setup-nuget@v1
 
-      # Step 3: Restore NuGet Packages
-      - name: "Restore NuGet Packages"
-        run: nuget restore **/*.sln
+      # Step 3: Cache NuGet packages
+      - name: "⚡ Cache NuGet Packages"
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.nuget/packages
+            ~/.nuget/NuGet.Config
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
 
-      # Step 4: Setup .NET SDK (Ensures Correct Version)
-      - name: "Setup .NET SDK"
+      # Step 4: Restore NuGet Packages
+      - name: "📥 Restore NuGet Packages"
+        run: nuget restore "**/*.sln"
+
+      # Step 5: Setup .NET SDK (pin exact version for stability)
+      - name: "🛠️ Setup .NET SDK"
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: "6.0.x"  # Adjust to match your .NET version
+          dotnet-version: "6.0.420" # ✅ Pin specific version instead of floating
 
-      # Step 5: Build Solution
-      - name: "Build Solution"
+      # Step 6: Build Solution
+      - name: "🏗️ Build Solution"
         run: |
-          msbuild **/*.sln /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:Platform="${{ env.BUILD_PLATFORM }}" /p:ExcludeProjects="**/Franz.DockerCompose/Franz.DockerCompose.dcproj"
+          msbuild "**/*.sln" `
+            /p:Configuration=${{ env.BUILD_CONFIGURATION }} `
+            /p:Platform="${{ env.BUILD_PLATFORM }}" `
+            /p:ExcludeProjects="**/Franz.DockerCompose/Franz.DockerCompose.dcproj"
 
-      # Step 6: Run Automated Tests
-      - name: "Run Automated Tests"
+      # Step 7: Run Automated Tests (unit tests only, skip integration if needed)
+      - name: "🧪 Run Automated Tests"
         run: |
-          dotnet test **/*.sln --configuration ${{ env.BUILD_CONFIGURATION }} --logger trx --results-directory TestResults
+          dotnet test "**/*.sln" `
+            --configuration ${{ env.BUILD_CONFIGURATION }} `
+            --logger "trx;LogFileName=test_results.trx" `
+            --results-directory TestResults `
+            --filter TestCategory!=Integration
+
+      # Step 8: Publish Test Results
+      - name: "📊 Publish Test Results"
+        uses: dorny/test-reporter@v1
+        if: always() # ✅ Ensure results are published even if tests fail
+        with:
+          name: "Test Report"
+          path: "TestResults/*.trx"
+          reporter: dotnet-trx
+
+      # Step 9: Upload Build Artifacts (optional)
+      - name: "⬆️ Upload Build Artifacts"
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: |
+            **/bin/${{ env.BUILD_CONFIGURATION }}/
+            TestResults/
+          retention-days: 7

@@ -1,25 +1,88 @@
-name: "Azure Docker Build & Push"
+name: "Azure Bicep Deployment"
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+env:
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+  LOCATION: ${{ secrets.AZURE_REGION }}
 
 jobs:
-  docker-build:
-    name: "Build & Push Docker Image to Azure"
+  deploy-azure:
+    name: "🚀 Deploy Azure Bicep Infrastructure"
     runs-on: ubuntu-latest
+
     steps:
-      - name: "Checkout Repository"
-        uses: actions/checkout@v3
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
 
-      - name: "Login to Azure Container Registry"
+      - name: "🔑 Login to Azure"
+        uses: azure/login@v1
+        with:
+          creds: |
+            {
+              "clientId": "${{ env.AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ env.AZURE_CLIENT_SECRET }}",
+              "subscriptionId": "${{ env.AZURE_SUBSCRIPTION_ID }}",
+              "tenantId": "${{ env.AZURE_TENANT_ID }}"
+            }
+
+      - name: "🔍 Validate Bicep Template"
         run: |
-          az acr login --name ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+          az bicep build --file Infrastructure/main.bicep
+          az deployment group validate \
+            --resource-group "$RESOURCE_GROUP" \
+            --template-file Infrastructure/main.bicep \
+            --parameters \
+              location="$LOCATION" \
+              frontendClientId="${{ secrets.AZURE_FRONTEND_CLIENT_ID }}" \
+              backendClientId="${{ secrets.AZURE_BACKEND_CLIENT_ID }}" \
+              databaseType="${{ secrets.AZURE_DATABASE_TYPE }}" \
+              environment="${{ github.event.inputs.environment }}" \
+            --mode Incremental
 
-      - name: "Build Docker Image"
-        run: docker build -t ${{ secrets.SERVICE_NAME }}:latest sources/back/Franz.Api
+      - name: "🚀 Deploy Infrastructure"
+        run: |
+          DEPLOY_NAME="bicep-deploy-$(date +'%Y%m%d%H%M%S')"
+          echo "Running deployment: $DEPLOY_NAME"
+          az deployment group create \
+            --name "$DEPLOY_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --template-file Infrastructure/main.bicep \
+            --parameters \
+              location="$LOCATION" \
+              frontendClientId="${{ secrets.AZURE_FRONTEND_CLIENT_ID }}" \
+              backendClientId="${{ secrets.AZURE_BACKEND_CLIENT_ID }}" \
+              databaseType="${{ secrets.AZURE_DATABASE_TYPE }}" \
+              environment="${{ github.event.inputs.environment }}" \
+            --mode Incremental \
+            --only-show-errors
 
-      - name: "Tag Docker Image"
-        run: docker tag ${{ secrets.SERVICE_NAME }}:latest ${{ secrets.AZURE_CONTAINER_REGISTRY }}/${{ secrets.SERVICE_NAME }}:latest
+      - name: "📦 Save Deployment Outputs"
+        run: |
+          az deployment group show \
+            --name "$DEPLOY_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --query properties.outputs > deployment-outputs.json
+        continue-on-error: true
 
-      - name: "Push Docker Image"
-        run: docker push ${{ secrets.AZURE_CONTAINER_REGISTRY }}/${{ secrets.SERVICE_NAME }}:latest
+      - name: "⬆️ Upload Deployment Outputs"
+        uses: actions/upload-artifact@v3
+        with:
+          name: azure-bicep-outputs
+          path: deployment-outputs.json
+          retention-days: 7
