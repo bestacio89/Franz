@@ -1,0 +1,56 @@
+stages:
+  - restore
+  - build
+  - test
+
+variables:
+  DOTNET_VERSION: "6.0"
+  DOTNET_IMAGE: "mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}"
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .nuget/packages
+
+restore:
+  stage: restore
+  image: $DOTNET_IMAGE
+  script:
+    - echo "🔄 Restoring NuGet packages..."
+    - dotnet restore "$(find . -name '*.sln')" --configfile nuget.config
+  artifacts:
+    paths:
+      - "*/obj/"
+    expire_in: 1h
+
+build:
+  stage: build
+  image: $DOTNET_IMAGE
+  script:
+    - echo "⚙️ Building solution..."
+    - dotnet build "$(find . -name '*.sln')" -c Release --no-restore /p:Platform="Any CPU"
+  artifacts:
+    paths:
+      - "*/bin/"
+    expire_in: 1 week
+
+test:
+  stage: test
+  image: $DOTNET_IMAGE
+  script:
+    - echo "🧪 Running tests..."
+    # Find all test DLLs and run them
+    - for dll in $(find . -type f -name "*test*.dll" ! -path "*/obj/*"); do
+        dotnet test "$dll" --no-build --logger "trx;LogFileName=test_results.trx";
+      done
+    # Convert TRX → JUnit for GitLab UI
+    - dotnet tool install --global trx2junit || true
+    - export PATH="$PATH:/root/.dotnet/tools"
+    - trx2junit $(find . -name "*.trx")
+  artifacts:
+    when: always
+    reports:
+      junit: "**/TestResults/*.xml"
+    paths:
+      - "**/TestResults/"
+    expire_in: 1 week

@@ -1,0 +1,50 @@
+docker-build:
+  stage: docker
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    AWS_REGION: $AWS_REGION
+    REPOSITORY: $REPOSITORY    # ✅ Passed as CI/CD variable (equivalent to parameters.repository)
+  before_script:
+    - apk add --no-cache aws-cli bash jq
+    - echo "🔑 Logging into AWS ECR..."
+    - aws ecr get-login-password --region ${AWS_REGION} \
+      | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+  script:
+    # ---------------------------
+    # ✅ Build Docker Image
+    # ---------------------------
+    - echo "🐳 Building Docker image..."
+    - >
+      docker build
+      -f sources/back/Franz.Api/Dockerfile
+      -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPOSITORY}:${CI_PIPELINE_ID}
+      -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPOSITORY}:latest
+      sources/back/Franz.Api
+
+    # ---------------------------
+    # ✅ Push Docker Image
+    # ---------------------------
+    - echo "📤 Pushing Docker image to AWS ECR..."
+    - docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPOSITORY}:${CI_PIPELINE_ID}
+    - docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPOSITORY}:latest
+
+    # ---------------------------
+    # ✅ Save image info for downstream jobs
+    # ---------------------------
+    - |
+      echo "{
+        \"repository\": \"${REPOSITORY}\",
+        \"image\": \"${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPOSITORY}:${CI_PIPELINE_ID}\"
+      }" > image-info.json
+
+  artifacts:
+    paths:
+      - image-info.json
+    expire_in: 7 days
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: always
+    - when: manual

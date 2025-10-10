@@ -1,22 +1,80 @@
-# ✅ GitLab CI/CD - Manual Infrastructure Deployment for Azure
-workflow:
-  rules:
-    - when: manual  # 🔥 Ensures manual execution
-
-include:
-  - local: ".gitlab-ci/stages/deploy-azure.yml"  # ✅ Includes reusable deployment stage
-
-variables:
-  AZURE_SUBSCRIPTION_ID: $AZURE_SUBSCRIPTION_ID
-  AZURE_CLIENT_ID: $AZURE_CLIENT_ID
-  AZURE_CLIENT_SECRET: $AZURE_CLIENT_SECRET
-  AZURE_TENANT_ID: $AZURE_TENANT_ID
-  AZURE_RESOURCE_GROUP: $AZURE_RESOURCE_GROUP
-  AZURE_REGION: "eastus"
-
+# ========================================
+# GitLab CI/CD - Manual Infra Deployment (Azure Bicep)
+# ========================================
 stages:
-  - deploy-infrastructure
+  - deploy
 
-deploy-azure-infrastructure:
-  extends: .deploy-azure  # ✅ Calls the external job
-  stage: deploy-infrastructure
+# 🔥 Manual trigger only
+infra-deploy:
+  stage: deploy
+  image: mcr.microsoft.com/azure-cli:2.60.0
+  rules:
+    - when: manual
+  variables:
+    # -----------------------------
+    # Parameters (override in CI/CD UI or group vars)
+    # -----------------------------
+    DATABASE_TYPE: "single"          # [single, multi]
+    EVENT_STORAGE_TYPE: "Kafka"      # [Kafka, CosmosDB, MongoDB]
+    ENTITY_STORAGE_TYPE: "SQLServer" # [PostgreSQL, MariaDB, MySQL, SQLServer, Oracle]
+    MESSAGING_TYPE: "Kafka"          # [Kafka, RabbitMQ, Both, None]
+    ENVIRONMENT: "dev"               # [dev, staging, prod]
+    CONTAINER_IMAGE: ""              # injected from build pipeline
+    RESOURCE_GROUP: "$AZURE_RESOURCE_GROUP"
+    AZURE_SUBSCRIPTION: "$AZURE_SUBSCRIPTION_ID"
+
+  script:
+    # 🔑 (Optional) Fetch secret from Key Vault
+    - echo "🔑 Fetching DB Secret..."
+    - |
+      if [ -n "$KEYVAULT_NAME" ]; then
+        DB_CONNECTION_STRING=$(az keyvault secret show \
+          --name DBConnectionString \
+          --vault-name "$KEYVAULT_NAME" \
+          --query value -o tsv)
+        export DB_CONNECTION_STRING
+      fi
+
+    # 🚀 Deploy Bicep
+    - echo "===================================="
+    - echo "🌍 Env:       $ENVIRONMENT"
+    - echo "🗄️ DB:        $DATABASE_TYPE"
+    - echo "📂 Event:     $EVENT_STORAGE_TYPE"
+    - echo "📂 Entity:    $ENTITY_STORAGE_TYPE"
+    - echo "📩 Messaging: $MESSAGING_TYPE"
+    - echo "🐳 Image:     $CONTAINER_IMAGE"
+    - echo "===================================="
+
+    - az account set --subscription "$AZURE_SUBSCRIPTION"
+    - |
+      az deployment group create \
+        --resource-group "$RESOURCE_GROUP" \
+        --name main-$ENVIRONMENT \
+        --template-file main.bicep \
+        --mode Incremental \
+        --only-show-errors \
+        --parameters \
+          databaseType=$DATABASE_TYPE \
+          eventStorageType=$EVENT_STORAGE_TYPE \
+          entityStorageType=$ENTITY_STORAGE_TYPE \
+          messagingType=$MESSAGING_TYPE \
+          environment=$ENVIRONMENT \
+          containerImage=$CONTAINER_IMAGE \
+          DBConnectionString="$DB_CONNECTION_STRING"
+
+    # 📤 Capture Outputs
+    - echo "📤 Capturing Bicep Outputs..."
+    - |
+      outputs=$(az deployment group show \
+        -g "$RESOURCE_GROUP" \
+        -n main-$ENVIRONMENT \
+        --query properties.outputs -o json)
+
+      echo "🔎 Raw Outputs: $outputs"
+      echo "$outputs" > infra-outputs.json
+
+  artifacts:
+    name: "infra-outputs-$ENVIRONMENT"
+    paths:
+      - infra-outputs.json
+    expire_in: 7 days

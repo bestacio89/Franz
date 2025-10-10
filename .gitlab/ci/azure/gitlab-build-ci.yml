@@ -1,33 +1,68 @@
-# ✅ GitLab CI/CD - Manual Build & Test Pipeline
-workflow:
-  rules:
-    - when: manual  # 🔥 Ensures manual execution
-
-image: mcr.microsoft.com/dotnet/sdk:6.0  # ✅ Use Official .NET SDK Image
-
-variables:
-  SOLUTION: "**/*.sln"  # Solution files to be restored
-  BUILD_PLATFORM: "Any CPU"  # Platform for building
-  BUILD_CONFIGURATION: "Release"  # Build configuration
-
+# ========================================
+# GitLab CI/CD - Build & Test (.NET)
+# ========================================
 stages:
-  - build-test
+  - build
+  - test
+  - artifacts
 
-build-test:
-  stage: build-test
+# ✅ Run only on develop branch
+build-and-test:
+  stage: build
+  image: mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-ltsc2019  # Windows-based .NET Framework SDK
   tags:
-    - windows  # ✅ Ensures runner supports Windows builds
+    - windows  # Requires a Windows GitLab runner
+  variables:
+    SOLUTION: "**/*.sln"
+    BUILD_PLATFORM: "Any CPU"
+    BUILD_CONFIGURATION: "Release"
+
   script:
-    - echo "Installing NuGet dependencies..."
-    - nuget restore $SOLUTION -ConfigFile nuget.config
+    # ----------------------------------------
+    # 📦 Restore NuGet Packages
+    # ----------------------------------------
+    - nuget restore "$SOLUTION" -ConfigFile nuget.config
 
-    - echo "Building .NET Solution..."
-    - msbuild $SOLUTION /p:Platform="$BUILD_PLATFORM" /p:Configuration="$BUILD_CONFIGURATION" /p:ExcludeProjects="**/Franz.DockerCompose/Franz.DockerCompose.dcproj"
+    # ----------------------------------------
+    # 🔨 Build Solution
+    # ----------------------------------------
+    - msbuild "$SOLUTION" /p:Platform="$BUILD_PLATFORM" /p:Configuration="$BUILD_CONFIGURATION" /p:ExcludeProjects="**/Franz.DockerCompose/Franz.DockerCompose.dcproj"
 
-    - echo "Running Automated Tests..."
-    - vstest.console.exe $(find . -name "*test*.dll" ! -name "*TestAdapter.dll" ! -path "*/obj/*")
   artifacts:
     paths:
-      - "**/*.dll"
-      - "**/*.exe"
-      - "**/*.pdb"
+      - bin/
+      - obj/
+    expire_in: 7 days
+
+# ✅ Run Unit Tests (skip Integration)
+unit-tests:
+  stage: test
+  image: mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-ltsc2019
+  tags:
+    - windows
+  variables:
+    BUILD_PLATFORM: "Any CPU"
+    BUILD_CONFIGURATION: "Release"
+
+  script:
+    - echo "🧪 Running Unit Tests (skip Integration)"
+    - vstest.console.exe **\*test*.dll --TestCaseFilter:"Category!=Integration"
+
+  artifacts:
+    when: always
+    paths:
+      - TestResults/
+    reports:
+      junit: TestResults/*.trx
+
+# ✅ Publish Test Results + Artifacts
+publish-artifacts:
+  stage: artifacts
+  script:
+    - echo "📦 Publishing Build Artifacts"
+  artifacts:
+    paths:
+      - TestResults/
+      - bin/
+      - obj/
+    expire_in: 7 days

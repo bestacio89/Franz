@@ -1,33 +1,38 @@
-# ✅ Prevent Auto-Triggers: Only runs manually
-workflow:
-  rules:
-    - when: manual
-
-variables:
-  AZURE_SUBSCRIPTION_ID: $AZURE_SUBSCRIPTION_ID
-  AZURE_CLIENT_ID: $AZURE_CLIENT_ID
-  AZURE_CLIENT_SECRET: $AZURE_CLIENT_SECRET
-  AZURE_TENANT_ID: $AZURE_TENANT_ID
-  AZURE_RESOURCE_GROUP: $AZURE_RESOURCE_GROUP
-  AZURE_REGION: "eastus"
-  AZURE_CONTAINER_REGISTRY: $AZURE_CONTAINER_REGISTRY
-
+# ========================================
+# GitLab CI/CD - Build & Push Docker Images
+# ========================================
 stages:
-  - build-frontend
-  - build-backend
-  - deploy-infrastructure
+  - build_frontend
+  - build_backend
+
+# Default variables (override in GitLab CI/CD UI or .gitlab-ci.yml include)
+variables:
+  REPOSITORY: "Franz"
+  MAJOR: "2"
+  MINOR: "1"
+  PATCH: "5"
+  FRONTEND_TYPE: "Blazor"   # [Angular | Blazor | ASP.NET]
+  IMAGE_TAG: "${MAJOR}.${MINOR}.${PATCH}"
+  ACR_REGISTRY: "$AZURE_CONTAINER_REGISTRY"
 
 # ========================================
-# ✅ 1. BUILD FRONTEND STAGE
+# 🚀 Build Frontend Stage
 # ========================================
 build-frontend:
-  stage: build-frontend
+  stage: build_frontend
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_DRIVER: overlay2
   script:
+    - echo ">> Detecting frontend type: $FRONTEND_TYPE"
+
     - |
-      if [[ "$FRONTEND_TYPE" == "Angular" ]]; then
+      if [ "$FRONTEND_TYPE" = "Angular" ]; then
         DOCKERFILE_PATH="sources/front/FranzFront.Angular/Dockerfile"
         BUILD_CONTEXT="sources/front/FranzFront.Angular"
-      elif [[ "$FRONTEND_TYPE" == "Blazor" ]]; then
+      elif [ "$FRONTEND_TYPE" = "Blazor" ]; then
         DOCKERFILE_PATH="sources/front/FranzFront.Blazor/Client/Dockerfile"
         BUILD_CONTEXT="sources/front/FranzFront.Blazor"
       else
@@ -35,26 +40,54 @@ build-frontend:
         BUILD_CONTEXT="sources/front/FranzFront.ASPNET"
       fi
 
-      echo "Building Frontend Docker Image..."
-      docker build -t $AZURE_CONTAINER_REGISTRY/$REPOSITORY-frontend-$FRONTEND_TYPE:$VERSION -f $DOCKERFILE_PATH $BUILD_CONTEXT
-      docker push $AZURE_CONTAINER_REGISTRY/$REPOSITORY-frontend-$FRONTEND_TYPE:$VERSION
-  only:
-    - manual
+      IMAGE_NAME="${REPOSITORY}-frontend-$(echo $FRONTEND_TYPE | tr '[:upper:]' '[:lower:]')"
+
+      echo "🐳 Building and pushing $IMAGE_NAME:$IMAGE_TAG"
+      docker login $ACR_REGISTRY -u $ACR_USERNAME -p $ACR_PASSWORD
+      docker build -t $ACR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG -t $ACR_REGISTRY/$IMAGE_NAME:latest -f $DOCKERFILE_PATH $BUILD_CONTEXT
+      docker push $ACR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+      docker push $ACR_REGISTRY/$IMAGE_NAME:latest
+
+      echo "{ \"frontend\": \"$IMAGE_NAME:$IMAGE_TAG\" }" > frontend-image.json
+
+  artifacts:
+    name: "frontend-image"
+    paths:
+      - frontend-image.json
+    expire_in: 7 days
 
 # ========================================
-# ✅ 2. BUILD BACKEND STAGE
+# 🚀 Build Backend Stage
 # ========================================
 build-backend:
-  stage: build-backend
+  stage: build_backend
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_DRIVER: overlay2
   script:
-    - echo "Building API Docker Image..."
-    - docker build -t $AZURE_CONTAINER_REGISTRY/$REPOSITORY-api:$VERSION -f sources/back/Franz.Api/Dockerfile sources/back/Franz.Api
-    - docker push $AZURE_CONTAINER_REGISTRY/$REPOSITORY-api:$VERSION
+    - docker login $ACR_REGISTRY -u $ACR_USERNAME -p $ACR_PASSWORD
 
-    - echo "Building Consumer Docker Image..."
-    - docker build -t $AZURE_CONTAINER_REGISTRY/$REPOSITORY-consumer:$VERSION -f sources/back/Franz.Backend/Consumer/Dockerfile sources/back/Franz.Backend/Consumer
-    - docker push $AZURE_CONTAINER_REGISTRY/$REPOSITORY-consumer:$VERSION
-  only:
-    - manual
+    # API
+    - docker build -t $ACR_REGISTRY/${REPOSITORY}-api:$IMAGE_TAG -t $ACR_REGISTRY/${REPOSITORY}-api:latest -f sources/back/Franz.Api/Dockerfile sources/back/Franz.Api
+    - docker push $ACR_REGISTRY/${REPOSITORY}-api:$IMAGE_TAG
+    - docker push $ACR_REGISTRY/${REPOSITORY}-api:latest
 
+    # Consumer
+    - docker build -t $ACR_REGISTRY/${REPOSITORY}-consumer:$IMAGE_TAG -t $ACR_REGISTRY/${REPOSITORY}-consumer:latest -f sources/back/Franz.Backend/Consumer/Dockerfile sources/back/Franz.Backend/Consumer
+    - docker push $ACR_REGISTRY/${REPOSITORY}-consumer:$IMAGE_TAG
+    - docker push $ACR_REGISTRY/${REPOSITORY}-consumer:latest
 
+    # Save JSON artifact
+    - |
+      echo "{ 
+        \"api\": \"${REPOSITORY}-api:$IMAGE_TAG\",
+        \"consumer\": \"${REPOSITORY}-consumer:$IMAGE_TAG\"
+      }" > backend-images.json
+
+  artifacts:
+    name: "backend-images"
+    paths:
+      - backend-images.json
+    expire_in: 7 days

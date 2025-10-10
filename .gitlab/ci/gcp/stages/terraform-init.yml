@@ -1,0 +1,28 @@
+jobs:
+- job: terraform-init
+  displayName: "Terraform Init"
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  steps:
+    - checkout: self
+
+    - task: TerraformInstaller@1
+      displayName: "Install Terraform"
+      inputs:
+        terraformVersion: "1.9.6"   # ✅ unify across jobs
+
+    - script: |
+        echo "Initializing Terraform with backend for environment: $(environment)"
+        terraform init \
+          -backend-config="backend-$(environment).tfvars" \
+          -input=false
+      displayName: "Initialize Terraform Backend"
+
+    - script: |
+        echo "Checking Terraform formatting..."
+        terraform fmt -check -recursive
+      displayName: "Terraform Format Check"
+
+    - publish: $(System.DefaultWorkingDirectory)/Terraform-GCP/backend-$(environment).tfvars
+      artifact: terraform-backend-config

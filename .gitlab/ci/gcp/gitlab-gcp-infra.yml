@@ -1,17 +1,87 @@
-steps:
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
-    id: deploy
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        echo "Starting GCP Infrastructure Deployment..."
-        gcloud auth activate-service-account $GOOGLE_CLIENT_EMAIL --key-file=$GOOGLE_KEY_FILE
-        gcloud config set project $GOOGLE_PROJECT_ID
-        gcloud config set compute/region us-east1
-        # Example: Deploy via Deployment Manager
-        gcloud deployment-manager deployments create franz-infrastructure \
-          --config infrastructure/config.yaml
+stages:
+  - init
+  - validate
+  - plan
+  - apply
+  - deploy
 
-options:
-  logging: CLOUD_LOGGING_ONLY
+variables:
+  TF_VERSION: "1.9.6"
+  WORKING_DIR: "infra/gcp"
+  DEPLOY_TARGET: "cloudrun"   # or "gke"
+
+# --------------------
+# Terraform init
+# --------------------
+terraform-init:
+  stage: init
+  image: hashicorp/terraform:${TF_VERSION}
+  script:
+    - cd $WORKING_DIR
+    - terraform init -input=false
+  artifacts:
+    paths:
+      - $WORKING_DIR/.terraform
+      - $WORKING_DIR/.terraform.lock.hcl
+
+# --------------------
+# Terraform validate
+# --------------------
+terraform-validate:
+  stage: validate
+  image: hashicorp/terraform:${TF_VERSION}
+  dependencies: [terraform-init]
+  script:
+    - cd $WORKING_DIR
+    - terraform validate
+
+# --------------------
+# Terraform plan
+# --------------------
+terraform-plan:
+  stage: plan
+  image: hashicorp/terraform:${TF_VERSION}
+  dependencies: [terraform-validate]
+  script:
+    - cd $WORKING_DIR
+    - terraform plan -out=tfplan
+    - terraform show -json tfplan > plan.json
+  artifacts:
+    paths:
+      - $WORKING_DIR/tfplan
+      - $WORKING_DIR/plan.json
+    reports:
+      terraform: $WORKING_DIR/plan.json
+
+# --------------------
+# Terraform apply
+# --------------------
+terraform-apply:
+  stage: apply
+  image: hashicorp/terraform:${TF_VERSION}
+  dependencies: [terraform-plan]
+  when: manual
+  script:
+    - cd $WORKING_DIR
+    - terraform apply -auto-approve tfplan
+    - terraform output -json > outputs.json
+  artifacts:
+    paths:
+      - $WORKING_DIR/outputs.json
+
+# --------------------
+# Deploy switch
+# --------------------
+deploy-gke:
+  stage: deploy
+  rules:
+    - if: '$DEPLOY_TARGET == "gke"'
+  trigger:
+    include: pipelines/gcp/jobs/deploy-gke.yml
+
+deploy-cloudrun:
+  stage: deploy
+  rules:
+    - if: '$DEPLOY_TARGET == "cloudrun"'
+  trigger:
+    include: pipelines/gcp/jobs/deploy-cloudrun.yml

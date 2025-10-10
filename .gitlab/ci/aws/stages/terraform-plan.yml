@@ -1,0 +1,36 @@
+terraform-init:
+  stage: init
+  image: hashicorp/terraform:1.5.0
+  variables:
+    TF_IN_AUTOMATION: "true"
+    TF_INPUT: "false"
+    ENVIRONMENT: $ENVIRONMENT
+    WORKING_DIR: $WORKING_DIR
+    BACKEND_DIR: $BACKEND_DIR
+  script:
+    - echo "📂 Switching to working directory: ${WORKING_DIR}"
+    - cd ${WORKING_DIR}
+    - ls -la
+
+    - |
+      BACKEND_FILE="${BACKEND_DIR}/backend-${ENVIRONMENT}.tfvars"
+
+      if [ ! -f "$BACKEND_FILE" ]; then
+        echo "❌ Backend config not found: $BACKEND_FILE"
+        exit 1
+      fi
+
+      echo "🚀 Initializing Terraform with backend: $BACKEND_FILE"
+      terraform init -input=false -no-color -backend-config="$BACKEND_FILE"
+
+  artifacts:
+    paths:
+      - ${WORKING_DIR}/.terraform/
+      - ${WORKING_DIR}/.terraform.lock.hcl
+    expire_in: 7 days
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: always
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: always
+    - when: manual

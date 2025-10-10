@@ -1,0 +1,38 @@
+stages:
+  - deploy
+
+deploy-cloudrun:
+  stage: deploy
+  image: google/cloud-sdk:latest   # ✅ gcloud CLI available
+  variables:
+    GCP_REGION: "us-central1"
+    SERVICE_NAME: "my-service"
+    # GCP_PROJECT_ID injected from GitLab CI/CD variables
+  before_script:
+    # 🔑 Authenticate with service account
+    - echo "$GCP_CREDENTIALS" | base64 -d > ${CI_PROJECT_DIR}/gcp-key.json
+    - gcloud auth activate-service-account --key-file ${CI_PROJECT_DIR}/gcp-key.json
+    - gcloud config set project "$GCP_PROJECT_ID"
+    - gcloud config set run/region "$GCP_REGION"
+  script:
+    - |
+      IMAGE="gcr.io/$GCP_PROJECT_ID/$SERVICE_NAME:$CI_COMMIT_SHA"
+      echo "🚀 Deploying $IMAGE to Cloud Run ($SERVICE_NAME in $GCP_REGION)"
+
+      gcloud run deploy "$SERVICE_NAME" \
+        --image="$IMAGE" \
+        --region="$GCP_REGION" \
+        --platform=managed \
+        --allow-unauthenticated \
+        --quiet
+
+      # Verify deployment
+      gcloud run services describe "$SERVICE_NAME" \
+        --region "$GCP_REGION" \
+        --format "value(status.url)" > cloudrun-url.txt
+
+      echo "✅ Cloud Run Service URL: $(cat cloudrun-url.txt)"
+  artifacts:
+    paths:
+      - cloudrun-url.txt
+    expire_in: 7 days

@@ -1,23 +1,48 @@
-version: 0.2
+stages:
+  - infra
 
-env:
-  variables:
-    AWS_REGION: "us-east-1"
+variables:
+  TF_VERSION: "1.9.6"
+  DEPLOY_TARGET: "eks"   # or ecs, passed at run time
 
-phases:
-  install:
-    commands:
-      - echo "Installing AWS CLI v2..."
-      - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-      - unzip awscliv2.zip
-      - sudo ./aws/install
+terraform-init:
+  stage: infra
+  image: hashicorp/terraform:${TF_VERSION}
+  script:
+    - cd infrastructure/aws/$DEPLOY_TARGET
+    - terraform init -input=false
+  artifacts:
+    paths:
+      - infrastructure/aws/$DEPLOY_TARGET/.terraform
+    expire_in: 1h
 
-  build:
-    commands:
-      - echo "Starting AWS Infrastructure Deployment..."
-      # Replace with your infra tool: e.g. CloudFormation or Terraform
-      - aws cloudformation deploy \
-          --template-file infrastructure/template.yml \
-          --stack-name franz-infrastructure \
-          --region $AWS_REGION \
-          --capabilities CAPABILITY_IAM
+terraform-validate:
+  stage: infra
+  image: hashicorp/terraform:${TF_VERSION}
+  script:
+    - cd infrastructure/aws/$DEPLOY_TARGET
+    - terraform validate
+    - terraform fmt -check -recursive
+
+terraform-plan:
+  stage: infra
+  image: hashicorp/terraform:${TF_VERSION}
+  script:
+    - cd infrastructure/aws/$DEPLOY_TARGET
+    - terraform plan -out=tfplan
+    - terraform show -json tfplan > plan.json
+  artifacts:
+    paths:
+      - infrastructure/aws/$DEPLOY_TARGET/tfplan
+      - infrastructure/aws/$DEPLOY_TARGET/plan.json
+    expire_in: 1 week
+
+terraform-apply:
+  stage: infra
+  image: hashicorp/terraform:${TF_VERSION}
+  script:
+    - cd infrastructure/aws/$DEPLOY_TARGET
+    - terraform apply -input=false tfplan
+  dependencies:
+    - terraform-plan
+  when: manual

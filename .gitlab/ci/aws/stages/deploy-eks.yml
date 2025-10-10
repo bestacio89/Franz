@@ -1,0 +1,58 @@
+deploy-eks:
+  stage: deploy
+  image: amazon/aws-cli:2.15.33
+  variables:
+    AWS_REGION: $AWS_REGION
+    CLUSTER_NAME: $EKS_CLUSTER_NAME
+    SERVICE_NAME: $SERVICE_NAME
+    AWS_ECR_URL: $AWS_ECR_URL
+    IMAGE_TAG: $IMAGE_TAG   # ✅ Should come from `image-info.json` artifact in docker-build
+  before_script:
+    - apk add --no-cache bash jq curl gettext
+    - echo "🔑 Configuring AWS CLI..."
+    - aws --version
+    - aws configure set region "${AWS_REGION}"
+    # Optional: if using GitLab variables for credentials
+    - aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
+    - aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
+  script:
+    # ----------------------------
+    # ✅ Update kubeconfig
+    # ----------------------------
+    - echo "🔑 Authenticating to EKS cluster: ${CLUSTER_NAME}..."
+    - aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}
+
+    # ----------------------------
+    # ✅ Deploy new image
+    # ----------------------------
+    - DEPLOY_IMAGE="${AWS_ECR_URL}/${SERVICE_NAME}:${IMAGE_TAG}"
+    - echo "🚀 Deploying ${SERVICE_NAME} with image: ${DEPLOY_IMAGE}"
+    - kubectl set image deployment/${SERVICE_NAME} ${SERVICE_NAME}=${DEPLOY_IMAGE}
+
+    # ----------------------------
+    # ✅ Wait for rollout
+    # ----------------------------
+    - echo "⏳ Waiting for rollout of ${SERVICE_NAME}..."
+    - |
+      if ! kubectl rollout status deployment/${SERVICE_NAME} --timeout=180s; then
+        echo "❌ Deployment rollout failed"
+        kubectl describe deployment/${SERVICE_NAME}
+        kubectl get pods -o wide
+        exit 1
+      fi
+
+    # ----------------------------
+    # ✅ Save deployment details
+    # ----------------------------
+    - echo "✅ Deployed ${SERVICE_NAME} to ${CLUSTER_NAME} at $(date)" > deployment-info.txt
+    - echo "Image: ${DEPLOY_IMAGE}" >> deployment-info.txt
+    - kubectl get pods -l app=${SERVICE_NAME} -o wide >> deployment-info.txt
+
+  artifacts:
+    paths:
+      - deployment-info.txt
+    expire_in: 7 days
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - when: manual

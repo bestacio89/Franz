@@ -1,38 +1,80 @@
-steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    id: frontend
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        if [[ "$FRONTEND_TYPE" == "Angular" ]]; then
-          DOCKERFILE_PATH="sources/front/FranzFront.Angular/Dockerfile"
-          BUILD_CONTEXT="sources/front/FranzFront.Angular"
-        elif [[ "$FRONTEND_TYPE" == "Blazor" ]]; then
-          DOCKERFILE_PATH="sources/front/FranzFront.Blazor/Client/Dockerfile"
-          BUILD_CONTEXT="sources/front/FranzFront.Blazor"
-        else
-          DOCKERFILE_PATH="sources/front/FranzFront.ASPNET/Dockerfile"
-          BUILD_CONTEXT="sources/front/FranzFront.ASPNET"
-        fi
+stages:
+  - build
+  - deploy
 
-        echo "Building Frontend Image..."
-        docker build -t $REGION-docker.pkg.dev/$GOOGLE_PROJECT_ID/$REPOSITORY/$REPOSITORY-frontend-$FRONTEND_TYPE:$VERSION -f $DOCKERFILE_PATH $BUILD_CONTEXT
-        docker push $REGION-docker.pkg.dev/$GOOGLE_PROJECT_ID/$REPOSITORY/$REPOSITORY-frontend-$FRONTEND_TYPE:$VERSION
+# ========================================
+# ✅ Variables (override in GitLab CI/CD settings)
+# ========================================
+variables:
+  GCP_PROJECT_ID: "my-gcp-project"
+  GCP_REGION: "us-central1"
+  IMAGE_TAG: "$CI_PIPELINE_IID"
+  REPOSITORY: "Franz"
+  SERVICE_NAME: "microservice"
+  GCP_ARTIFACT_REGISTRY: "us-central1-docker.pkg.dev/my-gcp-project/my-repo"
+  DEPLOY_TO_GKE: "false"  # set to "true" for GKE deploy
 
-  - name: 'gcr.io/cloud-builders/docker'
-    id: backend
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        echo "Building API Image..."
-        docker build -t $REGION-docker.pkg.dev/$GOOGLE_PROJECT_ID/$REPOSITORY/$REPOSITORY-api:$VERSION -f sources/back/Franz.Api/Dockerfile sources/back/Franz.Api
-        docker push $REGION-docker.pkg.dev/$GOOGLE_PROJECT_ID/$REPOSITORY/$REPOSITORY-api:$VERSION
+# ========================================
+# 🔨 Build & Push Docker Image
+# ========================================
+build-and-push:
+  stage: build
+  image: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+  services:
+    - docker:dind
+  script:
+    - echo "$GCLOUD_SERVICE_KEY" | base64 -d > $CI_PROJECT_DIR/gcloud.json
+    - gcloud auth activate-service-account --key-file=gcloud.json
+    - gcloud config set project $GCP_PROJECT_ID
+    - gcloud auth configure-docker $GCP_REGION-docker.pkg.dev --quiet
 
-        echo "Building Consumer Image..."
-        docker build -t $REGION-docker.pkg.dev/$GOOGLE_PROJECT_ID/$REPOSITORY/$REPOSITORY-consumer:$VERSION -f sources/back/Franz.Backend/Consumer/Dockerfile sources/back/Franz.Backend/Consumer
-        docker push $REGION-docker.pkg.dev/$GOOGLE_PROJECT_ID/$REPOSITORY/$REPOSITORY-consumer:$VERSION
+    - IMAGE="$GCP_ARTIFACT_REGISTRY/$SERVICE_NAME:$IMAGE_TAG"
+    - echo "🐳 Building image: $IMAGE"
+    - docker build -t $IMAGE .
+    - docker push $IMAGE
 
-options:
-  logging: CLOUD_LOGGING_ONLY
+    # save image tag for deploy stage
+    - echo "DEPLOY_IMAGE=$IMAGE" >> build.env
+  artifacts:
+    reports:
+      dotenv: build.env
+
+# ========================================
+# 🚀 Deploy to GKE
+# ========================================
+deploy-gke:
+  stage: deploy
+  image: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+  needs: ["build-and-push"]
+  rules:
+    - if: '$DEPLOY_TO_GKE == "true"'
+  script:
+    - echo "$GCLOUD_SERVICE_KEY" | base64 -d > $CI_PROJECT_DIR/gcloud.json
+    - gcloud auth activate-service-account --key-file=gcloud.json
+    - gcloud config set project $GCP_PROJECT_ID
+    - gcloud container clusters get-credentials gke-$REPOSITORY-cluster --region $GCP_REGION
+
+    - echo "🚀 Deploying to GKE image: $DEPLOY_IMAGE"
+    - kubectl set image deployment/$SERVICE_NAME $SERVICE_NAME=$DEPLOY_IMAGE
+    - kubectl rollout status deployment/$SERVICE_NAME
+
+# ========================================
+# 🚀 Deploy to Cloud Run
+# ========================================
+deploy-cloudrun:
+  stage: deploy
+  image: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+  needs: ["build-and-push"]
+  rules:
+    - if: '$DEPLOY_TO_GKE == "false"'
+  script:
+    - echo "$GCLOUD_SERVICE_KEY" | base64 -d > $CI_PROJECT_DIR/gcloud.json
+    - gcloud auth activate-service-account --key-file=gcloud.json
+    - gcloud config set project $GCP_PROJECT_ID
+
+    - echo "🚀 Deploying to Cloud Run image: $DEPLOY_IMAGE"
+    - gcloud run deploy $SERVICE_NAME \
+        --image=$DEPLOY_IMAGE \
+        --region=$GCP_REGION \
+        --platform=managed \
+        --allow-unauthenticated

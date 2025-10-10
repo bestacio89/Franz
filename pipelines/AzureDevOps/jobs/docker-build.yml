@@ -1,50 +1,37 @@
-parameters:
-  repository: ''
-  workdir: ''
-  registry: ''
-  dockerfile: ''
-  version: ''
+# ✅ GitLab CI/CD - Build & Publish Docker Image
+stages:
+  - build
+  - publish
 
-jobs:
-- job: Publish
-  displayName: "📦 Publish Docker Image"
-  pool:
-    vmImage: 'ubuntu-latest'
-        
-  steps:
-    # ----------------------------------------
-    # 🔑 Step 1: Login to ACR
-    # ----------------------------------------
-    - task: Docker@2
-      displayName: "🔑 Login to ACR"
-      inputs:
-        command: login 
-        containerRegistry: ${{ parameters.registry }}
+docker-build-publish:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind  # Docker-in-Docker service
+  variables:
+    DOCKER_TLS_CERTDIR: ""   # required for docker:dind
+    REPOSITORY: "my-repo/app"        # override in GitLab CI/CD variables
+    WORKDIR: "."                       # where Dockerfile lives
+    REGISTRY: "$CI_REGISTRY"          # GitLab registry by default
+    DOCKERFILE: "Dockerfile"
+    VERSION: "1.0.0"                   # usually $CI_COMMIT_TAG or $CI_COMMIT_SHORT_SHA
+  script:
+    # 🔑 Login to registry
+    - echo "🔑 Logging in to $REGISTRY"
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
 
-    # ----------------------------------------
-    # 🐳 Step 2: Build & Push Docker image
-    # ----------------------------------------
-    - task: Docker@2
-      displayName: "🐳 Build & Push Docker Image"
-      inputs:
-        command: buildAndPush
-        repository: ${{ parameters.repository }}
-        containerRegistry: ${{ parameters.registry }}
-        dockerfile: ${{ parameters.dockerfile }}
-        buildContext: ${{ parameters.workdir }}
-        tags: |
-          ${{ parameters.version }}
-          latest
+    # 🐳 Build & push Docker image
+    - echo "🐳 Building & pushing Docker image..."
+    - docker build -f $DOCKERFILE -t $REGISTRY/$REPOSITORY:$VERSION -t $REGISTRY/$REPOSITORY:latest $WORKDIR
+    - docker push $REGISTRY/$REPOSITORY:$VERSION
+    - docker push $REGISTRY/$REPOSITORY:latest
 
-    # ----------------------------------------
-    # 📤 Step 3: Export Image Tag for Deploy Pipelines
-    # ----------------------------------------
-    - bash: |
-        echo "Writing image tag to artifact..."
-        echo "{\"image\": \"${{ parameters.repository }}:${{ parameters.version }}\"}" > image-info.json
-        cat image-info.json
-      displayName: "📤 Save Image Tag"
+    # 📤 Save Image Tag for downstream jobs
+    - echo "{\"image\": \"$REGISTRY/$REPOSITORY:$VERSION\"}" > image-info.json
+    - cat image-info.json
 
-    - publish: image-info.json
-      artifact: docker-image-info
-      displayName: "📦 Publish Image Tag Artifact"
+  artifacts:
+    paths:
+      - image-info.json
+    name: docker-image-info
+    expire_in: 7 days

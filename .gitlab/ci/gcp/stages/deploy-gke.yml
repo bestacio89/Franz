@@ -1,0 +1,41 @@
+stages:
+  - deploy
+
+deploy-gke:
+  stage: deploy
+  image: google/cloud-sdk:latest   # ✅ includes gcloud + kubectl
+  variables:
+    GCP_REGION: "us-central1"
+    CLUSTER_NAME: "gke-franz-cluster"
+    SERVICE_NAME: "my-service"
+    # GCP_PROJECT_ID provided from GitLab CI/CD variables
+  before_script:
+    # Decode service account JSON from GitLab CI/CD variable
+    - echo "$GCP_CREDENTIALS" | base64 -d > ${CI_PROJECT_DIR}/gcp-key.json
+    - gcloud auth activate-service-account --key-file ${CI_PROJECT_DIR}/gcp-key.json
+    - gcloud config set project "$GCP_PROJECT_ID"
+    - gcloud config set compute/region "$GCP_REGION"
+    - gcloud container clusters get-credentials "$CLUSTER_NAME" --region "$GCP_REGION" --project "$GCP_PROJECT_ID"
+    - kubectl config current-context
+  script:
+    - |
+      IMAGE="gcr.io/$GCP_PROJECT_ID/$SERVICE_NAME:$CI_COMMIT_SHA"
+      echo "🚀 Deploying $IMAGE to cluster $CLUSTER_NAME in $GCP_REGION"
+
+      # Update Deployment
+      kubectl set image deployment/$SERVICE_NAME \
+        $SERVICE_NAME=$IMAGE --record
+
+      # Wait for rollout with timeout
+      kubectl rollout status deployment/$SERVICE_NAME --timeout=120s
+  artifacts:
+    paths:
+      - deployment-info.txt
+    expire_in: 7 days
+  after_script:
+    - |
+      IMAGE="gcr.io/$GCP_PROJECT_ID/$SERVICE_NAME:$CI_COMMIT_SHA"
+      echo "service=$SERVICE_NAME" > deployment-info.txt
+      echo "image=$IMAGE" >> deployment-info.txt
+      echo "cluster=$CLUSTER_NAME" >> deployment-info.txt
+      echo "region=$GCP_REGION" >> deployment-info.txt

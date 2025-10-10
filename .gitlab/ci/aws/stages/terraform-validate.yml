@@ -1,0 +1,45 @@
+stages:
+  - validate
+
+terraform-validate:
+  stage: validate
+  image: hashicorp/terraform:1.5.0
+  variables:
+    TF_IN_AUTOMATION: "true"          # Non-interactive automation mode
+    TF_INPUT: "false"
+    ENVIRONMENT: $ENVIRONMENT         # Maps to Azure DevOps $(environment)
+    WORKING_DIR: $WORKING_DIR         # Maps to Azure DevOps $(workingDirectory)
+  script:
+    - echo "📂 Switching to working directory: ${WORKING_DIR}"
+    - cd ${WORKING_DIR}
+
+    # ---------------------------
+    # 🔧 Terraform Init (no backend)
+    # ---------------------------
+    - echo "⚙️ Initializing Terraform..."
+    - terraform init -backend=false -input=false -no-color
+
+    # ---------------------------
+    # 📝 Format Check
+    # ---------------------------
+    - echo "📝 Running terraform fmt check..."
+    - terraform fmt -check -recursive -no-color
+
+    # ---------------------------
+    # 🧪 Validation
+    # ---------------------------
+    - echo "🧪 Validating Terraform configs..."
+    - terraform validate -no-color
+
+  artifacts:
+    paths:
+      - ${WORKING_DIR}/.terraform/
+    reports:
+      junit: tf-validate-report.xml    # Makes validation visible in GitLab UI
+    expire_in: 1 day
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: always
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: always
+    - when: manual   # allow manual runs too
