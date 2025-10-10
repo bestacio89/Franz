@@ -44,10 +44,10 @@ jobs:
       - name: "🔍 Validate Bicep Template"
         run: |
           echo "Validating Bicep template..."
-          az bicep build --file Infrastructure/main.bicep
+          az bicep build --file Infrastructure/AzureDevOps-Bicep/main.bicep
           az deployment group validate \
             --resource-group "$RESOURCE_GROUP" \
-            --template-file Infrastructure/main.bicep \
+            --template-file Infrastructure/AzureDevOps-Bicep/main.bicep \
             --parameters \
               location="$LOCATION" \
               frontendClientId="${{ secrets.AZURE_FRONTEND_CLIENT_ID }}" \

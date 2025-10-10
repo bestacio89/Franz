@@ -95,7 +95,7 @@ jobs:
 
           az deployment group create \
             --resource-group "$RESOURCE_GROUP" \
-            --template-file "Infrastructure/main.bicep" \
+            --template-file "Infrastructure/AzureDevops-Bicep/main.bicep" \
             --mode Incremental \
             --only-show-errors \
             --parameters \
