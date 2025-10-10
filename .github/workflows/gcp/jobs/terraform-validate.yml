@@ -1,21 +1,41 @@
 name: "Terraform Validate"
 
 on:
-  workflow_call:  # ✅ Allows this job to be called from other workflows
+  workflow_call:  # ✅ Allows this job to be reusable from other workflows
 
 jobs:
   terraform-validate:
-    name: "Terraform Validate"
+    name: "🧪 Terraform Validate"
     runs-on: ubuntu-latest
     steps:
-      - name: "Checkout Repository"
-        uses: actions/checkout@v3
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
 
-      - name: "Setup Terraform"
+      - name: "⚙️ Setup Terraform"
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: "1.5.0"
+          terraform_version: "1.5.0"   # ✅ Pin version for stability
 
-      - name: "Validate Terraform Configuration"
-        run: terraform validate
-        working-directory: Terraform-GCP # ✅ Ensures Terraform runs in the correct directory
+      - name: "⚙️ Init Terraform (no backend)"
+        run: terraform init -backend=false -input=false
+        working-directory: Terraform-GCP
+
+      - name: "🧹 Format Check"
+        run: terraform fmt -check -recursive
+        working-directory: Terraform-GCP
+
+      - name: "🧪 Validate Configuration"
+        run: terraform validate -no-color
+        working-directory: Terraform-GCP
+
+      - name: "📦 Save Validation Report"
+        run: |
+          mkdir -p reports
+          terraform validate -json > reports/validate-report.json || true
+        working-directory: Terraform-GCP
+
+      - name: "⬆️ Upload Validation Report"
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-validate-report
+          path: Infrastructure/Terraform-GCP/reports/validate-report.json

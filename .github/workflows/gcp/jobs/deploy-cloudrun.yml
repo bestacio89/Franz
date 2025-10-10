@@ -1,22 +1,66 @@
 name: "Deploy to Cloud Run"
-runs-on: ubuntu-latest
 
-inputs:
-  serviceName:
-    required: true
-  gcpArtifactRegistry:
-    required: true
+on:
+  workflow_call:
+    inputs:
+      serviceName:
+        description: "Cloud Run Service Name"
+        required: true
+        type: string
+      gcpArtifactRegistry:
+        description: "Artifact Registry path (e.g. region-docker.pkg.dev/project/repo)"
+        required: true
+        type: string
+    secrets:
+      GCP_CREDENTIALS:
+        required: true
+      GCP_PROJECT_ID:
+        required: true
+      GCP_REGION:
+        required: true
 
-steps:
-  - name: "Authenticate with Google Cloud"
-    uses: google-github-actions/auth@v1
-    with:
-      credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+jobs:
+  deploy-cloudrun:
+    name: "Deploy to Cloud Run"
+    runs-on: ubuntu-latest
 
-  - name: "Deploy to Cloud Run"
-    run: |
-      gcloud run deploy ${{ inputs.serviceName }} \
-        --image=${{ inputs.gcpArtifactRegistry }}/${{ inputs.serviceName }}:latest \
-        --region=${{ secrets.GCP_REGION }} \
-        --platform=managed \
-        --allow-unauthenticated
+    steps:
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "🔑 Authenticate with Google Cloud"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: "⚙️ Setup gcloud SDK"
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: "🚀 Deploy Service"
+        run: |
+          echo "Deploying ${{ inputs.serviceName }} to Cloud Run..."
+          gcloud run deploy ${{ inputs.serviceName }} \
+            --image=${{ inputs.gcpArtifactRegistry }}/${{ inputs.serviceName }}:${{ github.sha }} \
+            --region=${{ secrets.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --quiet
+
+      - name: "🔎 Fetch Service URL"
+        id: service-url
+        run: |
+          URL=$(gcloud run services describe ${{ inputs.serviceName }} \
+            --region=${{ secrets.GCP_REGION }} \
+            --format 'value(status.url)')
+          echo "service_url=$URL" >> $GITHUB_OUTPUT
+          echo "Deployed service URL: $URL"
+
+      - name: "⬆️ Upload Deployment Artifacts"
+        uses: actions/upload-artifact@v3
+        with:
+          name: cloudrun-deployment-${{ inputs.serviceName }}
+          path: |
+            Infrastructure/Terraform-GCP/*.tf
+          retention-days: 7

@@ -39,55 +39,103 @@ env:
 
 jobs:
   # ========================================
-  # ✅ 1. Terraform Initialization
+  # ✅ 1. Terraform Init
   # ========================================
   terraform-init:
-    name: "Terraform Init"
+    name: "⚙️ Terraform Init"
     runs-on: ubuntu-latest
     steps:
-      - name: "Checkout Repository"
-        uses: actions/checkout@v3
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
 
-      - name: "Terraform Init"
-        uses: ./.github/workflows/gcp/jobs/terraform-init.yml
+      - name: "🔑 Authenticate with GCP"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ env.GCP_SERVICE_ACCOUNT_KEY }}"
+
+      - name: "⚙️ Terraform Init"
+        run: |
+          cd infrastructure/gcp
+          terraform init -input=false
 
   # ========================================
   # ✅ 2. Terraform Validate
   # ========================================
   terraform-validate:
-    name: "Terraform Validate"
+    name: "🧪 Terraform Validate"
     needs: terraform-init
     runs-on: ubuntu-latest
     steps:
-      - name: "Terraform Validate"
-        uses: ./.github/workflows/gcp/jobs/terraform-validate.yml
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "🔑 Authenticate with GCP"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ env.GCP_SERVICE_ACCOUNT_KEY }}"
+
+      - name: "🧪 Validate Terraform Config"
+        run: |
+          cd infrastructure/gcp
+          terraform fmt -check -recursive
+          terraform validate -no-color
 
   # ========================================
   # ✅ 3. Terraform Plan
   # ========================================
   terraform-plan:
-    name: "Terraform Plan"
+    name: "📖 Terraform Plan"
     needs: terraform-validate
     runs-on: ubuntu-latest
     steps:
-      - name: "Terraform Plan"
-        uses: ./.github/workflows/gcp/jobs/terraform-plan.yml
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "🔑 Authenticate with GCP"
+        uses: google-github-actions/auth@v2
         with:
-          databaseType: ${{ github.event.inputs.databaseType }}
-          eventStorageType: ${{ github.event.inputs.eventStorageType }}
-          entityStorageType: ${{ github.event.inputs.entityStorageType }}
+          credentials_json: "${{ env.GCP_SERVICE_ACCOUNT_KEY }}"
+
+      - name: "📖 Terraform Plan"
+        run: |
+          cd infrastructure/gcp
+          terraform init -input=false
+          terraform plan -input=false \
+            -var="database_type=${{ github.event.inputs.databaseType }}" \
+            -var="event_storage_type=${{ github.event.inputs.eventStorageType }}" \
+            -var="entity_storage_type=${{ github.event.inputs.entityStorageType }}" \
+            -out=tfplan
+
+      - name: "📦 Save Terraform Plan Artifact"
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-plan
+          path: infrastructure/gcp/tfplan
 
   # ========================================
   # ✅ 4. Terraform Apply
   # ========================================
   terraform-apply:
-    name: "Terraform Apply"
+    name: "🚀 Terraform Apply"
     needs: terraform-plan
     runs-on: ubuntu-latest
+    environment: production  # ✅ GitHub Environments = manual approval if configured
     steps:
-      - name: "Terraform Apply"
-        uses: ./.github/workflows/gcp/jobs/terraform-apply.yml
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "🔑 Authenticate with GCP"
+        uses: google-github-actions/auth@v2
         with:
-          databaseType: ${{ github.event.inputs.databaseType }}
-          eventStorageType: ${{ github.event.inputs.eventStorageType }}
-          entityStorageType: ${{ github.event.inputs.entityStorageType }}
+          credentials_json: "${{ env.GCP_SERVICE_ACCOUNT_KEY }}"
+
+      - name: "⬇️ Download Terraform Plan"
+        uses: actions/download-artifact@v3
+        with:
+          name: terraform-plan
+          path: infrastructure/gcp
+
+      - name: "🚀 Apply Terraform Plan"
+        run: |
+          cd infrastructure/gcp
+          terraform apply -input=false -auto-approve tfplan

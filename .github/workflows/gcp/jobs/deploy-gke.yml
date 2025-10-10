@@ -1,23 +1,72 @@
 name: "Deploy to GKE"
-runs-on: ubuntu-latest
 
-inputs:
-  serviceName:
-    required: true
-  gcpArtifactRegistry:
-    required: true
+on:
+  workflow_call:
+    inputs:
+      serviceName:
+        description: "Kubernetes Deployment/Service Name"
+        required: true
+        type: string
+      gcpArtifactRegistry:
+        description: "GCP Artifact Registry (e.g. region-docker.pkg.dev/project/repo)"
+        required: true
+        type: string
+    secrets:
+      GCP_CREDENTIALS:
+        required: true
+      GCP_PROJECT_ID:
+        required: true
+      GCP_REGION:
+        required: true
+      GCP_GKE_CLUSTER:
+        required: true
 
-steps:
-  - name: "Authenticate with Google Cloud"
-    uses: google-github-actions/auth@v1
-    with:
-      credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+jobs:
+  deploy-gke:
+    name: "Deploy to GKE"
+    runs-on: ubuntu-latest
 
-  - name: "Connect to GKE Cluster"
-    run: |
-      gcloud container clusters get-credentials gke-${{ secrets.GCP_PROJECT_ID }}-cluster --region ${{ secrets.GCP_REGION }}
+    steps:
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
 
-  - name: "Deploy to GKE"
-    run: |
-      kubectl set image deployment/${{ inputs.serviceName }} ${{ inputs.serviceName }}=${{ inputs.gcpArtifactRegistry }}/${{ inputs.serviceName }}:latest
-      kubectl rollout status deployment/${{ inputs.serviceName }}
+      - name: "🔑 Authenticate with Google Cloud"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: "⚙️ Setup gcloud SDK"
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: "🔗 Connect to GKE Cluster"
+        run: |
+          gcloud container clusters get-credentials ${{ secrets.GCP_GKE_CLUSTER }} \
+            --region ${{ secrets.GCP_REGION }} \
+            --project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: "📦 Set Deployment Image"
+        run: |
+          echo "Deploying ${{ inputs.serviceName }} with latest image..."
+          kubectl set image deployment/${{ inputs.serviceName }} \
+            ${{ inputs.serviceName }}=${{ inputs.gcpArtifactRegistry }}/${{ inputs.serviceName }}:${{ github.sha }}
+
+      - name: "🕒 Wait for Rollout"
+        run: |
+          set -e
+          kubectl rollout status deployment/${{ inputs.serviceName }} --timeout=180s
+
+      - name: "📜 Capture Deployment Details"
+        run: |
+          kubectl get deployment/${{ inputs.serviceName }} -o yaml > deployment-info.yaml
+          kubectl describe deployment/${{ inputs.serviceName }} > deployment-describe.txt
+
+      - name: "⬆️ Upload Deployment Artifacts"
+        uses: actions/upload-artifact@v3
+        with:
+          name: gke-deployment-${{ inputs.serviceName }}
+          path: |
+            deployment-info.yaml
+            deployment-describe.txt
+          retention-days: 7

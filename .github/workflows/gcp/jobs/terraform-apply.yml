@@ -1,4 +1,4 @@
-name: "Terraform Apply"
+name: "Terraform Apply (GCP)"
 
 on:
   workflow_call:
@@ -8,13 +8,9 @@ on:
         required: true
         type: string
     secrets:
-      AWS_ACCESS_KEY_ID:
+      GCP_SA_KEY:
         required: true
-      AWS_SECRET_ACCESS_KEY:
-        required: true
-      AWS_REGION:
-        required: true
-      KAFKA_CLUSTER_NAME:
+      GCP_PROJECT_ID:
         required: true
 
 jobs:
@@ -22,34 +18,40 @@ jobs:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
     needs: terraform-plan
-    steps:
-      - name: "Checkout Repository"
-        uses: actions/checkout@v3
 
-      - name: "Setup Terraform"
+    steps:
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "⬇️ Download Terraform Plan"
+        uses: actions/download-artifact@v3
+        with:
+          name: terraform-plan
+          path: Infrastructure/Terraform-GCP
+
+      - name: "🔑 Authenticate to GCP"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: "⚙️ Setup Terraform"
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: "1.5.0"
 
-      - name: "Check if Kafka Hub Exists"
-        run: |
-          echo "Checking if Kafka Hub already exists..."
-          EXISTING_KAFKA=$(aws kafka list-clusters --region ${{ secrets.AWS_REGION }} --query "ClusterInfoList[?ClusterName=='${{ secrets.KAFKA_CLUSTER_NAME }}'].ClusterName" --output text)
-
-          if [ -n "$EXISTING_KAFKA" ]; then
-            echo "Kafka Hub already exists: $EXISTING_KAFKA"
-            echo "KAFKA_EXISTS=true" >> $GITHUB_ENV
-          else
-            echo "Kafka Hub does not exist. It will be created."
-            echo "KAFKA_EXISTS=false" >> $GITHUB_ENV
-          fi
-
-      - name: "Terraform Apply"
-        if: env.KAFKA_EXISTS == 'false'
-        run: |
-          terraform apply -auto-approve tfplan
-        working-directory: Terraform-Infra
+      - name: "🚀 Terraform Apply"
+        run: terraform apply -auto-approve tfplan
+        working-directory: Infrastructure/Terraform-GCP
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+          GOOGLE_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: "📦 Save Apply Outputs"
+        run: terraform output -json > terraform-outputs.json
+        working-directory: Infrastructure/Terraform-GCP
+
+      - name: "⬆️ Upload Apply Artifacts"
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-apply-outputs
+          path: Infrastructure/Terraform-GCP/terraform-outputs.json
+          retention-days: 7

@@ -1,4 +1,4 @@
-name: "Docker Build & Push to AWS ECR"
+name: "Docker Build & Push to GCP Artifact Registry"
 
 on:
   workflow_call:
@@ -11,39 +11,72 @@ on:
         description: "Service Name"
         required: true
         type: string
-      awsEcrRegistry:
-        description: "AWS ECR Registry URL"
+      gcpProjectId:
+        description: "GCP Project ID"
+        required: true
+        type: string
+      gcpRegion:
+        description: "GCP Region (e.g. europe-west1)"
         required: true
         type: string
     secrets:
-      AWS_ACCESS_KEY_ID:
-        required: true
-      AWS_SECRET_ACCESS_KEY:
-        required: true
-      AWS_REGION:
+      GCP_SA_KEY:
         required: true
 
 jobs:
   docker-build-push:
-    name: "Docker Build & Push"
+    name: "🐳 Docker Build & Push (GCP)"
     runs-on: ubuntu-latest
     needs: terraform-apply
+
     steps:
-      - name: "Checkout Repository"
-        uses: actions/checkout@v3
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
 
-      - name: "Login to AWS ECR"
-        run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ inputs.awsEcrRegistry }}
+      - name: "🔑 Authenticate to GCP"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: "Build Docker Image"
+      - name: "⚙️ Configure Docker for Artifact Registry"
         run: |
-          docker build -t ${{ inputs.serviceName }}:${{ github.sha }} -f sources/back/Franz.Api/Dockerfile sources/back/Franz.Api
+          gcloud auth configure-docker ${{ inputs.gcpRegion }}-docker.pkg.dev --quiet
 
-      - name: "Tag Docker Image"
+      - name: "🏗 Build Docker Image"
         run: |
-          docker tag ${{ inputs.serviceName }}:${{ github.sha }} ${{ inputs.awsEcrRegistry }}/${{ inputs.serviceName }}:${{ github.sha }}
+          IMAGE_NAME=${{ inputs.serviceName }}
+          IMAGE_TAG=${{ github.sha }}
+          docker build -t $IMAGE_NAME:$IMAGE_TAG -f sources/back/Franz.Api/Dockerfile sources/back/Franz.Api
 
-      - name: "Push Docker Image to AWS ECR"
+      - name: "🏷 Tag Docker Image"
         run: |
-          docker push ${{ inputs.awsEcrRegistry }}/${{ inputs.serviceName }}:${{ github.sha }}
+          IMAGE_NAME=${{ inputs.serviceName }}
+          IMAGE_TAG=${{ github.sha }}
+          FULL_URI=${{ inputs.gcpRegion }}-docker.pkg.dev/${{ inputs.gcpProjectId }}/${{ inputs.repository }}/$IMAGE_NAME:$IMAGE_TAG
+
+          docker tag $IMAGE_NAME:$IMAGE_TAG $FULL_URI
+          # also tag as latest
+          docker tag $IMAGE_NAME:$IMAGE_TAG ${{ inputs.gcpRegion }}-docker.pkg.dev/${{ inputs.gcpProjectId }}/${{ inputs.repository }}/$IMAGE_NAME:latest
+
+      - name: "📤 Push Docker Image to GAR"
+        run: |
+          docker push ${{ inputs.gcpRegion }}-docker.pkg.dev/${{ inputs.gcpProjectId }}/${{ inputs.repository }}/${{ inputs.serviceName }}:${{ github.sha }}
+          docker push ${{ inputs.gcpRegion }}-docker.pkg.dev/${{ inputs.gcpProjectId }}/${{ inputs.repository }}/${{ inputs.serviceName }}:latest
+
+      - name: "📦 Save Image Info Artifact"
+        run: |
+          echo "{
+            \"repository\": \"${{ inputs.repository }}\",
+            \"service\": \"${{ inputs.serviceName }}\",
+            \"project\": \"${{ inputs.gcpProjectId }}\",
+            \"region\": \"${{ inputs.gcpRegion }}\",
+            \"sha\": \"${{ github.sha }}\",
+            \"image\": \"${{ inputs.gcpRegion }}-docker.pkg.dev/${{ inputs.gcpProjectId }}/${{ inputs.repository }}/${{ inputs.serviceName }}:${{ github.sha }}\"
+          }" > image-info.json
+
+      - name: "⬆️ Upload Artifact"
+        uses: actions/upload-artifact@v3
+        with:
+          name: image-info
+          path: image-info.json
+          retention-days: 7

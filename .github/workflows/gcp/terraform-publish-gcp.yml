@@ -12,14 +12,17 @@ on:
         required: true
         default: "microservice"
       gcpArtifactRegistry:
-        description: "GCP Artifact Registry URL"
+        description: "GCP Artifact Registry URL (e.g., us-central1-docker.pkg.dev/project/repo)"
         required: true
         default: "<GCP_ARTIFACT_REGISTRY>"
-      deployToGKE:
-        description: "Deploy to GKE (true) or Cloud Run (false)"
+      deployTarget:
+        description: "Deployment target"
         required: true
-        type: boolean
-        default: false
+        default: "cloudrun"
+        type: choice
+        options:
+          - gke
+          - cloudrun
 
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -28,29 +31,107 @@ env:
 
 jobs:
   # ============================================
-  # ✅ BUILD & PUSH DOCKER IMAGE TO GCP ARTIFACT REGISTRY
+  # ✅ BUILD & PUSH DOCKER IMAGE
   # ============================================
   build-and-push:
-    uses: ./.github/workflows/gcp/jobs/build-and-push-gcp.yml
-    with:
-      serviceName: ${{ github.event.inputs.serviceName }}
-      gcpArtifactRegistry: ${{ github.event.inputs.gcpArtifactRegistry }}
+    name: "🐳 Build & Push Docker Image"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "🔑 Authenticate with GCP"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ env.GCP_CREDENTIALS }}"
+
+      - name: "⚙️ Configure Docker for Artifact Registry"
+        run: |
+          gcloud auth configure-docker ${{ github.event.inputs.gcpArtifactRegistry }} --quiet
+
+      - name: "🐳 Build & Push Image"
+        run: |
+          IMAGE="${{ github.event.inputs.gcpArtifactRegistry }}/${{ github.event.inputs.serviceName }}:${{ github.sha }}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+
+      - name: "📦 Save Image Info"
+        run: |
+          echo "{ \"image\": \"$IMAGE\" }" > image-info.json
+        shell: bash
+
+      - name: "⬆️ Upload Image Artifact"
+        uses: actions/upload-artifact@v3
+        with:
+          name: image-info
+          path: image-info.json
 
   # ============================================
-  # ✅ DEPLOY MICROSERVICE TO GCP (GKE OR CLOUD RUN)
+  # ✅ DEPLOY TO GKE
   # ============================================
-  deploy-to-gcp:
+  deploy-gke:
+    if: ${{ github.event.inputs.deployTarget == 'gke' }}
     needs: build-and-push
-    if: github.event.inputs.deployToGKE == 'true'
-    uses: ./.github/workflows/jobs/deploy-to-gke.yml
-    with:
-      serviceName: ${{ github.event.inputs.serviceName }}
-      gcpArtifactRegistry: ${{ github.event.inputs.gcpArtifactRegistry }}
+    name: "🚀 Deploy to GKE"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "🔑 Authenticate with GCP"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ env.GCP_CREDENTIALS }}"
 
-  deploy-to-cloudrun:
+      - name: "⚙️ Get GKE Credentials"
+        run: |
+          gcloud container clusters get-credentials ${{ github.event.inputs.serviceName }} \
+            --region ${{ env.GCP_REGION }} \
+            --project ${{ env.GCP_PROJECT_ID }}
+
+      - name: "📥 Download Image Artifact"
+        uses: actions/download-artifact@v3
+        with:
+          name: image-info
+
+      - name: "🚀 Apply Deployment"
+        run: |
+          IMAGE=$(jq -r .image image-info.json)
+          kubectl set image deployment/${{ github.event.inputs.serviceName }} \
+            ${{ github.event.inputs.serviceName }}=$IMAGE
+          kubectl rollout status deployment/${{ github.event.inputs.serviceName }} --timeout=120s
+
+  # ============================================
+  # ✅ DEPLOY TO CLOUD RUN
+  # ============================================
+  deploy-cloudrun:
+    if: ${{ github.event.inputs.deployTarget == 'cloudrun' }}
     needs: build-and-push
-    if: github.event.inputs.deployToGKE == 'false'
-    uses: ./.github/workflows/jobs/deploy-to-cloudrun.yml
-    with:
-      serviceName: ${{ github.event.inputs.serviceName }}
-      gcpArtifactRegistry: ${{ github.event.inputs.gcpArtifactRegistry }}
+    name: "🚀 Deploy to Cloud Run"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "🔑 Authenticate with GCP"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ env.GCP_CREDENTIALS }}"
+
+      - name: "📥 Download Image Artifact"
+        uses: actions/download-artifact@v3
+        with:
+          name: image-info
+
+      - name: "🚀 Deploy to Cloud Run"
+        run: |
+          IMAGE=$(jq -r .image image-info.json)
+          gcloud run deploy ${{ github.event.inputs.serviceName }} \
+            --image $IMAGE \
+            --region ${{ env.GCP_REGION }} \
+            --platform managed \
+            --quiet
+          gcloud run services describe ${{ github.event.inputs.serviceName }} \
+            --region ${{ env.GCP_REGION }} \
+            --format 'value(status.url)' > service-url.txt
+
+      - name: "⬆️ Upload Cloud Run URL"
+        uses: actions/upload-artifact@v3
+        with:
+          name: cloudrun-url
+          path: service-url.txt
