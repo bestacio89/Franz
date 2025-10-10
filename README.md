@@ -1,22 +1,23 @@
 ﻿# 🔥⚡ API Project — Powered by FRANZ ⚡🔥
 
-> **Architecture as Code** — this API is built on Franz, where discipline in engineering is law, not a democracy.
-> Every architectural rule is enforced at compile-time and runtime through **architecture tests, mediator pipelines, logging, and resilience** — shipping day-1 with Docker, CI/CD, and multi-cloud IaC baked in.
+> **Architecture as Code** — built on Franz, where **discipline is law, not suggestion**.
+> Every rule is enforced at compile-time and runtime via **architecture tests, mediator pipelines, logging, and resilience**.
+> Ships day-1 with **Docker, CI/CD, and multi-cloud IaC** baked in.
 
 ---
 
 ## ✨ Features
 
-This API is not just another boilerplate. By building on Franz, it inherits:
+This API is **not boilerplate**. By using Franz, it inherits:
 
-* 🏗 **Architecture as Code**: conventions & rules enforced by [ArchUnitNET](https://github.com/TNG/ArchUnitNET). No spaghetti allowed.
-* 📦 **Mediator Pipelines**: CQRS-style command/query separation with validation, logging, resilience, and tracing.
-* 🔒 **Resilience with Polly**: retries, circuit breakers, bulkheads, timeouts — all config-driven.
-* 📊 **Logging & Tracing**: environment-aware Serilog, OpenTelemetry pipelines, correlation IDs, ELK-ready enrichers.
-* 📡 **Messaging Ready**: Kafka, RabbitMQ, and Event Grid consumers/producers, wired with Franz defaults.
-* 🐳 **Container-first**: multi-stage Dockerfile, non-root runtime, built-in healthchecks.
-* ☁ **Cloud-ready**: Terraform + Bicep modules for **Azure**, **AWS**, **GCP** (Cloud Run, GKE, networking, databases, Kafka).
-* 🔄 **Multi-CI/CD support**: templates for **Azure DevOps**, **GitHub Actions**, **GitLab CI**.
+* 🏗 **Architecture as Code** → rules enforced by [ArchUnitNET](https://github.com/TNG/ArchUnitNET). No spaghetti allowed.
+* 📦 **Mediator Pipelines** → CQRS separation with validation, logging, resilience, and tracing.
+* 🔒 **Resilience with Polly** → retries, circuit breakers, bulkheads, timeouts — all config-driven.
+* 📊 **Observability** → Serilog, OpenTelemetry, correlation IDs, ELK enrichers.
+* 📡 **Messaging-ready** → Kafka, RabbitMQ, Event Grid with Franz defaults.
+* 🐳 **Container-first** → multi-stage Dockerfile, non-root runtime, healthchecks.
+* ☁ **Cloud-ready** → Terraform + Bicep modules for **Azure, AWS, GCP**.
+* 🔄 **Multi-CI/CD** → ready-to-run pipelines for Azure DevOps, GitHub Actions, GitLab CI.
 
 ---
 
@@ -39,7 +40,7 @@ dotnet restore
 dotnet run
 ```
 
-Open [http://localhost:5000/swagger](http://localhost:5000/swagger) to explore the API.
+👉 Open [http://localhost:5000/swagger](http://localhost:5000/swagger) to explore the API.
 
 ---
 
@@ -84,21 +85,21 @@ app.Run();
 
 ## 🔄 CI/CD
 
-| CI/CD Provider     | Location             | Notes                                |
-| ------------------ | -------------------- | ------------------------------------ |
-| **Azure DevOps**   | `pipelines/`         | Build, Infra, Publish YAML templates |
-| **GitHub Actions** | `.github/workflows/` | Portable jobs for GH-native runners  |
-| **GitLab CI**      | `.gitlab/ci/`        | Ready-to-use `.gitlab-ci.yml` chain  |
+| CI/CD Provider     | Location             | Notes                               |
+| ------------------ | -------------------- | ----------------------------------- |
+| **Azure DevOps**   | `pipelines/`         | Modular job templates (build/infra) |
+| **GitHub Actions** | `.github/workflows/` | GH-native runners & secrets         |
+| **GitLab CI**      | `.gitlab/ci/`        | Complete `.gitlab-ci.yml` chains    |
 
-💡 Pick your provider, drop in secrets, and go live.
+💡 Choose your platform → configure secrets → **ship to cloud**.
 
 ---
 
-## ☁ Infrastructure as Code
+## ☁ Multi-Cloud Infrastructure
 
-* **Terraform (GCP modules)** → `cloudrun`, `gke`, `kafka`, `networking`, `database`.
-* **Terraform (Infra boilerplate)** → backends, outputs, variables. Extendable to AWS + Azure.
-* **Azure Bicep** → `Infrastructure/main.bicep` with modularized imports under `Infrastructure/Modules/`.
+* **Terraform GCP** → Cloud Run, GKE, networking, DBs, Kafka.
+* **Terraform AWS** → EKS, ECS, RDS, VPCs, messaging.
+* **Azure Bicep** → `Infrastructure/AzureDevOps-Bicep/`.
 
 ---
 
@@ -111,18 +112,18 @@ docker run -p 8080:80 api-project
 
 * Multi-stage build (`sdk → publish → runtime`)
 * Healthcheck endpoint (`/health`)
-* Non-root user runtime
+* Runs as **non-root**
 
 ---
 
 ## 🧪 Architecture Tests
 
-* ✅ Command handlers must end with `CommandHandler` and implement `ICommandHandler<,>`.
-* ✅ Query handlers must end with `QueryHandler` and implement `IQueryHandler<,>`.
-* ✅ DTOs must end with `Dto`.
-* ✅ Repositories must implement correct lifetimes (`IScopedDependency`, `ISingletonDependency`).
+✅ Command handlers → `*CommandHandler` implementing `ICommandHandler<,>`
+✅ Query handlers → `*QueryHandler` implementing `IQueryHandler<,>`
+✅ DTOs → must end with `Dto`
+✅ Repositories → respect lifetimes (`Scoped`, `Singleton`)
 
-No PR merges unless architecture tests pass.
+👉 No PR merges unless architecture rules pass.
 
 ---
 
@@ -158,35 +159,18 @@ public class KafkaConsumerService : IHostedService
 
 ---
 
-## 📜 Changelog
-
-See [CHANGELOG.md](./CHANGELOG.md) for version history.
-Latest release: **1.6.2 — Unified Resilience Bootstrapper**
-
----
-
 ## 👑 Philosophy
 
 This API = **the vaccine against spaghetti**.
 
-Most teams: *“We enforce architecture with code reviews and Confluence docs.”*
-This API (via Franz): *“Who said this was a democracy?”*
+* Most teams: *“We enforce architecture with reviews and docs.”*
+* This repo: *“Who said this was a democracy?”*
 
 Architecture is **not optional**, it’s **codified and enforced**.
 
 ---
 
-## ⚡ Quick Pitch
-
-> *“What Franz, and I, can do in 72 hours — most pro teams battle months to achieve.”*
-
-* Day 1: Templates & Framework
-* Day 2: Documentation
-* Day 3: MVP models ready — **microservices or monolith, doesn’t matter**
-
----
-
-## 🦉 Our Architectural Creed
+## 🦉 Architectural Creed
 
 ```
 FFFFFFFFF  RRRRRR    AAAAA   N   N  ZZZZZZZ
@@ -198,18 +182,16 @@ F         R    R   A     A  N   N   ZZZZZZZ
 
 **The Creed**:
 
-1. **Opinionated from scratch.** This API works day one — no excuses, no yak-shaving.
-2. **No scraps allowed.** Work outside the rules and DI will pretend your code doesn’t exist.
-3. **This is not a democracy.** The architecture rules with the iron silk of *do it the right way*.
-4. **Defaults are sacred.** They exist because chaos is the alternative.
-5. **Tests never lie.** If you drift, the failing suite will expose your laziness.
-6. **Creativity is welcome — as long as it doesn’t look like spaghetti.**
-
-⚡ **This API is not just written — it’s enforced. Comply, or the tests will slap you back into line.**
+1. Opinionated from scratch — works day one.
+2. No scraps allowed — DI ignores non-compliant code.
+3. This is not a democracy — rules > opinions.
+4. Defaults are sacred.
+5. Tests never lie.
+6. Creativity is welcome, spaghetti is not.
 
 ---
 
-## 🏗 C4 Architecture
+## 🏗 C4 Diagrams
 
 ### C1: System Context
 
@@ -253,7 +235,7 @@ C4Component
     Container_Boundary(api, "API Service") {
         Component(controller, "Controllers", "ASP.NET", "Exposes HTTP endpoints")
         Component(mediator, "Mediator", "Franz.Common.Mediator", "Dispatches CQRS commands/queries")
-        Component(handler, "Handlers", "CommandHandler/QueryHandler", "Implements business logic")
+        Component(handler, "Handlers", "CommandHandler/QueryHandler", "Business logic")
         Component(repo, "Repositories", "EF Core / Persistence", "Accesses database")
     }
 
@@ -262,29 +244,75 @@ C4Component
     Rel(handler, repo, "Uses")
 ```
 
-📌 **Notes**:
+---
 
-* **Enforcement**: Architecture tests ensure handlers, DTOs, and repositories follow rules.
-* **Scalability**: Kafka/RabbitMQ allows scaling beyond REST.
-* **Extensibility**: External services plug into Franz via HTTP + Resilience pipelines.
+## 🌍 Multi-Cloud CI/CD
+
+```mermaid
+flowchart TD
+
+  subgraph CI-CD["CI/CD Platforms"]
+    ADO["Azure DevOps"]
+    GH["GitHub Actions"]
+    GL["GitLab CI"]
+  end
+
+  subgraph Infra["Infrastructure as Code"]
+    subgraph Azure
+      AZB["Bicep Templates"]
+      AKS["Deploy → AKS"]
+    end
+
+    subgraph AWS
+      TFAWS["Terraform AWS"]
+      ECS["Deploy → ECS"]
+      EKS["Deploy → EKS"]
+    end
+
+    subgraph GCP
+      TFGCP["Terraform GCP"]
+      GKE["Deploy → GKE"]
+      CR["Deploy → Cloud Run"]
+    end
+  end
+
+  subgraph App["Application Layer"]
+    FRZ["Franz Framework"]
+    SRV["Microservices"]
+  end
+
+  %% CI/CD to Infra
+  ADO --> AZB
+  GH --> TFAWS
+  GL --> TFGCP
+
+  %% Infra to Deploy Targets
+  AZB --> AKS
+  TFAWS --> ECS
+  TFAWS --> EKS
+  TFGCP --> GKE
+  TFGCP --> CR
+
+  %% Infra to Application
+  Infra --> App
+```
 
 ---
 
 ## 🛠 Developer Environment (IDE-as-Code)
 
-This project ships with **VS Code recommendations** to ensure every machine has the same cockpit instantly.
-
-Copy the repo → open in VS Code → install recommended extensions. Done.
+Ships with **VS Code recommendations**.
+Copy repo → open in VS Code → install extensions → instant cockpit.
 
 ### Recommended Extensions
 
-* **Git & CI/CD**: GitLens, Git Graph, GitHub Actions
-* **IaC**: Terraform, Bicep, ARM, Ansible, YAML
-* **Cloud Toolkits**: Azure, AWS, GCP
-* **Containers**: Docker, Kubernetes, Helm
-* **Languages**: C#, Python, Go, PowerShell
-* **Docs & Visualization**: Markdown Preview Mermaid, REST Client, Draw.io
-* **AI/Assistants**: GitHub Copilot, Windows AI Studio
+* GitLens / Git Graph
+* Terraform, Bicep, YAML
+* Azure / AWS / GCP toolkits
+* Docker, Kubernetes
+* Markdown Preview Mermaid
+* AI: GitHub Copilot, Windows AI Studio
 
-⚡ **IDE-as-Code**: No excuses, no wasted days configuring. Your dev environment is dictated, just like the architecture.
+⚡ **IDE-as-Code**: same cockpit, everywhere.
 
+---
