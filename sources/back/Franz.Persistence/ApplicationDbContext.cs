@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Franz.Common.Business.Domain;
 using Franz.Common.EntityFramework;
-using MediatR;
 using Franz.Common.Mediator.Dispatchers;
 
 namespace Franz.Persistence

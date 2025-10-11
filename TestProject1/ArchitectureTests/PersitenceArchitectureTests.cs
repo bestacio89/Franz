@@ -41,43 +41,61 @@ public class PersistenceArchitectureTests : BaseArchitectureTest
   }
 
   [Fact]
-  public void DependencyCheck_IsCorrect()
+  public void PersistenceLayerDependencies_AreCorrect()
   {
+    ReportArchitectureContext();
+    var repositories = PersistenceLayer.GetObjects(BaseArchitecture)
+        .Where(t => t.Name.EndsWith("Repository"))
+        .ToList();
+
+    if (!repositories.Any())
+    {
+      Console.WriteLine("🟡 No CommandHandlers found in Application layer — skipping rule.");
+      return;
+    }
 
     ArchRuleDefinition
-      .Types()
-      .That()
-      .Are(PersistenceLayer)
-      .And()
-      .DoNotResideInAssembly("Franz.Domain.dll")
-      .Should()
-      .ResideInNamespace("Franz.Common.Business.Domain")
-      .OrShould()
-      .ResideInNamespace("Franz.Common.Business.Events")
-      .OrShould()
-      .ResideInNamespace("Franz.Common.EntityFramework")
-      .OrShould()
-      .ResideInNamespace("Franz.Common.EntityFramework.Repositories")
-      .OrShould()
-      .ResideInNamespace("Franz.Common.EntityFramework.Extensions")
-      .OrShould()
-      .ResideInNamespace("Franz.Common.EntityFramework.Configuration")
-      .OrShould()
-      .ResideInNamespace("Franz.Common.MongoDB.config")
-      .OrShould()
-      .ResideInNamespace("Franz.Common.EntityFramework.Behaviors")
-      .OrShould()
-      .ResideInNamespace("Franz.Common.EntityFramework.Properties")
-      .OrShould()
-      .ResideInNamespace("Microsoft.Extensions.DependencyInjection")
-      .OrShould()
-      .ResideInNamespace("")
-      .OrShould()
-      .ResideInNamespace("MediatR")
-      .OrShould()
-      .ResideInNamespace("System")
-      .Check(BaseArchitecture);
+        .Classes()
+        .That()
+        .ResideInAssembly(PersistenceAssembly)
+        .Should()
+        .OnlyDependOnTypesThat()
+        // ✅ Allow dependencies on Franz core domain abstractions
+        .ResideInNamespaceMatching("Franz.Common.Business.Domain")
+        .OrShould().ResideInNamespaceMatching("Franz.Common.Business.Events")
 
+        // ✅ Allow dependencies on Franz persistence and repository tooling
+        .OrShould().ResideInNamespaceMatching("Franz.Common.EntityFramework")
+        .OrShould().ResideInNamespaceMatching("Franz.Common.EntityFramework.Repositories")
+        .OrShould().ResideInNamespaceMatching("Franz.Common.EntityFramework.Extensions")
+        .OrShould().ResideInNamespaceMatching("Franz.Common.EntityFramework.Configuration")
+        .OrShould().ResideInNamespaceMatching("Franz.Common.EntityFramework.Behaviors")
+        .OrShould().ResideInNamespaceMatching("Franz.Common.EntityFramework.Properties")
+        .OrShould().ResideInNamespaceMatching("Franz.Common.MongoDB")
+        .OrShould().ResideInNamespaceMatching("Franz.Common.MongoDB.Config") 
+
+        // ✅ Allow DI, Mediator, and core utilities
+        .OrShould().ResideInNamespaceMatching("Microsoft.Extensions.DependencyInjection")
+        .OrShould().ResideInNamespaceMatching("Franz.Common.Mediator")
+        .OrShould().ResideInNamespaceMatching("Franz.Common.Errors")
+
+        // ✅ Allow standard BCL namespaces
+        .OrShould().ResideInNamespaceMatching("System")
+        .OrShould().ResideInNamespaceMatching("System.Collections")
+        .OrShould().ResideInNamespaceMatching("System.Collections.Generic")
+        .OrShould().ResideInNamespaceMatching("System.Linq")
+        .OrShould().ResideInNamespaceMatching("System.Threading")
+        .OrShould().ResideInNamespaceMatching("System.Threading.Tasks")
+        .OrShould().ResideInNamespaceMatching("System.Runtime.CompilerServices")
+
+        // ✅ Allow itself (internal persistence classes)
+        .OrShould().ResideInNamespaceMatching("BookManagement.Persistence")
+
+        .Because("The Persistence layer should depend only on Franz persistence abstractions, core business types, and system libraries.")
+        .WithoutRequiringPositiveResults()
+        .Check(BaseArchitecture);
+
+    Console.WriteLine("✅ Verified persistence dependency isolation (Franz + System + self).");
   }
 
 

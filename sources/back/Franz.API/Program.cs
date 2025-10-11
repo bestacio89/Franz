@@ -27,7 +27,7 @@ builder.Services.AddOpenApi();
 // --- Application & Persistence ---
 builder.Services.RegisterApplicationServices();
 builder.Services.RegisterPersistenceServices<ApplicationDbContext>(builder.Configuration);
-builder.Services.AddDatabase<ApplicationDbContext>(builder.Environment, builder.Configuration);
+builder.Services.AddRelationalDatabase<ApplicationDbContext>(builder.Environment, builder.Configuration);
 
 // --- Http Architecture ---
 builder.Services.AddHttpArchitecture(builder.Environment, builder.Configuration);
