@@ -1,0 +1,91 @@
+name: "🚀 Deploy Microservice to AWS EKS"
+
+on:
+  workflow_dispatch:
+    inputs:
+      serviceName:
+        description: "Kubernetes Deployment Name"
+        required: true
+        default: "microservice"
+        type: string
+
+      imageTag:
+        description: "Docker image tag to deploy"
+        required: true
+        default: "latest"
+        type: string
+
+      awsRegion:
+        description: "AWS Region"
+        required: true
+        default: "us-east-1"
+        type: string
+
+      clusterName:
+        description: "EKS Cluster Name"
+        required: true
+        default: "my-eks-cluster"
+        type: string
+
+      awsEcrUrl:
+        description: "AWS ECR URL (e.g., <account>.dkr.ecr.<region>.amazonaws.com)"
+        required: true
+        default: "<AWS_ECR_URL>"
+        type: string
+
+jobs:
+  deploy:
+    name: "Deploy to AWS EKS"
+    runs-on: ubuntu-latest
+    environment:
+      name: production   # ✅ Add protection rules for manual approvals if needed
+
+    env:
+      AWS_REGION: ${{ github.event.inputs.awsRegion }}
+      CLUSTER_NAME: ${{ github.event.inputs.clusterName }}
+      SERVICE_NAME: ${{ github.event.inputs.serviceName }}
+      IMAGE_TAG: ${{ github.event.inputs.imageTag }}
+      AWS_ECR_URL: ${{ github.event.inputs.awsEcrUrl }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+
+    steps:
+      # ----------------------------
+      # ✅ Checkout repository
+      # ----------------------------
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+
+      # ----------------------------
+      # ✅ Configure AWS credentials
+      # ----------------------------
+      - name: "Configure AWS Credentials"
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ----------------------------
+      # ✅ Update kubeconfig
+      # ----------------------------
+      - name: "Update kubeconfig for EKS"
+        run: |
+          echo "🔑 Authenticating to EKS cluster: ${CLUSTER_NAME}..."
+          aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}
+
+      # ----------------------------
+      # ✅ Deploy new image
+      # ----------------------------
+      - name: "Deploy new image to EKS"
+        run: |
+          echo "🚀 Deploying service ${SERVICE_NAME}..."
+          IMAGE_URI="${AWS_ECR_URL}/${SERVICE_NAME}:${IMAGE_TAG}"
+          echo "Using image: ${IMAGE_URI}"
+
+          kubectl set image deployment/${SERVICE_NAME} \
+            ${SERVICE_NAME}=${IMAGE_URI}
+
+          echo "⏳ Waiting for rollout..."
+          kubectl rollout status deployment/${SERVICE_NAME} --timeout=120s
+
+          echo "✅ Deployment successful for ${SERVICE_NAME}."

@@ -1,14 +1,115 @@
-name: "Terraform Plan"
-runs-on: ubuntu-latest
-steps:
-  - name: "Checkout Repository"
-    uses: actions/checkout@v3
+name: "📝 Terraform Plan"
 
-  - name: "Setup Terraform"
-    uses: hashicorp/setup-terraform@v2
-    with:
-      terraform_version: 1.5.0
+on:
+  workflow_dispatch:
+    inputs:
+      workingDirectory:
+        description: "Terraform working directory"
+        required: true
+        default: "Terraform-Infra"
+        type: string
 
-  - name: "Terraform Plan"
-    run: terraform plan -var-file="terraform-${{ secrets.ENVIRONMENT }}.tfvars"
-    working-directory: Terraform-Infra  # ✅ Ensures Terraform runs inside Terraform-Infra
+      environment:
+        description: "Target environment (dev/staging/prod)"
+        required: true
+        default: "dev"
+        type: choice
+        options: [dev, staging, prod]
+
+      terraformVersion:
+        description: "Terraform version"
+        required: true
+        default: "1.9.6"
+        type: string
+
+jobs:
+  terraform-plan:
+    name: "📝 Terraform Plan"
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment }}
+
+    env:
+      TF_INPUT: "false"
+      TF_IN_AUTOMATION: "true"
+      TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
+      WORKING_DIR: ${{ github.event.inputs.workingDirectory }}
+      ENVIRONMENT: ${{ github.event.inputs.environment }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+
+    steps:
+      # ---------------------------
+      # ✅ Checkout repository
+      # ---------------------------
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+
+      # ---------------------------
+      # ✅ Configure AWS credentials (optional)
+      # ---------------------------
+      - name: "Configure AWS Credentials"
+        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ---------------------------
+      # ✅ Setup Terraform
+      # ---------------------------
+      - name: "Setup Terraform"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ github.event.inputs.terraformVersion }}
+
+      # ---------------------------
+      # ✅ Cache Terraform plugins
+      # ---------------------------
+      - name: "Cache Terraform Plugins"
+        uses: actions/cache@v4
+        with:
+          path: ~/.terraform.d/plugin-cache
+          key: terraform-${{ runner.os }}-${{ github.event.inputs.terraformVersion }}
+          restore-keys: terraform-${{ runner.os }}-
+
+      # ---------------------------
+      # ✅ Validate Terraform directory & var file
+      # ---------------------------
+      - name: "Validate Directory and Var File"
+        run: |
+          echo "📂 Switching to working directory: ${WORKING_DIR}"
+          cd "${WORKING_DIR}"
+
+          VAR_FILE="env/terraform-${ENVIRONMENT}.tfvars"
+          if [ ! -f "$VAR_FILE" ]; then
+            echo "❌ Variable file not found: $VAR_FILE"
+            exit 1
+          fi
+          echo "✅ Found variable file: $VAR_FILE"
+
+      # ---------------------------
+      # ✅ Run Terraform Plan
+      # ---------------------------
+      - name: "Generate Terraform Plan"
+        id: plan
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          PLAN_FILE="tfplan-${ENVIRONMENT}"
+          VAR_FILE="env/terraform-${ENVIRONMENT}.tfvars"
+
+          echo "📝 Running terraform plan for environment: ${ENVIRONMENT}"
+          terraform init -input=false -no-color
+          terraform plan -out="$PLAN_FILE" -var-file="$VAR_FILE" -no-color
+
+          echo "PLAN_FILE=$PLAN_FILE" >> $GITHUB_ENV
+          echo "✅ Terraform plan generated successfully."
+
+      # ---------------------------
+      # ✅ Upload plan artifact
+      # ---------------------------
+      - name: "Upload Terraform Plan Artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-${{ env.ENVIRONMENT }}
+          path: ${{ env.WORKING_DIR }}/tfplan-${{ env.ENVIRONMENT }}

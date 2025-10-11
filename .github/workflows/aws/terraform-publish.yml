@@ -1,20 +1,126 @@
-name: "Terraform Publish & Deploy"
+name: "AWS Microservice Build & Deploy"
 
 on:
-  workflow_dispatch:  # ✅ Manual trigger
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: "Repository Name"
+        required: true
+        default: "Franz"
+        type: string
+
+      serviceName:
+        description: "Microservice Name"
+        required: true
+        default: "microservice"
+        type: string
+
+      awsEcrUrl:
+        description: "AWS ECR URL (e.g., <account>.dkr.ecr.<region>.amazonaws.com)"
+        required: true
+        default: "<AWS_ECR_URL>"
+        type: string
+
+      deployToEKS:
+        description: "Deploy to EKS (true) or ECS (false)"
+        required: true
+        default: "false"
+        type: choice
+        options: ["true", "false"]
+
+env:
+  DOCKER_BUILDKIT: "1"
+  IMAGE_TAG: ${{ github.run_number }}
 
 jobs:
   # ========================================
-  # ✅ BUILD & PUSH DOCKER IMAGE (Reusing Job)
+  # 🐳 1. Build & Push Docker Image
   # ========================================
-  build-and-push-docker:
-    name: "Build & Push Docker Image"
-    uses: ./.github/workflows/aws/jobs/docker-build.yml  # ✅ Calls separate job
+  build-and-push:
+    name: "🐳 Build & Push Docker Image to AWS ECR"
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "Configure AWS Credentials"
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: "Login to Amazon ECR"
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: "Build Docker Image"
+        run: |
+          docker build \
+            --build-arg SERVICE_NAME=${{ github.event.inputs.serviceName }} \
+            -t ${{ github.event.inputs.awsEcrUrl }}/${{ github.event.inputs.serviceName }}:${{ env.IMAGE_TAG }} .
+
+      - name: "Push Docker Image to ECR"
+        run: |
+          docker push ${{ github.event.inputs.awsEcrUrl }}/${{ github.event.inputs.serviceName }}:${{ env.IMAGE_TAG }}
+
+      - name: "Save Docker Image Tag"
+        run: echo "${{ env.IMAGE_TAG }}" > imagetag.txt
+
+      - name: "Upload Image Tag Artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: imagetag
+          path: imagetag.txt
 
   # ========================================
-  # ✅ DEPLOY MICROSERVICE TO AWS ECS (Reusing Job)
+  # 🚀 2. Deploy Microservice
   # ========================================
-  deploy-microservice:
-    name: "Deploy to AWS ECS"
-    needs: build-and-push-docker  # ✅ Runs after Docker build
-    uses: ./.github/workflows/aws/jobs/deploy-ecs.yml  # ✅ Calls separate job
+  deploy:
+    name: "🚀 Deploy Microservice to AWS"
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: "Download Image Tag Artifact"
+        uses: actions/download-artifact@v4
+        with:
+          name: imagetag
+          path: ./imagetag
+
+      - name: "Read Image Tag"
+        id: tag
+        run: echo "IMAGE_TAG=$(cat imagetag/imagetag.txt)" >> $GITHUB_ENV
+
+      - name: "Configure AWS Credentials"
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # ----------------------------
+      # ✅ Deploy to EKS
+      # ----------------------------
+      - name: "Deploy to EKS"
+        if: ${{ github.event.inputs.deployToEKS == 'true' }}
+        run: |
+          echo "Deploying image $IMAGE_TAG to EKS..."
+          kubectl set image deployment/${{ github.event.inputs.serviceName }} \
+            ${{ github.event.inputs.serviceName }}=${{ github.event.inputs.awsEcrUrl }}/${{ github.event.inputs.serviceName }}:$IMAGE_TAG
+        env:
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+
+      # ----------------------------
+      # ✅ Deploy to ECS
+      # ----------------------------
+      - name: "Deploy to ECS"
+        if: ${{ github.event.inputs.deployToEKS == 'false' }}
+        run: |
+          echo "Deploying image $IMAGE_TAG to ECS..."
+          aws ecs update-service \
+            --cluster ${{ github.event.inputs.repository }}-cluster \
+            --service ${{ github.event.inputs.serviceName }} \
+            --force-new-deployment
+        env:
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}

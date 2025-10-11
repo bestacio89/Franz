@@ -1,13 +1,105 @@
-name: "Terraform Validate"
-runs-on: ubuntu-latest
-steps:
-  - name: "Checkout Repository"
-    uses: actions/checkout@v3
+name: "✅ Terraform Validation"
 
-  - name: "Setup Terraform"
-    uses: hashicorp/setup-terraform@v2
-    with:
-      terraform_version: 1.5.0
+on:
+  workflow_dispatch:
+    inputs:
+      workingDirectory:
+        description: "Terraform working directory"
+        required: true
+        default: "Terraform-Infra"
+        type: string
 
-  - name: "Validate Terraform Configuration"
-    run: terraform validate
+      terraformVersion:
+        description: "Terraform version to use"
+        required: true
+        default: "1.9.6"
+        type: string
+
+      environment:
+        description: "Target environment (dev/staging/prod)"
+        required: true
+        default: "dev"
+        type: choice
+        options: [dev, staging, prod]
+
+jobs:
+  terraform-validate:
+    name: "✅ Terraform Validate"
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment }}
+
+    env:
+      TF_INPUT: "false"
+      TF_IN_AUTOMATION: "true"
+      TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
+      WORKING_DIR: ${{ github.event.inputs.workingDirectory }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+
+    steps:
+      # ---------------------------
+      # ✅ Checkout repository
+      # ---------------------------
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+
+      # ---------------------------
+      # ✅ Configure AWS credentials (optional)
+      # ---------------------------
+      - name: "Configure AWS Credentials"
+        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ---------------------------
+      # ✅ Setup Terraform
+      # ---------------------------
+      - name: "Setup Terraform"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ github.event.inputs.terraformVersion }}
+
+      # ---------------------------
+      # ✅ Cache Terraform plugins
+      # ---------------------------
+      - name: "Cache Terraform Plugins"
+        uses: actions/cache@v4
+        with:
+          path: ~/.terraform.d/plugin-cache
+          key: terraform-${{ runner.os }}-${{ github.event.inputs.terraformVersion }}
+          restore-keys: terraform-${{ runner.os }}-
+
+      # ---------------------------
+      # ✅ Validate configuration directory
+      # ---------------------------
+      - name: "Validate Terraform Directory"
+        run: |
+          echo "📂 Switching to working directory: ${WORKING_DIR}"
+          if [ ! -d "${WORKING_DIR}" ]; then
+            echo "❌ Directory not found: ${WORKING_DIR}"
+            exit 1
+          fi
+          echo "✅ Directory confirmed."
+          cd "${WORKING_DIR}"
+
+      # ---------------------------
+      # ✅ Terraform validate
+      # ---------------------------
+      - name: "Run Terraform Validate"
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "🧪 Running terraform init (to ensure provider sync)..."
+          terraform init -input=false -no-color
+          echo "🧩 Running terraform validate..."
+          terraform validate -no-color
+
+      # ---------------------------
+      # ✅ Report validation result
+      # ---------------------------
+      - name: "Validation Summary"
+        if: success()
+        run: |
+          echo "✅ Terraform validation completed successfully for environment '${{ github.event.inputs.environment }}'."
