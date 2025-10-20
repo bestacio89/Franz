@@ -2,7 +2,6 @@
 using ArchUnitNET.Domain.Extensions;
 using ArchUnitNET.Fluent;
 using ArchUnitNET.Loader;
-using Franz.Common.Business.Domain;
 using Franz.Common.Business.Events;
 using Franz.Common.Mediator;
 using Franz.Common.Mediator.Messages;
@@ -18,7 +17,7 @@ namespace Franz.Testing
 {
   /// <summary>
   /// Universal architecture context for Franz-based solutions.
-  /// Dynamically loads *.Domain, *.Application, *.API, *.Persistence, *.Contracts.
+  /// Dynamically loads Franz.* (Common, Common.Mediator, Domain, Application, API, Persistence, Contracts).
   /// </summary>
   public abstract class BaseArchitectureTest
   {
@@ -27,19 +26,26 @@ namespace Franz.Testing
     // ─────────────────────────────────────────────
     static BaseArchitectureTest()
     {
+      Console.OutputEncoding = System.Text.Encoding.UTF8;
       Console.WriteLine("🧩 Preloading solution assemblies...");
 
-      // Load any DLL path that ends with one of the allowed suffixes
-      EnsureAssembliesLoaded(@".*\.(Domain|Application|API|Persistence|Contracts)(\.dll)?$");
+      // Include Franz.Common and Franz.Common.Mediator
+      const string allowedPattern =
+        @".*\.(Common(\.Mediator)?|Mediator|Domain|Application|API|Persistence|Contracts)(\.dll)?$";
 
-      // Collect all loaded assemblies with allowed suffixes
+      EnsureAssembliesLoaded(allowedPattern);
+
+      // Gather assemblies already loaded into the AppDomain that match our suffixes
       var assembliesToLoad = AppDomain.CurrentDomain
         .GetAssemblies()
-        .Where(a => Regex.IsMatch(a.GetName().Name, @"\.(Domain|Application|API|Persistence|Contracts)$", RegexOptions.IgnoreCase))
+        .Where(a => Regex.IsMatch(
+            a.GetName().Name,
+            @"\.(Common(\.Mediator)?|Mediator|Domain|Application|API|Persistence|Contracts)$",
+            RegexOptions.IgnoreCase))
         .Distinct()
         .ToArray();
 
-      // Detect solution prefix for nicer logs
+      // Detect solution prefix (best-effort cosmetic)
       var solutionPrefix = assembliesToLoad
         .Select(a => a.GetName().Name.Split('.')[0])
         .GroupBy(x => x)
@@ -49,20 +55,40 @@ namespace Franz.Testing
       Console.WriteLine($"⚙️  Detected Solution Prefix: {solutionPrefix}");
       foreach (var asm in assembliesToLoad) Console.WriteLine($"   • {asm.GetName().Name}");
 
+      // Build architecture graph
       BaseArchitecture = new ArchLoader()
         .LoadAssemblies(assembliesToLoad)
         .Build();
 
       Console.WriteLine("✅ Architecture graph built successfully.\n");
 
-      // Late-binding per-suffix (with fallback loader)
+      // Late-binding by suffix (fallback)
       DomainAssembly = TryResolveAssembly(".Domain") ?? assembliesToLoad.FirstOrDefault(a => a.GetName().Name.EndsWith(".Domain", StringComparison.OrdinalIgnoreCase));
       ApplicationAssembly = TryResolveAssembly(".Application") ?? assembliesToLoad.FirstOrDefault(a => a.GetName().Name.EndsWith(".Application", StringComparison.OrdinalIgnoreCase));
       PersistenceAssembly = TryResolveAssembly(".Persistence") ?? assembliesToLoad.FirstOrDefault(a => a.GetName().Name.EndsWith(".Persistence", StringComparison.OrdinalIgnoreCase));
       ApiAssembly = TryResolveAssembly(".API") ?? assembliesToLoad.FirstOrDefault(a => a.GetName().Name.EndsWith(".API", StringComparison.OrdinalIgnoreCase));
       ContractsAssembly = TryResolveAssembly(".Contracts") ?? assembliesToLoad.FirstOrDefault(a => a.GetName().Name.EndsWith(".Contracts", StringComparison.OrdinalIgnoreCase));
+      // (Common assemblies are not strictly needed as fields, we just need them loaded into BaseArchitecture)
 
-      // Discover events & handlers
+      // 🔎 Diagnostics — verify key interfaces are visible to the model
+      bool scopedExists = BaseArchitecture.Interfaces.Any(i => i.FullName == typeof(Franz.Common.DependencyInjection.IScopedDependency).FullName);
+      bool singletonExists = BaseArchitecture.Interfaces.Any(i => i.FullName == typeof(Franz.Common.DependencyInjection.ISingletonDependency).FullName);
+      bool icommandExists = BaseArchitecture.Interfaces.Any(i => i.FullName == typeof(ICommand).FullName);
+      bool iqueryExists = BaseArchitecture.Interfaces.Any(i => i.FullName == typeof(IQuery<>).FullName);
+
+      if (!scopedExists || !singletonExists || !icommandExists || !iqueryExists)
+      {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("⚠️  Warning: Some Franz.Common.* or Mediator interfaces were NOT found in the architecture graph.");
+        if (!scopedExists) Console.WriteLine("   ➜ Missing: Franz.Common.DependencyInjection.IScopedDependency");
+        if (!singletonExists) Console.WriteLine("   ➜ Missing: Franz.Common.DependencyInjection.ISingletonDependency");
+        if (!icommandExists) Console.WriteLine("   ➜ Missing: Franz.Common.Mediator.Messages.ICommand");
+        if (!iqueryExists) Console.WriteLine("   ➜ Missing: Franz.Common.Mediator.Messages.IQuery<>");
+        Console.WriteLine("   Hint: Ensure Franz.Common*.dll are copied to the test output (bin) folder.");
+        Console.ResetColor();
+      }
+
+      // Discover events & handlers (optional cache)
       DomainEventTypes = DomainLayer
         .GetObjects(BaseArchitecture)
         .Where(IsDomainEvent)
@@ -70,12 +96,13 @@ namespace Franz.Testing
 
       ApplicationEventHandlerTypes = ApplicationLayer
         .GetObjects(BaseArchitecture)
-        .Where(t => t.Name.EndsWith("EventHandler", StringComparison.OrdinalIgnoreCase) ||
-                    t.Name.EndsWith("NotificationHandler", StringComparison.OrdinalIgnoreCase))
+        .Where(t => t.Name.EndsWith("EventHandler", StringComparison.OrdinalIgnoreCase)
+                 || t.Name.EndsWith("NotificationHandler", StringComparison.OrdinalIgnoreCase))
         .ToList();
 
       HasDomainEvents = DomainEventTypes.Any();
       HasEventHandlers = ApplicationEventHandlerTypes.Any();
+
       SolutionPrefix = solutionPrefix;
     }
 
@@ -89,24 +116,23 @@ namespace Franz.Testing
     protected static Assembly? ContractsAssembly;
 
     protected static readonly Architecture BaseArchitecture;
-
     protected static string SolutionPrefix = "Unknown";
 
-    // Layers (namespace-based, suffix-agnostic)
+    // Layers (namespace-based, include nested)
     protected static readonly IObjectProvider<IType> DomainLayer =
-      ArchRuleDefinition.Types().That().ResideInNamespaceMatching(@".*\.Domain").As("Domain Layer");
+      ArchRuleDefinition.Types().That().ResideInNamespaceMatching(@".*\.Domain(\..*)?$").As("Domain Layer");
 
     protected static readonly IObjectProvider<IType> ApplicationLayer =
-      ArchRuleDefinition.Types().That().ResideInNamespaceMatching(@".*\.Application").As("Application Layer");
+      ArchRuleDefinition.Types().That().ResideInNamespaceMatching(@".*\.Application(\..*)?$").As("Application Layer");
 
     protected static readonly IObjectProvider<IType> PersistenceLayer =
-      ArchRuleDefinition.Types().That().ResideInNamespaceMatching(@".*\.Persistence").As("Persistence Layer");
+      ArchRuleDefinition.Types().That().ResideInNamespaceMatching(@".*\.Persistence(\..*)?$").As("Persistence Layer");
 
     protected static readonly IObjectProvider<IType> ApiLayer =
-      ArchRuleDefinition.Types().That().ResideInNamespaceMatching(@".*\.API").As("API Layer");
+      ArchRuleDefinition.Types().That().ResideInNamespaceMatching(@".*\.API(\..*)?$").As("API Layer");
 
     protected static readonly IObjectProvider<IType> ContractsLayer =
-      ArchRuleDefinition.Types().That().ResideInNamespaceMatching(@".*\.Contracts").As("Contracts Layer");
+      ArchRuleDefinition.Types().That().ResideInNamespaceMatching(@".*\.Contracts(\..*)?$").As("Contracts Layer");
 
     // Discovery caches
     protected static IReadOnlyList<IType> DomainEventTypes = new List<IType>();
@@ -180,13 +206,16 @@ namespace Franz.Testing
     // ─────────────────────────────────────────────
     private static Assembly? TryResolveAssembly(string suffix)
     {
+      // Try to find an already loaded assembly by suffix
       var asm = AppDomain.CurrentDomain
         .GetAssemblies()
         .FirstOrDefault(a => a.GetName().Name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
 
       if (asm != null) return asm;
 
-      var file = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, $"*{suffix}.dll", SearchOption.AllDirectories)
+      // Try to load from disk: *{suffix}.dll
+      var file = Directory
+        .GetFiles(AppDomain.CurrentDomain.BaseDirectory, $"*{suffix}.dll", SearchOption.AllDirectories)
         .FirstOrDefault();
 
       if (file != null)
@@ -247,13 +276,13 @@ namespace Franz.Testing
         t.ImplementsInterface(BaseArchitecture.Interfaces.FirstOrDefault(i => i.FullName == typeof(IIntegrationEvent).FullName));
 
       var isInfraNoise =
-        t.FullName.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase) ||
-        t.FullName.Contains("Persistence", StringComparison.OrdinalIgnoreCase) ||
-        t.FullName.Contains("Repository", StringComparison.OrdinalIgnoreCase) ||
-        t.FullName.Contains("Handler", StringComparison.OrdinalIgnoreCase) ||
-        t.FullName.Contains("Service", StringComparison.OrdinalIgnoreCase) ||
-        t.FullName.Contains("Validator", StringComparison.OrdinalIgnoreCase) ||
-        t.FullName.Contains("Mongo", StringComparison.OrdinalIgnoreCase);
+           t.FullName.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase)
+        || t.FullName.Contains("Persistence", StringComparison.OrdinalIgnoreCase)
+        || t.FullName.Contains("Repository", StringComparison.OrdinalIgnoreCase)
+        || t.FullName.Contains("Handler", StringComparison.OrdinalIgnoreCase)
+        || t.FullName.Contains("Service", StringComparison.OrdinalIgnoreCase)
+        || t.FullName.Contains("Validator", StringComparison.OrdinalIgnoreCase)
+        || t.FullName.Contains("Mongo", StringComparison.OrdinalIgnoreCase);
 
       return isConcrete && !isInfraNoise && (implementsDomainEvent || implementsIntegrationEvent);
     }

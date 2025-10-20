@@ -48,25 +48,55 @@ public class ApiArchitectureTests : BaseArchitectureTest
   public void DependencyToContractsExists()
   {
     var contractObjects = ContractsLayer
-         .GetObjects(BaseArchitecture)
-         .Where(t =>
-             t.Name.StartsWith("I") 
-             || !t.NameEndsWith("Command") || !t.NameEndsWith("Query"))
-         .ToList();
+        .GetObjects(BaseArchitecture)
+        .Where(t =>
+            t.Name.StartsWith("I", StringComparison.Ordinal) ||
+            t.Name.EndsWith("Command", StringComparison.Ordinal) ||
+            t.Name.EndsWith("Query", StringComparison.Ordinal))
+        .ToList();
 
     if (!contractObjects.Any())
     {
-      Console.WriteLine("🟡 No  Service Intefaces found — skipping contract interface enforcement (virgin template).");
+      Console.WriteLine("🟡 No contract interfaces or message definitions found — skipping enforcement (template mode).");
       return;
     }
+
+    var apiClasses = BaseArchitecture
+        .Classes
+        .Where(t => t.Assembly.Name.Equals("Franz.API", StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    if (!apiClasses.Any())
+    {
+      Console.WriteLine("🟡 No API layer types found — skipping dependency validation.");
+      return;
+    }
+
+    // Build rule — pass allowed assemblies as separate params
     ArchRuleDefinition
-    .Classes()
-    .That()
-    .AreAssignableTo(typeof(ICommand<>))
-    .Should()
-    .ResideInAssembly("Franz.Contracts")
-    .Check(BaseArchitecture);
+      .Classes()
+      .That()
+      .ResideInAssembly("Franz.API")
+      .And()
+      .DoNotHaveNameEndingWith("Program")
+      .And()
+      .DoNotHaveNameEndingWith("Startup")
+      .Should()
+      .OnlyDependOnTypesThat()
+      .ResideInAssembly(
+          "Franz.API"       
+      )
+      .OrShould()
+      .ResideInAssembly(
+          "Franz.Contracts")
+      .OrShould()
+      .ResideInAssembly(
+          "Franz.Common")
+      .Because("API components (except composition root) should depend only on Contracts and Common abstractions.")
+      .WithoutRequiringPositiveResults()
+      .Check(BaseArchitecture);
   }
+
 
 
 

@@ -248,7 +248,7 @@ public class DomainArchitectureTests : BaseArchitectureTest
         .Are(DomainEventTypes)
         .Should()
         .NotDependOnAnyTypesThat()
-        .ResideInNamespace("BookManagement.Infrastructure")
+        .ResideInNamespace("Franz.Infrastructure")
         .Because("Domain events must be pure domain concepts without infrastructure dependencies.")
         .Check(BaseArchitecture);
 

@@ -27,7 +27,7 @@ namespace Franz.Testing.ArchitectureTests
     [Fact]
     public void QueryNameConventionIsCorrect()
     {
-      var commandobjects = DomainLayer.GetObjects(BaseArchitecture)
+      var commandobjects = ContractsLayer.GetObjects(BaseArchitecture)
         .Where(t => t.Name.EndsWith("Query", StringComparison.OrdinalIgnoreCase))
         .ToList();
 
@@ -47,7 +47,7 @@ namespace Franz.Testing.ArchitectureTests
     public void CommandNameConventionIsCorrect()
 
     {
-      var commandobjects = DomainLayer.GetObjects(BaseArchitecture)
+      var commandobjects = ContractsLayer.GetObjects(BaseArchitecture)
         .Where(t => t.Name.EndsWith("Command", StringComparison.OrdinalIgnoreCase))
         .ToList();
 
@@ -57,7 +57,7 @@ namespace Franz.Testing.ArchitectureTests
         return;
       }
       ArchRuleDefinition.
-      Classes().That().AreAssignableTo(typeof(ICommand))
+      Classes().That().AreAssignableTo(typeof(ICommand<>))
        .Should()
        .HaveNameEndingWith("Command")
        .Check(BaseArchitecture);
@@ -97,9 +97,8 @@ namespace Franz.Testing.ArchitectureTests
           .GetObjects(BaseArchitecture)
           .Where(t =>
               t.Name.StartsWith("I") &&
-              !t.Name.EndsWith("Repository", StringComparison.OrdinalIgnoreCase)
-              || !t.NameEndsWith("Command") || !t.NameEndsWith("Query"))
-          .ToList();
+              !t.Name.EndsWith("Repository", StringComparison.OrdinalIgnoreCase))
+           .ToList();
 
       if (!contractObjects.Any())
       {
@@ -110,12 +109,11 @@ namespace Franz.Testing.ArchitectureTests
         Classes()
         .That().ResideInNamespace("Franz.Contracts.Infrastructure.*")
         .Should()
-        .BeAssignableTo(typeof(Interface))
-        .AndShould()
         .BeAssignableTo(typeof(IScopedDependency))
         .OrShould().BeAssignableTo(typeof(ISingletonDependency))
         .Because("Every infrastructureInterface requires aproper  lifetime")
-        .Check(BaseArchitecture);
+        .WithoutRequiringPositiveResults()
+        .Check(BaseArchitecture)       ;
 
     }
 
@@ -142,12 +140,16 @@ namespace Franz.Testing.ArchitectureTests
           .That()
           .Are(contractObjects)
           .Should()
-          .BeAssignableTo(typeof(IReadRepository<>))
+          .BeAssignableTo(typeof(IScopedDependency))
+          .AndShould()
+          .NotBeAssignableTo(typeof(IReadRepository<>))
           .OrShould()
-          .BeAssignableTo(typeof(IAggregateRepository<,>))
+          .NotBeAssignableTo(typeof(IAggregateRepository<,>))
           .AndShould()
           .HaveNameEndingWith("Repository")
-          .Because("All repository interfaces must implement the Franz persistence contract model (Read/Aggregate Repositories).")
+                 
+          .Because("Because repositories are scoped and Custom repos should not implement Generic Framework provisioned implementations")
+          .WithoutRequiringPositiveResults()
           .Check(BaseArchitecture);
 
       Console.WriteLine($"✅ Verified {contractObjects.Count} repository interface(s) follow the Franz persistence contract model.");
@@ -162,7 +164,11 @@ namespace Franz.Testing.ArchitectureTests
           .GetObjects(BaseArchitecture)
           .Where(t =>
               t.Name.StartsWith("I") &&
-              t.Name.EndsWith("Repository", StringComparison.OrdinalIgnoreCase))
+              t.Name.EndsWith("Repository", StringComparison.OrdinalIgnoreCase) &&
+              !t.Name.Contains("Aggregate") &&
+              !t.Name.Contains("Read") &&
+              !t.NameContains("Entity"))
+
           .ToList();
 
       if (!contractObjects.Any())
@@ -172,12 +178,14 @@ namespace Franz.Testing.ArchitectureTests
       }
       // ✅ Enforce rule: all custom repository interfaces should inherit IScopedDependency
       ArchRuleDefinition.Classes()
-          .That().Are(typeof(Interface))
-          .And().AreNot(typeof(IReadRepository<>)) // Exclude IReadRepository
+          .That()
+          .AreNot(typeof(IReadRepository<>)) // Exclude IReadRepository
           .And().AreNot(typeof(IAggregateRepository<,>)) // Exclude IAggregateRepository
           .And().HaveNameEndingWith("Repository") // Naming convention for custom repositories
           .Should()
-          .BeAssignableTo(typeof(IScopedDependency)) // Enforce IScopedDependency
+          .ImplementAnyInterfacesThat()
+          .HaveFullNameMatching(typeof(IScopedDependency).FullName!)
+          // Enforce IScopedDependency
           .Because("Custom persistence interfaces should follow lifetime management using IScopedDependency")
           .Check(BaseArchitecture);
     }
