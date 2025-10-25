@@ -60,7 +60,7 @@ stages:
             inputs:
               restoreSolution: '$(solution)'
               feedsToUse: 'select'
-              vstsFeed: 'Franz/FranzFeed'    # 🧭 Change to your Azure Artifacts feed
+              vstsFeed: 'Franz.Common/FranzPlatform'    # 🧭 Change to your Azure Artifacts feed
               includeNuGetOrg: true
 
           # ----------------------------------------
