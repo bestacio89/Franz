@@ -90,7 +90,7 @@ stages:
             displayName: "🧪 Run Unit Tests (skip Integration)"
             inputs:
               testAssemblyVer2: |
-                **\*Tests.dll
+                **\Franz.Testing.*.dll
                 !**\*TestAdapter.dll
                 !**\obj\**
               testFiltercriteria: 'TestCategory!=Integration'
