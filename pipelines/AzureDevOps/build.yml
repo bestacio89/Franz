@@ -1,96 +1,138 @@
 # ========================================
-# Azure DevOps Pipeline - Build & Test
+# 🧠 Franz Audit Suite - Build & Test Pipeline
 # ========================================
+# ✅ Purpose:
+#   Automated build & verification of Franz.Common + Audit Test Suite
+#   Ensures all template & DTO logic (Book–Member etc.) compile & pass unit tests.
+# ----------------------------------------
+# 🏗️ Trigger
+# ----------------------------------------
 
 trigger:
   branches:
     include:
-      - Develop   # ✅ Auto-run on develop commits
-pr: none          # ❌ Prevent on PR creation
+      - Develop          # ✅ Run automatically on commits to develop
+pr: none                 # ❌ Skip PR validation builds (manual trigger only)
 
+# ----------------------------------------
+# 🧩 Build Environment
+# ----------------------------------------
 pool:
-  vmImage: 'windows-latest'   # ✅ Windows agent for MSBuild + VSTest
+  vmImage: 'windows-latest'   # 🪟 Required for MSBuild + VSTest integration
 
 variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
+  artifactName: 'drop'
 
+# ----------------------------------------
+# 🚀 Stage: Build & Test
+# ----------------------------------------
 stages:
 - stage: BuildAndTest
-  displayName: "🛠️ Build and Test"
+  displayName: "🛠️ Build & Run Test Suite"
   jobs:
   - job: BuildTest
-    displayName: "🔨 Build & Run Tests"
+    displayName: "🔨 Compile + Execute Tests"
     steps:
 
     # ----------------------------------------
-    # ✅ NuGet Setup & Cache
+    # 🧰 NuGet Setup & Caching
     # ----------------------------------------
     - task: NuGetToolInstaller@1
-      displayName: "📦 Install NuGet"
+      displayName: "📦 Install NuGet CLI"
 
     - task: Cache@2
+      displayName: "⚡ Cache NuGet Packages"
       inputs:
         key: 'nuget | "$(Agent.OS)" | **/packages.lock.json'
         restoreKeys: |
           nuget | "$(Agent.OS)"
-        path: $(NuGetPackageRoot)
-      displayName: "⚡ Cache NuGet Packages"
+        path: '$(UserProfile)\.nuget\packages'
 
     # ----------------------------------------
-    # ✅ Restore Packages
+    # 📥 Restore Dependencies
     # ----------------------------------------
     - task: NuGetCommand@2
+      displayName: "📦 Restore NuGet Packages"
       inputs:
         restoreSolution: '$(solution)'
-        feedsToUse: 'config'
-        nugetConfigPath: 'nuget.config'
-      displayName: "📦 Restore NuGet Packages"
+        feedsToUse: 'select'
+        vstsFeed: 'Franz/FranzFeed'    # 🧭 Change to your Azure Artifacts feed
+        includeNuGetOrg: true
 
     # ----------------------------------------
-    # ✅ Build Solution
+    # 🧱 Build Solution
     # ----------------------------------------
     - task: VSBuild@1
+      displayName: "🏗️ Build Franz Solution"
       inputs:
         solution: '$(solution)'
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
-        msbuildArgs: '/p:ExcludeProjects="**/Franz.DockerCompose/Franz.DockerCompose.dcproj"'
-      displayName: "🔨 Build Solution"
+        msbuildArgs: '/restore /verbosity:minimal'
+        clean: true
+        maximumCpuCount: true
+        logProjectEvents: false
 
     # ----------------------------------------
-    # ✅ Run Unit Tests (skip integration)
+    # 🧪 Execute Unit Tests
     # ----------------------------------------
     - task: VSTest@2
+      displayName: "🧪 Run Unit Tests (skip Integration)"
       inputs:
         testAssemblyVer2: |
-          **\*test*.dll
+          **\*Tests.dll
           !**\*TestAdapter.dll
           !**\obj\**
-        testFiltercriteria: 'Category!=Integration'   # 👈 skip Integration tests
+        testFiltercriteria: 'TestCategory!=Integration'
+        searchFolder: '$(System.DefaultWorkingDirectory)'
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
         diagnosticsEnabled: true
-      displayName: "🧪 Run Unit Tests (skip Integration)"
+        testResultsDirectory: '$(Agent.TempDirectory)/TestResults'
+        runInParallel: true
+        runSettingsFile: ''
+        codeCoverageEnabled: true
 
     # ----------------------------------------
-    # ✅ Publish Test Results
+    # 📊 Publish Test Results
     # ----------------------------------------
     - task: PublishTestResults@2
+      displayName: "📊 Publish Unit Test Results"
+      condition: succeededOrFailed()
       inputs:
         testResultsFormat: 'VSTest'
-        testResultsFiles: '**/TestResults/*.trx'
+        testResultsFiles: '$(Agent.TempDirectory)/**/*.trx'
         failTaskOnFailedTests: true
-      condition: succeededOrFailed()
-      displayName: "📊 Publish Test Results"
+        mergeTestResults: true
 
     # ----------------------------------------
-    # ✅ Publish Build Artifacts
+    # 📦 Copy Build Outputs to Artifact Staging
+    # ----------------------------------------
+    - task: CopyFiles@2
+      displayName: "📂 Collect Compiled Binaries"
+      inputs:
+        SourceFolder: '$(Build.SourcesDirectory)'
+        Contents: '**/bin/$(buildConfiguration)/**'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+    # ----------------------------------------
+    # 🚢 Publish Build Artifacts
     # ----------------------------------------
     - task: PublishBuildArtifacts@1
+      displayName: "🚀 Publish Artifacts to Pipeline"
       inputs:
         pathToPublish: '$(Build.ArtifactStagingDirectory)'
-        artifactName: 'drop'
+        artifactName: '$(artifactName)'
         publishLocation: 'Container'
-      displayName: "📦 Publish Build Artifacts"
+
+# ========================================
+# ✅ Notes
+# ========================================
+#  - Integration tests are skipped via filter (TestCategory!=Integration)
+#  - Compatible with xUnit, NUnit, MSTest
+#  - Code coverage enabled for analysis
+#  - Can extend with a TestContainers or Kafka stage in future
+# ========================================
