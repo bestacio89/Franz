@@ -46,10 +46,10 @@ stages:
     - task: Cache@2
       displayName: "⚡ Cache NuGet Packages"
       inputs:
-        key: 'nuget | "$(Agent.OS)" | **/packages.lock.json'
-        restoreKeys: |
-          nuget | "$(Agent.OS)"
-        path: '$(UserProfile)\.nuget\packages'
+         key: 'nuget | "$(Agent.OS)" | $(Build.SourcesDirectory)/**/*.csproj'
+         restoreKeys: |
+            nuget | "$(Agent.OS)"
+      path: '$(UserProfile)\.nuget\packages'
 
     # ----------------------------------------
     # 📥 Restore Dependencies
