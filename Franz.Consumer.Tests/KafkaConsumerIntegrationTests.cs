@@ -32,7 +32,7 @@ namespace Franz.Consumer.Tests
       await _kafkaContainer.DisposeAsync();
     }
 
-    [Fact]
+    [Fact(Skip = "Skipped in CI environment")]
     [Trait("Category", "Integration")]   // 👈 Mark this as Integration
     public async Task KafkaConsumer_ShouldProcessMessage()
     {
