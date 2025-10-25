@@ -89,7 +89,7 @@ public class PersistenceArchitectureTests : BaseArchitectureTest
         .OrShould().ResideInNamespaceMatching("System.Runtime.CompilerServices")
 
         // ✅ Allow itself (internal persistence classes)
-        .OrShould().ResideInNamespaceMatching("BookManagement.Persistence")
+        .OrShould().ResideInNamespaceMatching("Franz.Persistence")
 
         .Because("The Persistence layer should depend only on Franz persistence abstractions, core business types, and system libraries.")
         .WithoutRequiringPositiveResults()

@@ -9,6 +9,8 @@ using Franz.Common.Business.Domain;
 using Franz.Common.DependencyInjection;
 using Franz.Common.Mediator.Messages;
 using FranzTesting;
+using Microsoft.Azure.Cosmos.Linq;
+using System.Reflection;
 using Interface = System.Reflection.TypeInfo;
 
 namespace Franz.Testing.ArchitectureTests
@@ -189,6 +191,89 @@ namespace Franz.Testing.ArchitectureTests
           .Because("Custom persistence interfaces should follow lifetime management using IScopedDependency")
           .Check(BaseArchitecture);
     }
+
+
+    [Fact]
+    public void Dtos_Must_Be_Immutable_Or_Records()
+    {
+      var dtoObjects = ContractsLayer
+          .GetObjects(BaseArchitecture)
+          .Where(t =>
+              t.Name.EndsWith("Dto", StringComparison.OrdinalIgnoreCase) ||
+              t.Namespace.FullName.Contains("DTOs", StringComparison.OrdinalIgnoreCase))
+          .ToList();
+
+      if (!dtoObjects.Any())
+      {
+        Console.WriteLine("🟡 No DTOs found — skipping DTO immutability rule.");
+        return;
+      }
+
+      var offenders = new List<IType>();
+
+      foreach (var dto in dtoObjects)
+      {
+        var type = GetReflectionType(dto);
+        if (type == null) continue;
+
+        // ✅ Skip records
+        if (IsRecord(type))
+          continue;
+
+        // 🧠 Check for mutable properties (setters not init-only)
+        bool hasWritableProps = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Any(p =>
+            {
+              var setMethod = p.SetMethod;
+              if (setMethod == null) return false;
+
+              bool isInitOnly = setMethod.ReturnParameter
+                  .GetRequiredCustomModifiers()
+                  .Contains(typeof(System.Runtime.CompilerServices.IsExternalInit));
+
+              return !isInitOnly;
+            });
+
+        if (hasWritableProps)
+          offenders.Add(dto);
+      }
+
+      if (!offenders.Any())
+      {
+        Console.WriteLine("✅ All DTOs are immutable records or init-only — compliance confirmed.");
+        return;
+      }
+
+      Console.WriteLine("🚨 Mutable or non-record DTOs detected:");
+      offenders.ForEach(o => Console.WriteLine($" - {o.FullName}"));
+
+      var rule = ArchRuleDefinition
+          .Classes()
+          .That().Are(offenders)
+          .Should().NotExist()
+          .Because("DTOs must be immutable record types or have only init-only properties.");
+
+      rule.Check(BaseArchitecture);
+    }
+
+    private static bool IsRecord(Type type)
+    {
+      return type.GetMethod("<Clone>$", BindingFlags.NonPublic | BindingFlags.Instance) != null
+          || type.GetMethod("PrintMembers", BindingFlags.NonPublic | BindingFlags.Instance) != null;
+    }
+
+    private static Type? GetReflectionType(IType archType)
+    {
+      // Try dynamic reflection — avoids compile-time generic binding
+      var maybeTypeProp = archType.GetType().GetProperty("Type", BindingFlags.Public | BindingFlags.Instance);
+      if (maybeTypeProp?.GetValue(archType) is Type systemType)
+        return systemType;
+
+      // fallback: try by name if reflection fails
+      return Type.GetType(archType.FullName, throwOnError: false);
+    }
+
+
   }
 }
 

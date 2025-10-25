@@ -75,6 +75,7 @@ namespace Franz.Testing
       bool singletonExists = BaseArchitecture.Interfaces.Any(i => i.FullName == typeof(Franz.Common.DependencyInjection.ISingletonDependency).FullName);
       bool icommandExists = BaseArchitecture.Interfaces.Any(i => i.FullName == typeof(ICommand).FullName);
       bool iqueryExists = BaseArchitecture.Interfaces.Any(i => i.FullName == typeof(IQuery<>).FullName);
+      bool customreposexist = BaseArchitecture.Types.Any(t => t.Name.EndsWith("Repository", StringComparison.OrdinalIgnoreCase));
 
       if (!scopedExists || !singletonExists || !icommandExists || !iqueryExists)
       {
@@ -84,6 +85,7 @@ namespace Franz.Testing
         if (!singletonExists) Console.WriteLine("   ➜ Missing: Franz.Common.DependencyInjection.ISingletonDependency");
         if (!icommandExists) Console.WriteLine("   ➜ Missing: Franz.Common.Mediator.Messages.ICommand");
         if (!iqueryExists) Console.WriteLine("   ➜ Missing: Franz.Common.Mediator.Messages.IQuery<>");
+        if (!customreposexist) Console.WriteLine("   ➜ Non Existant: Custom Repository types this architecture runs with Franz.Common Preordained entity and aggregate repos (e.g., IBookRepository)");
         Console.WriteLine("   Hint: Ensure Franz.Common*.dll are copied to the test output (bin) folder.");
         Console.ResetColor();
       }
