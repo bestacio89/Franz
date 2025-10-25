@@ -5,7 +5,7 @@
 trigger:
   branches:
     include:
-      - develop   # ✅ Auto-run on develop commits
+      - Develop   # ✅ Auto-run on develop commits
 pr: none          # ❌ Prevent on PR creation
 
 pool:
