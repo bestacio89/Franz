@@ -4,10 +4,11 @@
 # ✅ Purpose:
 #   Automated build & verification of Franz.Common + Audit Test Suite
 #   Ensures all template & DTO logic (Book–Member etc.) compile & pass unit tests.
+# ========================================
+
 # ----------------------------------------
 # 🏗️ Trigger
 # ----------------------------------------
-
 trigger:
   branches:
     include:
@@ -30,103 +31,103 @@ variables:
 # 🚀 Stage: Build & Test
 # ----------------------------------------
 stages:
-- stage: BuildAndTest
-  displayName: "🛠️ Build & Run Test Suite"
-  jobs:
-  - job: BuildTest
-    displayName: "🔨 Compile + Execute Tests"
-    steps:
+  - stage: BuildAndTest
+    displayName: "🛠️ Build & Run Test Suite"
+    jobs:
+      - job: BuildTest
+        displayName: "🔨 Compile + Execute Tests"
+        steps:
 
-    # ----------------------------------------
-    # 🧰 NuGet Setup & Caching
-    # ----------------------------------------
-    - task: NuGetToolInstaller@1
-      displayName: "📦 Install NuGet CLI"
+          # ----------------------------------------
+          # 🧰 NuGet Setup & Caching
+          # ----------------------------------------
+          - task: NuGetToolInstaller@1
+            displayName: "📦 Install NuGet CLI"
 
-    - task: Cache@2
-      displayName: "⚡ Cache NuGet Packages"
-      inputs:
-         key: 'nuget | "$(Agent.OS)" | $(Build.SourcesDirectory)/**/*.csproj'
-         restoreKeys: |
-            nuget | "$(Agent.OS)"
-      path: '$(UserProfile)\.nuget\packages'
+          - task: Cache@2
+            displayName: "⚡ Cache NuGet Packages"
+            inputs:
+              key: 'nuget | "$(Agent.OS)" | $(Build.SourcesDirectory)/**/*.csproj'
+              restoreKeys: |
+                nuget | "$(Agent.OS)"
+              path: '$(UserProfile)\.nuget\packages'
 
-    # ----------------------------------------
-    # 📥 Restore Dependencies
-    # ----------------------------------------
-    - task: NuGetCommand@2
-      displayName: "📦 Restore NuGet Packages"
-      inputs:
-        restoreSolution: '$(solution)'
-        feedsToUse: 'select'
-        vstsFeed: 'Franz/FranzFeed'    # 🧭 Change to your Azure Artifacts feed
-        includeNuGetOrg: true
+          # ----------------------------------------
+          # 📥 Restore Dependencies
+          # ----------------------------------------
+          - task: NuGetCommand@2
+            displayName: "📦 Restore NuGet Packages"
+            inputs:
+              restoreSolution: '$(solution)'
+              feedsToUse: 'select'
+              vstsFeed: 'Franz/FranzFeed'    # 🧭 Change to your Azure Artifacts feed
+              includeNuGetOrg: true
 
-    # ----------------------------------------
-    # 🧱 Build Solution
-    # ----------------------------------------
-    - task: VSBuild@1
-      displayName: "🏗️ Build Franz Solution"
-      inputs:
-        solution: '$(solution)'
-        platform: '$(buildPlatform)'
-        configuration: '$(buildConfiguration)'
-        msbuildArgs: '/restore /verbosity:minimal'
-        clean: true
-        maximumCpuCount: true
-        logProjectEvents: false
+          # ----------------------------------------
+          # 🧱 Build Solution
+          # ----------------------------------------
+          - task: VSBuild@1
+            displayName: "🏗️ Build Franz Solution"
+            inputs:
+              solution: '$(solution)'
+              platform: '$(buildPlatform)'
+              configuration: '$(buildConfiguration)'
+              msbuildArgs: '/restore /verbosity:minimal'
+              clean: true
+              maximumCpuCount: true
+              logProjectEvents: false
 
-    # ----------------------------------------
-    # 🧪 Execute Unit Tests
-    # ----------------------------------------
-    - task: VSTest@2
-      displayName: "🧪 Run Unit Tests (skip Integration)"
-      inputs:
-        testAssemblyVer2: |
-          **\*Tests.dll
-          !**\*TestAdapter.dll
-          !**\obj\**
-        testFiltercriteria: 'TestCategory!=Integration'
-        searchFolder: '$(System.DefaultWorkingDirectory)'
-        platform: '$(buildPlatform)'
-        configuration: '$(buildConfiguration)'
-        diagnosticsEnabled: true
-        testResultsDirectory: '$(Agent.TempDirectory)/TestResults'
-        runInParallel: true
-        runSettingsFile: ''
-        codeCoverageEnabled: true
+          # ----------------------------------------
+          # 🧪 Execute Unit Tests
+          # ----------------------------------------
+          - task: VSTest@2
+            displayName: "🧪 Run Unit Tests (skip Integration)"
+            inputs:
+              testAssemblyVer2: |
+                **\*Tests.dll
+                !**\*TestAdapter.dll
+                !**\obj\**
+              testFiltercriteria: 'TestCategory!=Integration'
+              searchFolder: '$(System.DefaultWorkingDirectory)'
+              platform: '$(buildPlatform)'
+              configuration: '$(buildConfiguration)'
+              diagnosticsEnabled: true
+              testResultsDirectory: '$(Agent.TempDirectory)/TestResults'
+              runInParallel: true
+              runSettingsFile: ''
+              codeCoverageEnabled: true
 
-    # ----------------------------------------
-    # 📊 Publish Test Results
-    # ----------------------------------------
-    - task: PublishTestResults@2
-      displayName: "📊 Publish Unit Test Results"
-      condition: succeededOrFailed()
-      inputs:
-        testResultsFormat: 'VSTest'
-        testResultsFiles: '$(Agent.TempDirectory)/**/*.trx'
-        failTaskOnFailedTests: true
-        mergeTestResults: true
+          # ----------------------------------------
+          # 📊 Publish Test Results
+          # ----------------------------------------
+          - task: PublishTestResults@2
+            displayName: "📊 Publish Unit Test Results"
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: 'VSTest'
+              testResultsFiles: '$(Agent.TempDirectory)/**/*.trx'
+              failTaskOnFailedTests: true
+              mergeTestResults: true
 
-    # ----------------------------------------
-    # 📦 Copy Build Outputs to Artifact Staging
-    # ----------------------------------------
-    - task: CopyFiles@2
-      displayName: "📂 Collect Compiled Binaries"
-      inputs:
-        SourceFolder: '$(Build.SourcesDirectory)'
-        Contents: '**/bin/$(buildConfiguration)/**'
-        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+          # ----------------------------------------
+          # 📦 Copy Build Outputs to Artifact Staging
+          # ----------------------------------------
+          - task: CopyFiles@2
+            displayName: "📂 Collect Compiled Binaries"
+            inputs:
+              SourceFolder: '$(Build.SourcesDirectory)'
+              Contents: '**/bin/$(buildConfiguration)/**'
+              TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
-    # ----------------------------------------
-    # 🚢 Publish Build Artifacts
-    # ----------------------------------------
-    - task: PublishBuildArtifacts@1
-      displayName: "🚀 Publish Artifacts to Pipeline"
-      inputs:
-        pathToPublish: '$(Build.ArtifactStagingDirectory)'
-        artifactName: '$(artifactName)'
-        publishLocation: 'Container'
+          # ----------------------------------------
+          # 🚢 Publish Build Artifacts
+          # ----------------------------------------
+          - task: PublishBuildArtifacts@1
+            displayName: "🚀 Publish Artifacts to Pipeline"
+            inputs:
+              pathToPublish: '$(Build.ArtifactStagingDirectory)'
+              artifactName: '$(artifactName)'
+              publishLocation: 'Container'
 
 # ========================================
 # ✅ Notes
