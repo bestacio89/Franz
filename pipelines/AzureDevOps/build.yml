@@ -53,14 +53,20 @@ stages:
               path: '$(UserProfile)\.nuget\packages'
 
           # ----------------------------------------
+          # 🔐 Authenticate to Azure Artifacts feed
+          # ----------------------------------------
+          - task: NuGetAuthenticate@1
+            displayName: "🔐 Authenticate to Franz.Common feed"
+
+          # ----------------------------------------
           # 📥 Restore Dependencies
           # ----------------------------------------
           - task: NuGetCommand@2
             displayName: "📦 Restore NuGet Packages"
             inputs:
               restoreSolution: '$(solution)'
-              feedsToUse: 'select'
-              vstsFeed: 'Franz.Common/FranzPlatform'    # 🧭 Change to your Azure Artifacts feed
+              feedsToUse: 'config'                       # ✅ use your nuget.config
+              nugetConfigPath: 'nuget.config'            # ✅ points to Franz.Common feed
               includeNuGetOrg: true
 
           # ----------------------------------------
@@ -94,7 +100,6 @@ stages:
               diagnosticsEnabled: true
               testResultsDirectory: '$(Agent.TempDirectory)/TestResults'
               runInParallel: true
-              runSettingsFile: ''
               codeCoverageEnabled: true
 
           # ----------------------------------------
@@ -132,6 +137,7 @@ stages:
 # ========================================
 # ✅ Notes
 # ========================================
+#  - Uses NuGetAuthenticate for secure feed access (Franz.Common project scope)
 #  - Integration tests are skipped via filter (TestCategory!=Integration)
 #  - Compatible with xUnit, NUnit, MSTest
 #  - Code coverage enabled for analysis
