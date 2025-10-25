@@ -4,15 +4,17 @@
 
   <ItemGroup>
 	 
-	  <PackageReference Include="Franz.Common.Caching" Version="1.6.3" />
+	  <PackageReference Include="Franz.Common.Caching" Version="1.6.19" />
 	 
-	  <PackageReference Include="Franz.Common.EntityFramework.SQLServer" Version="1.6.3" />
+	  <PackageReference Include="Franz.Common.EntityFramework" Version="1.6.19" />
 	 
-	  <PackageReference Include="Franz.Common.Hosting" Version="1.6.3" />
+	  <PackageReference Include="Franz.Common.EntityFramework.PostGres" Version="1.6.19" />
+	 
+	  <PackageReference Include="Franz.Common.Hosting" Version="1.6.19" />
 	 
 	  <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
 	  
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.08">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -22,10 +24,12 @@
     <Folder Include="Configurations\" />
     <Folder Include="Depots\" />
     <Folder Include="Migrations\" />
+    <Folder Include="Persistence\Seeders\NewFolder\" />
     <Folder Include="Semoirs\" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Franz.Contracts\Franz.Contracts.csproj" />
     <ProjectReference Include="..\Franz.Domain\Franz.Domain.csproj" />
   </ItemGroup>
 

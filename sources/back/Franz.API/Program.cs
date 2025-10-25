@@ -1,24 +1,34 @@
 ﻿using Franz.API.Extensions;
 using Franz.Application;
+using Franz.Application.Books.Queries;
 using Franz.Common.Http.Bootstrap.Extensions;
 using Franz.Common.Http.Client.Extensions;
 using Franz.Common.Http.EntityFramework.Extensions;
-using Franz.Common.Http.Messaging.Extensions;
-using Franz.Common.Http.Refit.Extensions;
+
 using Franz.Common.Logging.Extensions;
 using Franz.Common.Mediator.Extensions;
 
 using Franz.Common.Mediator.Polly;
 
 using Franz.Persistence; // our new cowboy helper
+using Franz.Persistence.Seeders;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Serilog.Filters;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --- Logging (env-aware Serilog via UseHybridLog) ---
-builder.Host.UseHybridLog();
+builder.Host.UseLog();
+builder.Services.AddFranzSerilogAuditPipeline()
+                .AddFranzEventValidationPipeline()
+                .AddFranzSerilogLoggingPipeline()
+                .AddMediatorOpenTelemetry()
+                .AddMediatorEventOpenTelemetry(new System.Diagnostics.ActivitySource("Franz.Mediator"));
+
+
 
 // --- Core services ---
 builder.Services.AddControllers();
@@ -27,24 +37,25 @@ builder.Services.AddOpenApi();
 // --- Application & Persistence ---
 builder.Services.RegisterApplicationServices();
 builder.Services.RegisterPersistenceServices<ApplicationDbContext>(builder.Configuration);
-builder.Services.AddRelationalDatabase<ApplicationDbContext>(builder.Environment, builder.Configuration);
+builder.Services.AddRelationalDatabase<ApplicationDbContext>(builder.Environment, builder.Configuration)
+  .AddEntityRepositories<ApplicationDbContext>()
+  .AddGenericRepositories<ApplicationDbContext>();
+  
+  
+
 
 // --- Http Architecture ---
 builder.Services.AddHttpArchitecture(builder.Environment, builder.Configuration);
 
 // --- Messaging ---
-builder.Services.AddMessagingInHttpContext(builder.Configuration);
+//builder.Services.AddMessagingInHttpContext(builder.Configuration);
 
-// --- HttpClients / Refit ---
-builder.Services.AddHttpServices(builder.Configuration, TimeSpan.FromSeconds(30));
-builder.Services.AddExternalServices(builder.Configuration);
+//builder.Services.AddHttpServices(builder.Configuration, TimeSpan.FromSeconds(30));
+//builder.Services.AddExternalServices(builder.Configuration);
 
 // --- Mediator + Pipelines ---
-builder.Services.AddFranzMediatorDefault();
-builder.Services
-    .AddFranzEventValidationPipeline()
-    .AddMediatorOpenTelemetry()
-    .AddMediatorEventOpenTelemetry(new System.Diagnostics.ActivitySource("Franz.Mediator"));
+builder.Services.AddFranzMediator(new[] { typeof(ListBooksQueryHandler).Assembly });
+    ;
 
 // --- Resilience (Polly) ---
 builder.Services.AddFranzResilience(builder.Configuration);
@@ -74,6 +85,8 @@ using (var scope = app.Services.CreateScope())
   {
     db.Database.EnsureDeleted();
     db.Database.EnsureCreated();
+    BookSeeder.Seed(db);
+    MemberSeeder.Seed(db);
   }
   else
   {
@@ -85,8 +98,8 @@ using (var scope = app.Services.CreateScope())
 app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
 // --- Middleware ---
-app.UseCors("AllowAll");
-app.UseHttpArchitecture();
+//app.UseCors("AllowAll");
+//app.UseHttpArchitecture();
 
 if (app.Environment.IsDevelopment())
 {

@@ -1,39 +1,50 @@
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Franz.Common.Business.Domain;
-using Franz.Common.Messaging.Kafka;
-using Franz.Common.EntityFramework.SQLServer.Extensions;
-using Franz.Consumer.Extensions;
-using Franz.Consumer.Services;
-using Franz.Persistence;
-using Franz.Common.Messaging.Delegating;
-using Franz.Consumer.Handlers;
+﻿using Franz.Common.EntityFramework.SQLServer.Extensions;
 using Franz.Common.Messaging.Bootstrap.Extenstions;
+using Franz.Common.Messaging.Delegating;
 
-var builder = Host.CreateDefaultBuilder(args)
-    .ConfigureAppConfiguration((context, config) =>
+using Franz.Consumer.Extensions;
+using Franz.Consumer.Handlers;
+
+using Franz.Persistence;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
+using Franz.Common.Messaging.Kafka.Extensions;
+namespace Franz.Consumer
+{
+  public static class Program
+  {
+    public static async Task Main(string[] args)
     {
-      // Add configuration files
-      config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-      config.AddJsonFile($"appsettings.{context.HostingEnvironment.EnvironmentName}.json", optional: true);
-    })
-    .ConfigureServices((context, services) =>
-    {
-      var configuration = context.Configuration;
-      var environment = context.HostingEnvironment;
+      using IHost host = Host.CreateDefaultBuilder(args)
+          .ConfigureAppConfiguration((context, config) =>
+          {
+            // Load base configuration
+            config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                        .AddJsonFile($"appsettings.{context.HostingEnvironment.EnvironmentName}.json", optional: true)
+                        .AddEnvironmentVariables();
+          })
+          .ConfigureServices((context, services) =>
+          {
+            var configuration = context.Configuration;
+            var environment = context.HostingEnvironment;
 
-      // Messaging architecture (Kafka and related services)
-      services.AddMessagingArchitecture(environment, configuration);
-      services.AddKafkaMessaging(configuration);
+            // 🧩 Messaging architecture setup (Kafka + Delegating)
+            services.AddMessagingArchitecture(environment, configuration);
+            services.AddKafkaMessaging(configuration);
 
-      // Database setup (SQL Server)
-      services.AddSqlServerDatabase<ApplicationDbContext>(configuration);
+            // 🗄️ Database setup (SQL Server)
+            services.AddSqlServerDatabase<ApplicationDbContext>(configuration);
 
-      // Add additional application services if needed
-      services.AddScoped<IMessageHandler, KafkaMessageHandler>();
-    })
-    .Build();
+            // 🧠 Business domain and consumer services
+            services.AddScoped<IMessageHandler, KafkaMessageHandler>();
+            services.AddKafkaMessagingServices(configuration); // from Franz.Consumer.Extensions
+          })
+          .Build();
 
-// Run the host
-await builder.RunAsync();
+      // ✅ Start host (graceful lifetime)
+      await host.RunAsync();
+    }
+  }
+}

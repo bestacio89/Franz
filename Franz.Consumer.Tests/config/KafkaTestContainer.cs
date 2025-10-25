@@ -22,7 +22,7 @@ namespace Franz.Consumer.Tests.config
           .WithEnvironment("KAFKA_ADVERTISED_LISTENERS", "PLAINTEXT://localhost:9093")
           .WithEnvironment("KAFKA_LISTENERS", "PLAINTEXT://0.0.0.0:9093")
           .WithPortBinding(9093, true) // Map Kafka's internal port to a random host port
-          .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(9093)) // Wait until Kafka is ready
+          .WithWaitStrategy(Wait.ForUnixContainer()) // Wait until Kafka is ready
           .Build();
     }
 

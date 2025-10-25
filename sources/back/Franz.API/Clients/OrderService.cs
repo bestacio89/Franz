@@ -1,4 +1,8 @@
-﻿using Franz.API.Clients;
+﻿
+
+
+using Franz.Contracts.DTOs;
+using Franz.Contracts.Infrastructure;
 
 public class OrderService
 {
@@ -16,7 +20,7 @@ public class OrderService
     var product = await _catalog.GetProductByIdAsync(productId);
 
     var payment = await _payments.ProcessPaymentAsync(
-        new PaymentRequest(Guid.NewGuid().ToString(), product.Price, "EUR", "CreditCard")
+        new PaymentRequestDto(Guid.NewGuid().ToString(), product.Price, "EUR", "CreditCard")
     );
 
     if (payment.Status != "Success")

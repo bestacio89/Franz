@@ -1,12 +1,14 @@
 ﻿
 
+using Franz.Common.DependencyInjection;
+using Franz.Contracts.DTOs;
 using Refit;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Franz.API.Clients;
+namespace Franz.Contracts.Infrastructure;
 
-  public interface ICatalogClient
+  public interface ICatalogClient :IScopedDependency
   {
     [Get("/products")]
     Task<IEnumerable<ProductDto>> GetProductsAsync();
@@ -15,17 +17,14 @@ namespace Franz.API.Clients;
     Task<ProductDto> GetProductByIdAsync(int id);
 
     [Post("/products")]
-    Task<ProductDto> CreateProductAsync([Body] ProductCreateRequest request);
+    Task<ProductDto> CreateProductAsync([Body] ProductCreateRequestDto request);
 
     [Put("/products/{id}")]
-    Task<ProductDto> UpdateProductAsync(int id, [Body] ProductUpdateRequest request);
+    Task<ProductDto> UpdateProductAsync(int id, [Body] ProductUpdateRequestDto request);
 
     [Delete("/products/{id}")]
     Task DeleteProductAsync(int id);
   }
 
   // DTOs can live in a shared "Contracts" or "Dtos" folder
-  public record ProductDto(int Id, string Name, decimal Price);
-  public record ProductCreateRequest(string Name, decimal Price);
-  public record ProductUpdateRequest(string Name, decimal Price);
 

@@ -1,4 +1,4 @@
-﻿using Franz.Common.Mediator.Extensions;
+﻿using Franz.Common.Mapping.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 

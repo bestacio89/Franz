@@ -3,9 +3,10 @@
   <Import Project="../../../common.targets" />
 
   <ItemGroup>
-    <PackageReference Include="Franz.Common.Business" Version="1.6.3" />
-    <PackageReference Include="Franz.Common.Caching" Version="1.6.3" />
-    <PackageReference Include="Franz.Common.Mediator" Version="1.6.3" />
+    <PackageReference Include="Franz.Common.Business" Version="1.6.19" />
+    <PackageReference Include="Franz.Common.Caching" Version="1.6.19" />
+    <PackageReference Include="Franz.Common.Mediator" Version="1.6.19" />
+    <PackageReference Include="Refit" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -15,6 +16,8 @@
   <ItemGroup>
     <Folder Include="Features\Example\Commands\" />
     <Folder Include="Features\Example\Queries\" />
+    <Folder Include="Features\Example\Persistence\" />
+    <Folder Include="Features\Example\Infrastructure\" />
   </ItemGroup>
 
 </Project>
