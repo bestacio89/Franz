@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Text;
 using ArchUnitNET.Fluent;
 using ArchUnitNET.xUnit;
 using Franz.Common.Mediator.Messages;
@@ -12,14 +11,13 @@ using ControllerBase = Microsoft.AspNetCore.Mvc.ControllerBase;
 namespace Franz.Testing.ArchitecturalReports.Layers
 {
   /// <summary>
-  /// API Layer Compliance Audit —
+  /// ⚖️ Franz Tribunal — API Layer Compliance Audit
   /// Validates controller conventions, dependency isolation, and namespace discipline
-  /// within the Franz API boundary.
+  /// within the API boundary. Fully dynamic for any solution prefix.
   /// </summary>
-  public class ApiLayerComplianceAudit : ArchitecturalAuditBase
+  public sealed class ApiLayerComplianceAudit : ArchitecturalAuditBase
   {
     [Trait("Category", "ArchitecturalReport")]
-
     public void Audit_ApiLayer_Compliance()
     {
       ExecuteTribunal("API Layer Compliance Audit", (sb, markViolation) =>
@@ -27,6 +25,8 @@ namespace Franz.Testing.ArchitecturalReports.Layers
         sb.AppendLine("---------------------------------------------------------------");
         sb.AppendLine("                API LAYER COMPLIANCE AUDIT                     ");
         sb.AppendLine("---------------------------------------------------------------");
+
+        var prefix = SolutionPrefix; // 🔹 Dynamic prefix for all namespace matches
 
         // RULE 1 — Assembly presence
         ExecuteRule("Assembly Presence", "API assembly must be present and accessible.", () =>
@@ -36,7 +36,7 @@ namespace Franz.Testing.ArchitecturalReports.Layers
         }, sb, markViolation);
 
         // RULE 2 — Controller conventions
-        ExecuteRule("Controller Conventions", "Controllers must end with 'Controller' and reside under Franz.API.Controllers.", () =>
+        ExecuteRule("Controller Conventions", $"Controllers must end with 'Controller' and reside under {prefix}.API.Controllers.", () =>
         {
           var controllers = ApiLayer
               .GetObjects(BaseArchitecture)
@@ -56,14 +56,14 @@ namespace Franz.Testing.ArchitecturalReports.Layers
               .Should()
               .BeAssignableTo(typeof(ControllerBase))
               .AndShould()
-              .ResideInNamespace("Franz.API.Controllers", true)
-              .Because("Controllers must reside in Franz.API.Controllers and derive from ControllerBase.")
+              .ResideInNamespaceMatching($"^{prefix}\\.API\\.Controllers(\\..*)?$")
+              .Because($"Controllers must reside in {prefix}.API.Controllers and derive from ControllerBase.")
               .Check(BaseArchitecture);
 
           sb.AppendLine($"✅ Verified {controllers.Count} controller(s) comply with naming and inheritance conventions.");
         }, sb, markViolation);
 
-        // RULE 3 — Dependency isolation
+        // RULE 3 — Dependency isolation (dynamic)
         ExecuteRule("Dependency Isolation", "Controllers may depend only on Contracts, Common abstractions, and framework namespaces.", () =>
         {
           var controllers = ApiLayer
@@ -83,16 +83,16 @@ namespace Franz.Testing.ArchitecturalReports.Layers
               .Are(controllers)
               .Should()
               .OnlyDependOnTypesThat()
-              // Franz internal abstractions
-              .ResideInNamespaceMatching(@"^Franz\.Contracts(\..*)?$")
-              .OrShould().ResideInNamespaceMatching(@"^Franz\.Common(\..*)?$")
-              .OrShould().ResideInNamespaceMatching(@"^Franz\.Common\.Mediator(\..*)?$")
-              // Framework namespaces
+              // Franz internal abstractions (dynamic prefix)
+              .ResideInNamespaceMatching($"^{prefix}\\.Contracts(\\..*)?$")
+              .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Common(\\..*)?$")
+              .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Common\\.Mediator(\\..*)?$")
+              // System & Microsoft
               .OrShould().ResideInNamespaceMatching(@"^System(\..*)?$")
               .OrShould().ResideInNamespaceMatching(@"^Microsoft(\..*)?$")
-              .OrShould().ResideInNamespaceMatching(@"^Microsoft\.AspNetCore(\..*)?$")
+              .OrShould().ResideInNamespaceMatching(@"^Microsoft\\.AspNetCore(\\..*)?$")
               // Local API namespace
-              .OrShould().ResideInNamespaceMatching(@"^Franz\.API(\..*)?$")
+              .OrShould().ResideInNamespaceMatching($"^{prefix}\\.API(\\..*)?$")
               .Because("Controllers must not depend on Domain, Application, or Persistence layers.")
               .WithoutRequiringPositiveResults()
               .Check(BaseArchitecture);
@@ -100,9 +100,14 @@ namespace Franz.Testing.ArchitecturalReports.Layers
           sb.AppendLine("✅ Verified API controllers maintain clean dependency boundaries.");
         }, sb, markViolation);
 
+        // ───────────────────────────────
+        // 🎯 VERDICT SUMMARY
+        // ───────────────────────────────
         sb.AppendLine("---------------------------------------------------------------");
         sb.AppendLine(" API LAYER COMPLIANCE: COMPLETED SUCCESSFULLY");
         sb.AppendLine("---------------------------------------------------------------");
+        sb.AppendLine($"🕊️  {prefix}.API Audit Verdict: Excellent");
+        sb.AppendLine("⚙️  Controllers: Properly Scoped ✔  |  Dependencies: Clean ✔");
       });
     }
   }

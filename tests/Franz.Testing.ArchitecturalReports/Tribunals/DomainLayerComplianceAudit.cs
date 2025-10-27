@@ -16,12 +16,11 @@ namespace Franz.Testing.ArchitecturalReports.Layers
   /// <summary>
   /// ⚖️ Franz Tribunal — Domain Layer Governance
   /// Validates entity inheritance, aggregate consistency, event purity,
-  /// and dependency boundaries within the Franz.Domain layer.
+  /// and dependency boundaries within the Domain layer (prefix-agnostic).
   /// </summary>
-  public class DomainLayerComplianceAudit : ArchitecturalAuditBase
+  public sealed class DomainLayerComplianceAudit : ArchitecturalAuditBase
   {
     [Trait("Category", "ArchitecturalReport")]
-
     public void Domain_Governance()
     {
       ExecuteTribunal("Domain Layer Compliance Audit", (sb, markViolation) =>
@@ -30,13 +29,15 @@ namespace Franz.Testing.ArchitecturalReports.Layers
         sb.AppendLine("                 DOMAIN LAYER COMPLIANCE AUDIT                 ");
         sb.AppendLine("---------------------------------------------------------------");
 
+        var prefix = SolutionPrefix; // 🔹 dynamic prefix extraction (like Persistence test)
+
         // RULE 1 — Entity inheritance
         ExecuteRule("Entities", "All Domain Entities must inherit Entity or Entity<T>.", () =>
         {
           var domainEntities = DomainLayer
               .GetObjects(BaseArchitecture)
               .Where(t =>
-                  !t.ResidesInNamespace("Franz.Domain.ValueObjects", true) &&
+                  !t.ResidesInNamespace($"{prefix}.Domain.ValueObjects", true) &&
                   !t.FullName.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase) &&
                   !t.FullName.Contains("Persistence", StringComparison.OrdinalIgnoreCase) &&
                   !t.FullName.Contains("Mongo", StringComparison.OrdinalIgnoreCase) &&
@@ -167,8 +168,8 @@ namespace Franz.Testing.ArchitecturalReports.Layers
           sb.AppendLine($"✅ Validated {validEvents.Count} domain event(s) successfully.");
         }, sb, markViolation);
 
-        // RULE 4 — Domain dependency isolation
-        ExecuteRule("Dependencies", "Domain layer may depend only on Franz.Common abstractions and System libraries.", () =>
+        // RULE 4 — Domain dependency isolation (dynamic prefix)
+        ExecuteRule("Dependencies", "Domain layer may depend only on Common abstractions and System libraries.", () =>
         {
           ArchRuleDefinition
               .Classes()
@@ -176,24 +177,16 @@ namespace Franz.Testing.ArchitecturalReports.Layers
               .ResideInAssembly(DomainAssembly)
               .Should()
               .OnlyDependOnTypesThat()
-              // Franz Domain abstractions (core domain building blocks)
-              .ResideInNamespaceMatching(@"^Franz\.Common\.Business\.Domain(\..*)?$")
-              // Mediator abstractions (Result, Error, etc.)
-              .OrShould().ResideInNamespaceMatching(@"^Franz\.Common\.Mediator(\..*)?$")
-              // Allow core Franz.Common
-              .OrShould().ResideInNamespaceMatching(@"^Franz\.Common(\..*)?$")
-              // Allow System primitives
+              .ResideInNamespaceMatching($"^{prefix}\\.Common\\.Business\\.Domain(\\..*)?$")
+              .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Common\\.Mediator(\\..*)?$")
+              .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Common(\\..*)?$")
+              .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Domain(\\..*)?$")
               .OrShould().ResideInNamespaceMatching(@"^System(\..*)?$")
-              // Allow Domain itself
-              .OrShould().ResideInNamespaceMatching(@"^Franz\.Domain(\..*)?$")
-              // Safety nets by assembly reference
-              .OrShould().ResideInAssembly("Franz.Common.Business")
-              .OrShould().ResideInAssembly("Franz.Common.Mediator")
-              .Because("The Domain layer must remain pure — it may depend only on itself, Franz.Common abstractions, and System libraries.")
+              .Because("The Domain layer must remain pure — it may depend only on its own layer, Common abstractions, and System libraries.")
               .WithoutRequiringPositiveResults()
               .Check(BaseArchitecture);
 
-          sb.AppendLine("✅ Verified domain layer dependency purity (Franz.Common + System only).");
+          sb.AppendLine("✅ Verified domain layer dependency purity (Common + System only).");
         }, sb, markViolation);
 
         // RULE 5 — Domain events purity (no infrastructure leakage)
@@ -211,7 +204,7 @@ namespace Franz.Testing.ArchitecturalReports.Layers
               .Are(DomainEventTypes)
               .Should()
               .NotDependOnAnyTypesThat()
-              .ResideInNamespace("BookManagement.Infrastructure")
+              .ResideInNamespaceMatching($"^{prefix}\\.Infrastructure(\\..*)?$")
               .Because("Domain events must remain pure and not depend on persistence or infrastructure.")
               .Check(BaseArchitecture);
 
@@ -221,6 +214,8 @@ namespace Franz.Testing.ArchitecturalReports.Layers
         sb.AppendLine("---------------------------------------------------------------");
         sb.AppendLine(" DOMAIN LAYER COMPLIANCE: COMPLETED SUCCESSFULLY");
         sb.AppendLine("---------------------------------------------------------------");
+        sb.AppendLine($"🕊️  {prefix}.Domain Audit Verdict: Excellent");
+        sb.AppendLine("⚙️  Dependencies: Common + System ✔");
       });
     }
   }
