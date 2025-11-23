@@ -1,5 +1,5 @@
 ﻿<p align="center">
-  <img width="200" src="../Docs/assets/FranzTemplate.png" alt="Franz Logo"/>
+  <img width="200" src="./Docs/assets/FranzTemplate.png" alt="Franz Logo"/>
 </p>
 
 <h1 align="center">API Project — Powered by Franz</h1>
