@@ -1,0 +1,656 @@
+2025-11-15 15:16:51.909 +01:00 [DBG] [DB] Connection string (masked): Host=127.0.0.1;Database=library;Username=postgres;Password=***;Port=5432;SSL Mode=Disable
+2025-11-15 15:16:58.417 +01:00 [DBG] Initializing Razor view compiler with no compiled views.
+2025-11-15 15:16:58.434 +01:00 [DBG] Registered model binder providers, in the following order: ["Microsoft.AspNetCore.Mvc.Versioning.ApiVersionModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.BinderTypeModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.ServicesModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.BodyModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.HeaderModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.FloatingPointTypeModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.EnumTypeModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.DateTimeModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.SimpleTypeModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.TryParseModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.CancellationTokenModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.ByteArrayModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.FormFileModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.FormCollectionModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.KeyValuePairModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.DictionaryModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.ArrayModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.CollectionModelBinderProvider","Microsoft.AspNetCore.Mvc.ModelBinding.Binders.ComplexObjectModelBinderProvider"]
+2025-11-15 15:16:58.528 +01:00 [DBG] Hosting starting
+2025-11-15 15:16:58.591 +01:00 [DBG] Middleware loaded
+2025-11-15 15:16:58.597 +01:00 [DBG] Middleware loaded. Script /_framework/aspnetcore-browser-refresh.js (16503 B).
+2025-11-15 15:16:58.603 +01:00 [DBG] Middleware loaded. Script /_framework/blazor-hotreload.js (799 B).
+2025-11-15 15:16:58.656 +01:00 [DBG] Middleware configuration started with options: {AllowedHosts = *, AllowEmptyHosts = True, IncludeFailureMessage = True}
+2025-11-15 15:16:58.664 +01:00 [DBG] Wildcard detected, all requests with hosts will be allowed.
+2025-11-15 15:16:58.678 +01:00 [DBG] Middleware loaded: DOTNET_MODIFIABLE_ASSEMBLIES=debug, __ASPNETCORE_BROWSER_TOOLS=true
+2025-11-15 15:16:58.778 +01:00 [WRN] The ASP.NET Core developer certificate is not trusted. For information about trusting the ASP.NET Core developer certificate, see https://aka.ms/aspnet/https-trust-dev-cert
+2025-11-15 15:16:58.922 +01:00 [DBG] Loaded hosting startup assembly Franz.API
+2025-11-15 15:16:58.927 +01:00 [DBG] Loaded hosting startup assembly Microsoft.WebTools.ApiEndpointDiscovery
+2025-11-15 15:16:58.932 +01:00 [DBG] Loaded hosting startup assembly Microsoft.AspNetCore.Watch.BrowserRefresh
+2025-11-15 15:16:58.937 +01:00 [DBG] Loaded hosting startup assembly Microsoft.WebTools.BrowserLink.Net
+2025-11-15 15:16:58.949 +01:00 [DBG] Executing API description provider 'EndpointMetadataApiDescriptionProvider' from assembly Microsoft.AspNetCore.Mvc.ApiExplorer v9.0.0.0.
+2025-11-15 15:16:58.955 +01:00 [DBG] Executing API description provider 'DefaultApiDescriptionProvider' from assembly Microsoft.AspNetCore.Mvc.ApiExplorer v9.0.0.0.
+2025-11-15 15:16:58.970 +01:00 [DBG] Executing API description provider 'JsonPatchOperationsArrayProvider' from assembly Microsoft.AspNetCore.Mvc.NewtonsoftJson v9.0.8.0.
+2025-11-15 15:16:58.978 +01:00 [DBG] Executing API description provider 'VersionedApiDescriptionProvider' from assembly Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer v5.1.0.0.
+2025-11-15 15:16:59.038 +01:00 [DBG] Hosting started
+2025-11-15 15:16:59.207 +01:00 [DBG] Connection id "0HNH4A6HSK3SI" received FIN.
+2025-11-15 15:16:59.207 +01:00 [DBG] Connection id "0HNH4A6HSK3SH" received FIN.
+2025-11-15 15:16:59.221 +01:00 [DBG] Connection id "0HNH4A6HSK3SI" accepted.
+2025-11-15 15:16:59.221 +01:00 [DBG] Connection id "0HNH4A6HSK3SH" accepted.
+2025-11-15 15:16:59.227 +01:00 [DBG] Connection id "0HNH4A6HSK3SI" started.
+2025-11-15 15:16:59.231 +01:00 [DBG] Connection id "0HNH4A6HSK3SH" started.
+2025-11-15 15:16:59.272 +01:00 [DBG] Failed to authenticate HTTPS connection.
+System.IO.IOException: Received an unexpected EOF or 0 bytes from the transport stream.
+   at System.Net.Security.SslStream.ReceiveHandshakeFrameAsync[TIOAdapter](CancellationToken cancellationToken)
+   at System.Net.Security.SslStream.ForceAuthenticationAsync[TIOAdapter](Boolean receiveFirst, Byte[] reAuthenticationData, CancellationToken cancellationToken)
+   at System.Net.Security.SslStream.ProcessAuthenticationWithTelemetryAsync(Boolean isAsync, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Https.Internal.HttpsConnectionMiddleware.OnConnectionAsync(ConnectionContext context)
+2025-11-15 15:16:59.272 +01:00 [DBG] Failed to authenticate HTTPS connection.
+System.IO.IOException: Received an unexpected EOF or 0 bytes from the transport stream.
+   at System.Net.Security.SslStream.ReceiveHandshakeFrameAsync[TIOAdapter](CancellationToken cancellationToken)
+   at System.Net.Security.SslStream.ForceAuthenticationAsync[TIOAdapter](Boolean receiveFirst, Byte[] reAuthenticationData, CancellationToken cancellationToken)
+   at System.Net.Security.SslStream.ProcessAuthenticationWithTelemetryAsync(Boolean isAsync, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Https.Internal.HttpsConnectionMiddleware.OnConnectionAsync(ConnectionContext context)
+2025-11-15 15:16:59.286 +01:00 [DBG] Connection id "0HNH4A6HSK3SI" stopped.
+2025-11-15 15:16:59.290 +01:00 [DBG] Connection id "0HNH4A6HSK3SH" stopped.
+2025-11-15 15:16:59.301 +01:00 [DBG] Connection id "0HNH4A6HSK3SI" sending FIN because: "The Socket transport's send loop completed gracefully."
+2025-11-15 15:16:59.301 +01:00 [DBG] Connection id "0HNH4A6HSK3SH" sending FIN because: "The Socket transport's send loop completed gracefully."
+2025-11-15 15:16:59.934 +01:00 [DBG] Connection id "0HNH4A6HSK3SJ" accepted.
+2025-11-15 15:16:59.954 +01:00 [DBG] Connection id "0HNH4A6HSK3SJ" started.
+2025-11-15 15:16:59.955 +01:00 [DBG] Connection id "0HNH4A6HSK3SK" accepted.
+2025-11-15 15:16:59.977 +01:00 [DBG] Connection id "0HNH4A6HSK3SK" started.
+2025-11-15 15:17:00.054 +01:00 [DBG] Connection id "0HNH4A6HSK3SJ" received FIN.
+2025-11-15 15:17:00.055 +01:00 [DBG] Connection id "0HNH4A6HSK3SK" received FIN.
+2025-11-15 15:17:00.191 +01:00 [DBG] Failed to authenticate HTTPS connection.
+System.Security.Authentication.AuthenticationException: Authentication failed, see inner exception.
+ ---> System.ComponentModel.Win32Exception (0x80090327): Une erreur inconnue s’est produite lors du traitement du certificat.
+   --- End of inner exception stack trace ---
+   at System.Net.Security.SslStream.ForceAuthenticationAsync[TIOAdapter](Boolean receiveFirst, Byte[] reAuthenticationData, CancellationToken cancellationToken)
+   at System.Net.Security.SslStream.ProcessAuthenticationWithTelemetryAsync(Boolean isAsync, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Https.Internal.HttpsConnectionMiddleware.OnConnectionAsync(ConnectionContext context)
+2025-11-15 15:17:00.193 +01:00 [DBG] Failed to authenticate HTTPS connection.
+System.Security.Authentication.AuthenticationException: Authentication failed, see inner exception.
+ ---> System.ComponentModel.Win32Exception (0x80090327): Une erreur inconnue s’est produite lors du traitement du certificat.
+   --- End of inner exception stack trace ---
+   at System.Net.Security.SslStream.ForceAuthenticationAsync[TIOAdapter](Boolean receiveFirst, Byte[] reAuthenticationData, CancellationToken cancellationToken)
+   at System.Net.Security.SslStream.ProcessAuthenticationWithTelemetryAsync(Boolean isAsync, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Https.Internal.HttpsConnectionMiddleware.OnConnectionAsync(ConnectionContext context)
+2025-11-15 15:17:00.222 +01:00 [DBG] Connection id "0HNH4A6HSK3SJ" stopped.
+2025-11-15 15:17:00.233 +01:00 [DBG] Connection id "0HNH4A6HSK3SK" stopped.
+2025-11-15 15:17:00.236 +01:00 [DBG] Connection id "0HNH4A6HSK3SJ" sending FIN because: "The Socket transport's send loop completed gracefully."
+2025-11-15 15:17:00.252 +01:00 [DBG] Connection id "0HNH4A6HSK3SK" sending FIN because: "The Socket transport's send loop completed gracefully."
+2025-11-15 15:17:07.686 +01:00 [DBG] Connection id "0HNH4A6HSK3SL" accepted.
+2025-11-15 15:17:07.691 +01:00 [DBG] Connection id "0HNH4A6HSK3SL" started.
+2025-11-15 15:17:07.692 +01:00 [DBG] Connection id "0HNH4A6HSK3SM" accepted.
+2025-11-15 15:17:07.699 +01:00 [DBG] Connection id "0HNH4A6HSK3SL" received FIN.
+2025-11-15 15:17:07.702 +01:00 [DBG] Connection id "0HNH4A6HSK3SM" started.
+2025-11-15 15:17:07.702 +01:00 [DBG] Failed to authenticate HTTPS connection.
+System.Security.Authentication.AuthenticationException: Authentication failed, see inner exception.
+ ---> System.ComponentModel.Win32Exception (0x80090327): Une erreur inconnue s’est produite lors du traitement du certificat.
+   --- End of inner exception stack trace ---
+   at System.Net.Security.SslStream.ForceAuthenticationAsync[TIOAdapter](Boolean receiveFirst, Byte[] reAuthenticationData, CancellationToken cancellationToken)
+   at System.Net.Security.SslStream.ProcessAuthenticationWithTelemetryAsync(Boolean isAsync, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Https.Internal.HttpsConnectionMiddleware.OnConnectionAsync(ConnectionContext context)
+2025-11-15 15:17:07.714 +01:00 [DBG] Connection id "0HNH4A6HSK3SM" received FIN.
+2025-11-15 15:17:07.715 +01:00 [DBG] Connection id "0HNH4A6HSK3SN" accepted.
+2025-11-15 15:17:07.720 +01:00 [DBG] Connection id "0HNH4A6HSK3SL" stopped.
+2025-11-15 15:17:07.715 +01:00 [DBG] Failed to authenticate HTTPS connection.
+System.Security.Authentication.AuthenticationException: Authentication failed, see inner exception.
+ ---> System.ComponentModel.Win32Exception (0x80090327): Une erreur inconnue s’est produite lors du traitement du certificat.
+   --- End of inner exception stack trace ---
+   at System.Net.Security.SslStream.ForceAuthenticationAsync[TIOAdapter](Boolean receiveFirst, Byte[] reAuthenticationData, CancellationToken cancellationToken)
+   at System.Net.Security.SslStream.ProcessAuthenticationWithTelemetryAsync(Boolean isAsync, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Https.Internal.HttpsConnectionMiddleware.OnConnectionAsync(ConnectionContext context)
+2025-11-15 15:17:07.729 +01:00 [DBG] Connection id "0HNH4A6HSK3SN" started.
+2025-11-15 15:17:07.734 +01:00 [DBG] Connection id "0HNH4A6HSK3SL" sending FIN because: "The Socket transport's send loop completed gracefully."
+2025-11-15 15:17:07.741 +01:00 [DBG] Connection id "0HNH4A6HSK3SM" stopped.
+2025-11-15 15:17:07.758 +01:00 [DBG] Connection id "0HNH4A6HSK3SM" sending FIN because: "The Socket transport's send loop completed gracefully."
+2025-11-15 15:17:07.767 +01:00 [DBG] Connection 0HNH4A6HSK3SN established using the following protocol: "Tls13"
+2025-11-15 15:17:07.822 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger - null null
+2025-11-15 15:17:08.134 +01:00 [DBG] No candidates found for the request path '/swagger'
+2025-11-15 15:17:08.140 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:08.180 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:08.226 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger - 301 0 null 413.3485ms
+2025-11-15 15:17:08.233 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger/index.html - null null
+2025-11-15 15:17:08.275 +01:00 [DBG] No candidates found for the request path '/swagger/index.html'
+2025-11-15 15:17:08.280 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:08.286 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:08.353 +01:00 [DBG] Response markup is scheduled to include Browser Link script injection.
+2025-11-15 15:17:08.374 +01:00 [DBG] Response markup is scheduled to include browser refresh script injection.
+2025-11-15 15:17:08.388 +01:00 [DBG] Response markup was updated to include Browser Link script injection.
+2025-11-15 15:17:08.393 +01:00 [DBG] Response markup was updated to include browser refresh script injection.
+2025-11-15 15:17:08.399 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger/index.html - 200 null text/html;charset=utf-8 165.6ms
+2025-11-15 15:17:08.454 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger/index.css - null null
+2025-11-15 15:17:08.454 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger/swagger-ui.css - null null
+2025-11-15 15:17:08.455 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger/index.js - null null
+2025-11-15 15:17:08.455 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/_framework/aspnetcore-browser-refresh.js - null null
+2025-11-15 15:17:08.483 +01:00 [DBG] No candidates found for the request path '/swagger/swagger-ui.css'
+2025-11-15 15:17:08.491 +01:00 [DBG] No candidates found for the request path '/swagger/index.js'
+2025-11-15 15:17:08.476 +01:00 [DBG] No candidates found for the request path '/swagger/index.css'
+2025-11-15 15:17:08.504 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:08.509 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:08.533 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:08.547 +01:00 [DBG] Script injected: /_framework/aspnetcore-browser-refresh.js
+2025-11-15 15:17:08.550 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:08.550 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:08.560 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/_framework/aspnetcore-browser-refresh.js - 200 16503 application/javascript; charset=utf-8 104.1075ms
+2025-11-15 15:17:08.555 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:08.568 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger/index.js - 200 null application/javascript;charset=utf-8 112.8587ms
+2025-11-15 15:17:08.456 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/_vs/browserLink - null null
+2025-11-15 15:17:08.455 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger/swagger-ui-standalone-preset.js - null null
+2025-11-15 15:17:08.455 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger/swagger-ui-bundle.js - null null
+2025-11-15 15:17:08.616 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger/index.css - 200 152 text/css 161.4905ms
+2025-11-15 15:17:08.626 +01:00 [DBG] No candidates found for the request path '/swagger/swagger-ui-standalone-preset.js'
+2025-11-15 15:17:08.641 +01:00 [DBG] No candidates found for the request path '/swagger/swagger-ui-bundle.js'
+2025-11-15 15:17:08.629 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger/swagger-ui.css - 200 23647 text/css 174.569ms
+2025-11-15 15:17:08.658 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:08.664 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:08.679 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:08.683 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:08.696 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger/swagger-ui-standalone-preset.js - 200 77352 text/javascript 240.8872ms
+2025-11-15 15:17:08.717 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger/swagger-ui-bundle.js - 200 424767 text/javascript 262.0231ms
+2025-11-15 15:17:08.725 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/_vs/browserLink - 200 null text/javascript; charset=UTF-8 269.1158ms
+2025-11-15 15:17:08.947 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/openapi/v1.json - null null
+2025-11-15 15:17:08.967 +01:00 [DBG] 1 candidate(s) found for the request path '/openapi/v1.json'
+2025-11-15 15:17:08.975 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger/favicon-32x32.png - null null
+2025-11-15 15:17:08.976 +01:00 [DBG] Endpoint 'HTTP: GET /openapi/{documentName}.json' with route pattern '/openapi/{documentName}.json' is valid for the request path '/openapi/v1.json'
+2025-11-15 15:17:08.984 +01:00 [DBG] No candidates found for the request path '/swagger/favicon-32x32.png'
+2025-11-15 15:17:08.993 +01:00 [DBG] Request matched endpoint 'HTTP: GET /openapi/{documentName}.json'
+2025-11-15 15:17:08.998 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:09.010 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:09.010 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:09.023 +01:00 [INF] Executing endpoint 'HTTP: GET /openapi/{documentName}.json'
+2025-11-15 15:17:09.029 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger/favicon-32x32.png - 200 628 image/png 54.0838ms
+2025-11-15 15:17:09.251 +01:00 [INF] Executed endpoint 'HTTP: GET /openapi/{documentName}.json'
+2025-11-15 15:17:09.259 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/openapi/v1.json - 200 null application/json;charset=utf-8 311.9982ms
+2025-11-15 15:17:22.411 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger - null null
+2025-11-15 15:17:22.479 +01:00 [DBG] No candidates found for the request path '/swagger'
+2025-11-15 15:17:22.485 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:22.491 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:22.496 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger - 301 0 null 85.6018ms
+2025-11-15 15:17:22.505 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger/index.html - null null
+2025-11-15 15:17:22.556 +01:00 [DBG] No candidates found for the request path '/swagger/index.html'
+2025-11-15 15:17:22.561 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:22.566 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:22.573 +01:00 [DBG] Response markup is scheduled to include Browser Link script injection.
+2025-11-15 15:17:22.577 +01:00 [DBG] Response markup is scheduled to include browser refresh script injection.
+2025-11-15 15:17:22.581 +01:00 [DBG] Response markup was updated to include Browser Link script injection.
+2025-11-15 15:17:22.586 +01:00 [DBG] Response markup was updated to include browser refresh script injection.
+2025-11-15 15:17:22.591 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger/index.html - 200 null text/html;charset=utf-8 86.0944ms
+2025-11-15 15:17:22.669 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger/swagger-ui.css - null null
+2025-11-15 15:17:22.671 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger/index.css - null null
+2025-11-15 15:17:22.671 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger/swagger-ui-bundle.js - null null
+2025-11-15 15:17:22.678 +01:00 [DBG] No candidates found for the request path '/swagger/swagger-ui.css'
+2025-11-15 15:17:22.685 +01:00 [DBG] No candidates found for the request path '/swagger/index.css'
+2025-11-15 15:17:22.692 +01:00 [DBG] No candidates found for the request path '/swagger/swagger-ui-bundle.js'
+2025-11-15 15:17:22.696 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:22.701 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:22.706 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:22.710 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:22.713 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:22.716 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:22.721 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger/swagger-ui.css - 200 23647 text/css 52.3953ms
+2025-11-15 15:17:22.725 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger/index.css - 200 152 text/css 54.0759ms
+2025-11-15 15:17:22.731 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger/index.js - null null
+2025-11-15 15:17:22.731 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger/swagger-ui-bundle.js - 200 424767 text/javascript 60.5837ms
+2025-11-15 15:17:22.728 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger/swagger-ui-standalone-preset.js - null null
+2025-11-15 15:17:22.754 +01:00 [DBG] No candidates found for the request path '/swagger/index.js'
+2025-11-15 15:17:22.774 +01:00 [DBG] No candidates found for the request path '/swagger/swagger-ui-standalone-preset.js'
+2025-11-15 15:17:22.778 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:22.783 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:22.787 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:22.791 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:22.796 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger/index.js - 200 null application/javascript;charset=utf-8 64.9088ms
+2025-11-15 15:17:22.803 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger/swagger-ui-standalone-preset.js - 200 77352 text/javascript 76.4465ms
+2025-11-15 15:17:22.806 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/_framework/aspnetcore-browser-refresh.js - null null
+2025-11-15 15:17:22.826 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/_vs/browserLink - null null
+2025-11-15 15:17:22.831 +01:00 [DBG] Script injected: /_framework/aspnetcore-browser-refresh.js
+2025-11-15 15:17:22.844 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/_framework/aspnetcore-browser-refresh.js - 200 16503 application/javascript; charset=utf-8 37.4757ms
+2025-11-15 15:17:22.861 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/_vs/browserLink - 200 null text/javascript; charset=UTF-8 34.2691ms
+2025-11-15 15:17:23.051 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/openapi/v1.json - null null
+2025-11-15 15:17:23.062 +01:00 [DBG] 1 candidate(s) found for the request path '/openapi/v1.json'
+2025-11-15 15:17:23.070 +01:00 [DBG] Endpoint 'HTTP: GET /openapi/{documentName}.json' with route pattern '/openapi/{documentName}.json' is valid for the request path '/openapi/v1.json'
+2025-11-15 15:17:23.080 +01:00 [DBG] Request matched endpoint 'HTTP: GET /openapi/{documentName}.json'
+2025-11-15 15:17:23.085 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:23.091 +01:00 [INF] Executing endpoint 'HTTP: GET /openapi/{documentName}.json'
+2025-11-15 15:17:23.091 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/swagger/favicon-32x32.png - null null
+2025-11-15 15:17:23.106 +01:00 [DBG] No candidates found for the request path '/swagger/favicon-32x32.png'
+2025-11-15 15:17:23.108 +01:00 [INF] Executed endpoint 'HTTP: GET /openapi/{documentName}.json'
+2025-11-15 15:17:23.111 +01:00 [DBG] Request did not match any endpoints
+2025-11-15 15:17:23.115 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/openapi/v1.json - 200 null application/json;charset=utf-8 64.0681ms
+2025-11-15 15:17:23.119 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:17:23.136 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/swagger/favicon-32x32.png - 200 628 image/png 44.4374ms
+2025-11-15 15:19:51.305 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/api/v1/api/books/by-author/Banana - null null
+2025-11-15 15:19:51.328 +01:00 [DBG] 1 candidate(s) found for the request path '/api/v1/api/books/by-author/Banana'
+2025-11-15 15:19:51.338 +01:00 [DBG] Endpoint 'Franz.API.Controllers.BooksController.GetByAuthor (Franz.API)' with route pattern 'api/v{version:apiVersion}/api/books/by-author/{author}' is valid for the request path '/api/v1/api/books/by-author/Banana'
+2025-11-15 15:19:51.350 +01:00 [DBG] Request matched endpoint 'Franz.API.Controllers.BooksController.GetByAuthor (Franz.API)'
+2025-11-15 15:19:51.356 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:19:51.361 +01:00 [INF] Executing endpoint 'Franz.API.Controllers.BooksController.GetByAuthor (Franz.API)'
+2025-11-15 15:19:51.370 +01:00 [DBG] [DB] Connection string (masked): Host=127.0.0.1;Database=library;Username=postgres;Password=***;Port=5432;SSL Mode=Disable
+2025-11-15 15:19:51.396 +01:00 [INF] Route matched with {action = "GetByAuthor", controller = "Books"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[System.Collections.Generic.IReadOnlyList`1[Franz.Contracts.DTOs.BookDto]]] GetByAuthor(System.String, System.Threading.CancellationToken) on controller Franz.API.Controllers.BooksController (Franz.API).
+2025-11-15 15:19:51.404 +01:00 [DBG] Execution plan of authorization filters (in the following order): ["None"]
+2025-11-15 15:19:51.410 +01:00 [DBG] Execution plan of resource filters (in the following order): ["Microsoft.AspNetCore.Mvc.ViewFeatures.Filters.SaveTempDataFilter"]
+2025-11-15 15:19:51.417 +01:00 [DBG] Execution plan of action filters (in the following order): ["Microsoft.AspNetCore.Mvc.ModelBinding.UnsupportedContentTypeFilter (Order: -3000)","Microsoft.AspNetCore.Mvc.Infrastructure.ModelStateInvalidFilter (Order: -2000)","Franz.Common.Http.EntityFramework.Transactions.TransactionFilter","Microsoft.AspNetCore.Mvc.ReportApiVersionsAttribute (Order: 0)","Microsoft.AspNetCore.Mvc.Versioning.ApplyContentTypeVersionActionFilter"]
+2025-11-15 15:19:51.425 +01:00 [DBG] Execution plan of exception filters (in the following order): ["Franz.Common.Http.Errors.ExceptionFilter"]
+2025-11-15 15:19:51.432 +01:00 [DBG] Execution plan of result filters (in the following order): ["Microsoft.AspNetCore.Mvc.ViewFeatures.Filters.SaveTempDataFilter","Microsoft.AspNetCore.Mvc.Infrastructure.ClientErrorResultFilter (Order: -2000)","Microsoft.AspNetCore.Mvc.ReportApiVersionsAttribute (Order: 0)"]
+2025-11-15 15:19:51.440 +01:00 [DBG] Executing controller factory for controller Franz.API.Controllers.BooksController (Franz.API)
+2025-11-15 15:19:51.446 +01:00 [DBG] Executed controller factory for controller Franz.API.Controllers.BooksController (Franz.API)
+2025-11-15 15:19:51.460 +01:00 [DBG] Attempting to bind parameter 'author' of type 'System.String' ...
+2025-11-15 15:19:51.468 +01:00 [DBG] Attempting to bind parameter 'author' of type 'System.String' using the name 'author' in request data ...
+2025-11-15 15:19:51.475 +01:00 [DBG] Done attempting to bind parameter 'author' of type 'System.String'.
+2025-11-15 15:19:51.482 +01:00 [DBG] Done attempting to bind parameter 'author' of type 'System.String'.
+2025-11-15 15:19:51.488 +01:00 [DBG] Attempting to validate the bound parameter 'author' of type 'System.String' ...
+2025-11-15 15:19:51.496 +01:00 [DBG] Done attempting to validate the bound parameter 'author' of type 'System.String'.
+2025-11-15 15:19:51.503 +01:00 [DBG] Attempting to bind parameter 'ct' of type 'System.Threading.CancellationToken' ...
+2025-11-15 15:19:51.508 +01:00 [DBG] Done attempting to bind parameter 'ct' of type 'System.Threading.CancellationToken'.
+2025-11-15 15:19:51.514 +01:00 [DBG] Attempting to validate the bound parameter 'ct' of type 'System.Threading.CancellationToken' ...
+2025-11-15 15:19:51.521 +01:00 [DBG] Done attempting to validate the bound parameter 'ct' of type 'System.Threading.CancellationToken'.
+2025-11-15 15:19:51.623 +01:00 [INF] Executing action method Franz.API.Controllers.BooksController.GetByAuthor (Franz.API) - Validation state: "Valid"
+2025-11-15 15:19:51.642 +01:00 [INF] 🔎 [Audit-Pre] Validating GetBooksByAuthorQuery [a48e53b5e3c342a2a19e3701a1c5764f]
+2025-11-15 15:19:51.650 +01:00 [INF] ⏳ [Pre] Starting GetBooksByAuthorQuery [a48e53b5e3c342a2a19e3701a1c5764f]
+2025-11-15 15:19:51.675 +01:00 [INF] [Validation] GetBooksByAuthorQuery passed
+2025-11-15 15:19:51.685 +01:00 [INF] ▶️ Handling GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f]
+2025-11-15 15:19:51.710 +01:00 [INF] ▶️ Executing GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] with Retry policy AsyncRetryPolicy-f5eb7241
+2025-11-15 15:19:51.734 +01:00 [INF] ▶️ Executing GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] with CircuitBreaker AsyncCircuitBreakerPolicy-d5ca3d90
+2025-11-15 15:19:51.757 +01:00 [INF] ⏳ Executing GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] with Timeout policy AsyncTimeoutPolicy-863bf1b4
+2025-11-15 15:19:51.780 +01:00 [INF] ▶️ Executing GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] with Bulkhead AsyncBulkheadPolicy-6b2ce593
+2025-11-15 15:20:01.666 +01:00 [ERR] ❌ GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] faulted under Bulkhead AsyncBulkheadPolicy-6b2ce593 after 9885ms
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+2025-11-15 15:20:01.723 +01:00 [ERR] ❌ GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] failed after 9966ms (policy AsyncTimeoutPolicy-863bf1b4)
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+2025-11-15 15:20:01.749 +01:00 [ERR] ❌ GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] failed within CircuitBreaker after 10015ms (policy AsyncCircuitBreakerPolicy-d5ca3d90)
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.<>c__DisplayClass8_0`1.<<ImplementationAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerEngine.ImplementationAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, ExceptionPredicates shouldHandleExceptionPredicates, ResultPredicates`1 shouldHandleResultPredicates, ICircuitController`1 breakerController, CancellationToken cancellationToken)
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.ImplementationAsync[TResult](Func`3 action, Context context, CancellationToken cancellationToken, Boolean continueOnCapturedContext)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+2025-11-15 15:20:01.771 +01:00 [WRN] 🔁 GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] retry attempt 1 (policy AsyncRetryPolicy-f5eb7241)
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.<>c__DisplayClass8_0`1.<<ImplementationAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerEngine.ImplementationAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, ExceptionPredicates shouldHandleExceptionPredicates, ResultPredicates`1 shouldHandleResultPredicates, ICircuitController`1 breakerController, CancellationToken cancellationToken)
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.ImplementationAsync[TResult](Func`3 action, Context context, CancellationToken cancellationToken, Boolean continueOnCapturedContext)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyRetryPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+2025-11-15 15:20:02.297 +01:00 [INF] ▶️ Executing GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] with CircuitBreaker AsyncCircuitBreakerPolicy-d5ca3d90
+2025-11-15 15:20:02.304 +01:00 [INF] ⏳ Executing GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] with Timeout policy AsyncTimeoutPolicy-863bf1b4
+2025-11-15 15:20:02.310 +01:00 [INF] ▶️ Executing GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] with Bulkhead AsyncBulkheadPolicy-6b2ce593
+2025-11-15 15:20:04.086 +01:00 [ERR] ❌ GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] faulted under Bulkhead AsyncBulkheadPolicy-6b2ce593 after 1776ms
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+2025-11-15 15:20:04.100 +01:00 [ERR] ❌ GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] failed after 1796ms (policy AsyncTimeoutPolicy-863bf1b4)
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+2025-11-15 15:20:04.116 +01:00 [ERR] ❌ GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] failed within CircuitBreaker after 1818ms (policy AsyncCircuitBreakerPolicy-d5ca3d90)
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.<>c__DisplayClass8_0`1.<<ImplementationAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerEngine.ImplementationAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, ExceptionPredicates shouldHandleExceptionPredicates, ResultPredicates`1 shouldHandleResultPredicates, ICircuitController`1 breakerController, CancellationToken cancellationToken)
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.ImplementationAsync[TResult](Func`3 action, Context context, CancellationToken cancellationToken, Boolean continueOnCapturedContext)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+2025-11-15 15:20:04.137 +01:00 [WRN] 🔁 GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] retry attempt 2 (policy AsyncRetryPolicy-f5eb7241)
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.<>c__DisplayClass8_0`1.<<ImplementationAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerEngine.ImplementationAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, ExceptionPredicates shouldHandleExceptionPredicates, ResultPredicates`1 shouldHandleResultPredicates, ICircuitController`1 breakerController, CancellationToken cancellationToken)
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.ImplementationAsync[TResult](Func`3 action, Context context, CancellationToken cancellationToken, Boolean continueOnCapturedContext)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyRetryPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+2025-11-15 15:20:04.656 +01:00 [INF] ▶️ Executing GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] with CircuitBreaker AsyncCircuitBreakerPolicy-d5ca3d90
+2025-11-15 15:20:04.663 +01:00 [INF] ⏳ Executing GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] with Timeout policy AsyncTimeoutPolicy-863bf1b4
+2025-11-15 15:20:04.669 +01:00 [INF] ▶️ Executing GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] with Bulkhead AsyncBulkheadPolicy-6b2ce593
+2025-11-15 15:20:05.600 +01:00 [ERR] ❌ GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] faulted under Bulkhead AsyncBulkheadPolicy-6b2ce593 after 931ms
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+2025-11-15 15:20:05.614 +01:00 [ERR] ❌ GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] failed after 951ms (policy AsyncTimeoutPolicy-863bf1b4)
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+2025-11-15 15:20:05.632 +01:00 [ERR] ❌ GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] failed within CircuitBreaker after 975ms (policy AsyncCircuitBreakerPolicy-d5ca3d90)
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.<>c__DisplayClass8_0`1.<<ImplementationAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerEngine.ImplementationAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, ExceptionPredicates shouldHandleExceptionPredicates, ResultPredicates`1 shouldHandleResultPredicates, ICircuitController`1 breakerController, CancellationToken cancellationToken)
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.ImplementationAsync[TResult](Func`3 action, Context context, CancellationToken cancellationToken, Boolean continueOnCapturedContext)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+2025-11-15 15:20:05.652 +01:00 [WRN] 🔁 GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] retry attempt 3 (policy AsyncRetryPolicy-f5eb7241)
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.<>c__DisplayClass8_0`1.<<ImplementationAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerEngine.ImplementationAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, ExceptionPredicates shouldHandleExceptionPredicates, ResultPredicates`1 shouldHandleResultPredicates, ICircuitController`1 breakerController, CancellationToken cancellationToken)
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.ImplementationAsync[TResult](Func`3 action, Context context, CancellationToken cancellationToken, Boolean continueOnCapturedContext)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyRetryPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+2025-11-15 15:20:06.178 +01:00 [INF] ▶️ Executing GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] with CircuitBreaker AsyncCircuitBreakerPolicy-d5ca3d90
+2025-11-15 15:20:06.187 +01:00 [INF] ⏳ Executing GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] with Timeout policy AsyncTimeoutPolicy-863bf1b4
+2025-11-15 15:20:06.210 +01:00 [INF] ▶️ Executing GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] with Bulkhead AsyncBulkheadPolicy-6b2ce593
+2025-11-15 15:20:07.124 +01:00 [ERR] ❌ GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] faulted under Bulkhead AsyncBulkheadPolicy-6b2ce593 after 913ms
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+2025-11-15 15:20:07.140 +01:00 [ERR] ❌ GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] failed after 953ms (policy AsyncTimeoutPolicy-863bf1b4)
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+2025-11-15 15:20:07.157 +01:00 [ERR] ❌ GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] failed within CircuitBreaker after 979ms (policy AsyncCircuitBreakerPolicy-d5ca3d90)
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.<>c__DisplayClass8_0`1.<<ImplementationAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerEngine.ImplementationAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, ExceptionPredicates shouldHandleExceptionPredicates, ResultPredicates`1 shouldHandleResultPredicates, ICircuitController`1 breakerController, CancellationToken cancellationToken)
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.ImplementationAsync[TResult](Func`3 action, Context context, CancellationToken cancellationToken, Boolean continueOnCapturedContext)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+2025-11-15 15:20:07.180 +01:00 [WRN] 🔁 GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] retry attempt 4 (policy AsyncRetryPolicy-f5eb7241)
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.<>c__DisplayClass8_0`1.<<ImplementationAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerEngine.ImplementationAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, ExceptionPredicates shouldHandleExceptionPredicates, ResultPredicates`1 shouldHandleResultPredicates, ICircuitController`1 breakerController, CancellationToken cancellationToken)
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.ImplementationAsync[TResult](Func`3 action, Context context, CancellationToken cancellationToken, Boolean continueOnCapturedContext)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyRetryPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+2025-11-15 15:20:07.206 +01:00 [ERR] ❌ GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] failed after 15496ms (policy AsyncRetryPolicy-f5eb7241, retries=4)
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.<>c__DisplayClass8_0`1.<<ImplementationAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerEngine.ImplementationAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, ExceptionPredicates shouldHandleExceptionPredicates, ResultPredicates`1 shouldHandleResultPredicates, ICircuitController`1 breakerController, CancellationToken cancellationToken)
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.ImplementationAsync[TResult](Func`3 action, Context context, CancellationToken cancellationToken, Boolean continueOnCapturedContext)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyRetryPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.AsyncPolicy.<>c__DisplayClass44_0.<<ImplementationAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Retry.AsyncRetryEngine.ImplementationAsync[TResult](Func`3 action, Context context, ExceptionPredicates shouldRetryExceptionPredicates, ResultPredicates`1 shouldRetryResultPredicates, Func`5 onRetryAsync, CancellationToken cancellationToken, Int32 permittedRetryCount, IEnumerable`1 sleepDurationsEnumerable, Func`4 sleepDurationProvider, Boolean continueOnCapturedContext)
+   at Polly.AsyncPolicy.ExecuteInternalAsync(Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyRetryPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+2025-11-15 15:20:07.236 +01:00 [ERR] ❌ GetBooksByAuthorQuery [2a746f437dd14c0b82d75674284cc34f] failed after 15550ms
+System.Exception: 🍌 Banana Republic Exception: simulated DB meltdown!
+   at Franz.Application.Books.Queries.GetBooksByAuthorQueryHandler.Handle(GetBooksByAuthorQuery request, CancellationToken cancellationToken) in E:\Source\Repos\Franz\sources\back\Franz.Application\Books\Queries\GetBooksAuthorQuery.cs:line 33
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Bulkhead.AsyncBulkheadEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 onBulkheadRejectedAsync, SemaphoreSlim maxParallelizationSemaphore, SemaphoreSlim maxQueuedActionsSemaphore, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyBulkheadPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.Timeout.AsyncTimeoutEngine.ImplementationAsync[TResult](Func`3 action, Context context, Func`2 timeoutProvider, TimeoutStrategy timeoutStrategy, Func`5 onTimeoutAsync, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyTimeoutPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.<>c__DisplayClass8_0`1.<<ImplementationAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.CircuitBreaker.AsyncCircuitBreakerEngine.ImplementationAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, ExceptionPredicates shouldHandleExceptionPredicates, ResultPredicates`1 shouldHandleResultPredicates, ICircuitController`1 breakerController, CancellationToken cancellationToken)
+   at Polly.CircuitBreaker.AsyncCircuitBreakerPolicy.ImplementationAsync[TResult](Func`3 action, Context context, CancellationToken cancellationToken, Boolean continueOnCapturedContext)
+   at Polly.AsyncPolicy.ExecuteInternalAsync[TResult](Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyCircuitBreakerPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyRetryPipeline`2.<>c__DisplayClass4_0.<<Handle>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.AsyncPolicy.<>c__DisplayClass44_0.<<ImplementationAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Polly.Retry.AsyncRetryEngine.ImplementationAsync[TResult](Func`3 action, Context context, ExceptionPredicates shouldRetryExceptionPredicates, ResultPredicates`1 shouldRetryResultPredicates, Func`5 onRetryAsync, CancellationToken cancellationToken, Int32 permittedRetryCount, IEnumerable`1 sleepDurationsEnumerable, Func`4 sleepDurationProvider, Boolean continueOnCapturedContext)
+   at Polly.AsyncPolicy.ExecuteInternalAsync(Func`3 action, Context context, Boolean continueOnCapturedContext, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Polly.Pipelines.PollyRetryPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.OpenTelemetry.OpenTelemetryPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+   at Franz.Common.Mediator.Pipelines.Logging.SerilogLoggingPipeline`2.Handle(TRequest request, Func`1 next, CancellationToken cancellationToken)
+2025-11-15 15:20:11.256 +01:00 [DBG] List of registered output formatters, in the following order: ["Microsoft.AspNetCore.Mvc.Formatters.HttpNoContentOutputFormatter","Microsoft.AspNetCore.Mvc.Formatters.StringOutputFormatter","Microsoft.AspNetCore.Mvc.Formatters.StreamOutputFormatter","Microsoft.AspNetCore.Mvc.Formatters.NewtonsoftJsonOutputFormatter"]
+2025-11-15 15:20:11.269 +01:00 [DBG] Attempting to select an output formatter based on Accept header '["text/plain; x-api-version=1.0"]'.
+2025-11-15 15:20:11.277 +01:00 [DBG] Could not find an output formatter based on content negotiation. Accepted types were (["text/plain; x-api-version=1.0"])
+2025-11-15 15:20:11.283 +01:00 [DBG] Attempting to select an output formatter without using a content type as no explicit content types were specified for the response.
+2025-11-15 15:20:11.288 +01:00 [DBG] Attempting to select the first formatter in the output formatters list which can write the result.
+2025-11-15 15:20:11.295 +01:00 [DBG] Selected output formatter 'Microsoft.AspNetCore.Mvc.Formatters.NewtonsoftJsonOutputFormatter' and content type 'application/json' to write the response.
+2025-11-15 15:20:11.302 +01:00 [INF] Executing ObjectResult, writing value of type 'Franz.Common.Errors.ErrorResponse'.
+2025-11-15 15:20:11.437 +01:00 [INF] Executed action Franz.API.Controllers.BooksController.GetByAuthor (Franz.API) in 19993.3799ms
+2025-11-15 15:20:11.442 +01:00 [INF] Executed endpoint 'Franz.API.Controllers.BooksController.GetByAuthor (Franz.API)'
+2025-11-15 15:20:11.453 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/api/v1/api/books/by-author/Banana - 500 6741 application/json; charset=utf-8; x-api-version=1 20147.7925ms
+2025-11-15 15:20:45.974 +01:00 [INF] Request starting HTTP/2 GET https://localhost:7178/api/v1/api/books - null null
+2025-11-15 15:20:45.992 +01:00 [DBG] 1 candidate(s) found for the request path '/api/v1/api/books'
+2025-11-15 15:20:45.997 +01:00 [DBG] Endpoint 'Franz.API.Controllers.BooksController.GetAll (Franz.API)' with route pattern 'api/v{version:apiVersion}/api/books' is valid for the request path '/api/v1/api/books'
+2025-11-15 15:20:46.004 +01:00 [DBG] Request matched endpoint 'Franz.API.Controllers.BooksController.GetAll (Franz.API)'
+2025-11-15 15:20:46.008 +01:00 [DBG] AuthenticationScheme: Bearer was not authenticated.
+2025-11-15 15:20:46.013 +01:00 [INF] Executing endpoint 'Franz.API.Controllers.BooksController.GetAll (Franz.API)'
+2025-11-15 15:20:46.020 +01:00 [DBG] [DB] Connection string (masked): Host=127.0.0.1;Database=library;Username=postgres;Password=***;Port=5432;SSL Mode=Disable
+2025-11-15 15:20:46.028 +01:00 [INF] Route matched with {action = "GetAll", controller = "Books"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[System.Collections.Generic.IEnumerable`1[Franz.Contracts.DTOs.BookDto]]] GetAll(System.Threading.CancellationToken) on controller Franz.API.Controllers.BooksController (Franz.API).
+2025-11-15 15:20:46.033 +01:00 [DBG] Execution plan of authorization filters (in the following order): ["None"]
+2025-11-15 15:20:46.038 +01:00 [DBG] Execution plan of resource filters (in the following order): ["Microsoft.AspNetCore.Mvc.ViewFeatures.Filters.SaveTempDataFilter"]
+2025-11-15 15:20:46.044 +01:00 [DBG] Execution plan of action filters (in the following order): ["Microsoft.AspNetCore.Mvc.ModelBinding.UnsupportedContentTypeFilter (Order: -3000)","Microsoft.AspNetCore.Mvc.Infrastructure.ModelStateInvalidFilter (Order: -2000)","Franz.Common.Http.EntityFramework.Transactions.TransactionFilter","Microsoft.AspNetCore.Mvc.ReportApiVersionsAttribute (Order: 0)","Microsoft.AspNetCore.Mvc.Versioning.ApplyContentTypeVersionActionFilter"]
+2025-11-15 15:20:46.051 +01:00 [DBG] Execution plan of exception filters (in the following order): ["Franz.Common.Http.Errors.ExceptionFilter"]
+2025-11-15 15:20:46.056 +01:00 [DBG] Execution plan of result filters (in the following order): ["Microsoft.AspNetCore.Mvc.ViewFeatures.Filters.SaveTempDataFilter","Microsoft.AspNetCore.Mvc.Infrastructure.ClientErrorResultFilter (Order: -2000)","Microsoft.AspNetCore.Mvc.ReportApiVersionsAttribute (Order: 0)"]
+2025-11-15 15:20:46.061 +01:00 [DBG] Executing controller factory for controller Franz.API.Controllers.BooksController (Franz.API)
+2025-11-15 15:20:46.065 +01:00 [DBG] Executed controller factory for controller Franz.API.Controllers.BooksController (Franz.API)
+2025-11-15 15:20:46.070 +01:00 [DBG] Attempting to bind parameter 'ct' of type 'System.Threading.CancellationToken' ...
+2025-11-15 15:20:46.076 +01:00 [DBG] Done attempting to bind parameter 'ct' of type 'System.Threading.CancellationToken'.
+2025-11-15 15:20:46.081 +01:00 [DBG] Attempting to validate the bound parameter 'ct' of type 'System.Threading.CancellationToken' ...
+2025-11-15 15:20:46.086 +01:00 [DBG] Done attempting to validate the bound parameter 'ct' of type 'System.Threading.CancellationToken'.
+2025-11-15 15:20:46.117 +01:00 [INF] Executing action method Franz.API.Controllers.BooksController.GetAll (Franz.API) - Validation state: "Valid"
+2025-11-15 15:20:46.125 +01:00 [INF] 🔎 [Audit-Pre] Validating ListBooksQuery [1219c70edcb945fb9a42c57f775ed9f8]
+2025-11-15 15:20:46.130 +01:00 [INF] ⏳ [Pre] Starting ListBooksQuery [1219c70edcb945fb9a42c57f775ed9f8]
+2025-11-15 15:20:46.138 +01:00 [INF] [Validation] ListBooksQuery passed
+2025-11-15 15:20:46.143 +01:00 [INF] ▶️ Handling ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62]
+2025-11-15 15:20:46.148 +01:00 [INF] ▶️ Executing ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] with Retry policy AsyncRetryPolicy-f5eb7241
+2025-11-15 15:20:46.153 +01:00 [INF] ▶️ Executing ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] with CircuitBreaker AsyncCircuitBreakerPolicy-d5ca3d90
+2025-11-15 15:20:46.158 +01:00 [INF] ⏳ Executing ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] with Timeout policy AsyncTimeoutPolicy-863bf1b4
+2025-11-15 15:20:46.163 +01:00 [INF] ▶️ Executing ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] with Bulkhead AsyncBulkheadPolicy-6b2ce593
+2025-11-15 15:20:46.256 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] completed via Bulkhead in 93ms (policy AsyncBulkheadPolicy-6b2ce593) — Available=10, Queue=20
+2025-11-15 15:20:46.263 +01:00 [INF] ▶️ Executing ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] with Bulkhead AsyncBulkheadPolicy-6b2ce593
+2025-11-15 15:20:46.272 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] completed via Bulkhead in 8ms (policy AsyncBulkheadPolicy-6b2ce593) — Available=10, Queue=20
+2025-11-15 15:20:46.279 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] completed within timeout in 120ms (policy AsyncTimeoutPolicy-863bf1b4)
+2025-11-15 15:20:46.285 +01:00 [INF] ⏳ Executing ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] with Timeout policy AsyncTimeoutPolicy-863bf1b4
+2025-11-15 15:20:46.289 +01:00 [INF] ▶️ Executing ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] with Bulkhead AsyncBulkheadPolicy-6b2ce593
+2025-11-15 15:20:46.296 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] completed via Bulkhead in 7ms (policy AsyncBulkheadPolicy-6b2ce593) — Available=10, Queue=20
+2025-11-15 15:20:46.305 +01:00 [INF] ▶️ Executing ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] with Bulkhead AsyncBulkheadPolicy-6b2ce593
+2025-11-15 15:20:46.312 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] completed via Bulkhead in 7ms (policy AsyncBulkheadPolicy-6b2ce593) — Available=10, Queue=20
+2025-11-15 15:20:46.319 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] completed within timeout in 34ms (policy AsyncTimeoutPolicy-863bf1b4)
+2025-11-15 15:20:46.324 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] passed CircuitBreaker in 171ms (policy AsyncCircuitBreakerPolicy-d5ca3d90)
+2025-11-15 15:20:46.329 +01:00 [INF] ▶️ Executing ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] with CircuitBreaker AsyncCircuitBreakerPolicy-d5ca3d90
+2025-11-15 15:20:46.333 +01:00 [INF] ⏳ Executing ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] with Timeout policy AsyncTimeoutPolicy-863bf1b4
+2025-11-15 15:20:46.337 +01:00 [INF] ▶️ Executing ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] with Bulkhead AsyncBulkheadPolicy-6b2ce593
+2025-11-15 15:20:46.344 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] completed via Bulkhead in 6ms (policy AsyncBulkheadPolicy-6b2ce593) — Available=10, Queue=20
+2025-11-15 15:20:46.350 +01:00 [INF] ▶️ Executing ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] with Bulkhead AsyncBulkheadPolicy-6b2ce593
+2025-11-15 15:20:46.357 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] completed via Bulkhead in 6ms (policy AsyncBulkheadPolicy-6b2ce593) — Available=10, Queue=20
+2025-11-15 15:20:46.363 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] completed within timeout in 30ms (policy AsyncTimeoutPolicy-863bf1b4)
+2025-11-15 15:20:46.368 +01:00 [INF] ⏳ Executing ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] with Timeout policy AsyncTimeoutPolicy-863bf1b4
+2025-11-15 15:20:46.374 +01:00 [INF] ▶️ Executing ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] with Bulkhead AsyncBulkheadPolicy-6b2ce593
+2025-11-15 15:20:46.381 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] completed via Bulkhead in 6ms (policy AsyncBulkheadPolicy-6b2ce593) — Available=10, Queue=20
+2025-11-15 15:20:46.387 +01:00 [INF] ▶️ Executing ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] with Bulkhead AsyncBulkheadPolicy-6b2ce593
+2025-11-15 15:20:46.393 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] completed via Bulkhead in 6ms (policy AsyncBulkheadPolicy-6b2ce593) — Available=10, Queue=20
+2025-11-15 15:20:46.399 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] completed within timeout in 30ms (policy AsyncTimeoutPolicy-863bf1b4)
+2025-11-15 15:20:46.404 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] passed CircuitBreaker in 75ms (policy AsyncCircuitBreakerPolicy-d5ca3d90)
+2025-11-15 15:20:46.410 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] succeeded after 262ms (policy AsyncRetryPolicy-f5eb7241, retries=0)
+2025-11-15 15:20:46.417 +01:00 [INF] ✅ ListBooksQuery [7f75c06f6f7d4334a6bb91793c5cdc62] completed in 273ms
+2025-11-15 15:20:46.427 +01:00 [INF] ✅ [Audit-Post] ListBooksQuery [d65a845aa4194c1b8806c679e7645d88] response {"Value":[{"Id":1,"Title":"Domain-Driven Design","Author":"Eric Evans","Isbn":"9780321125217","PublishedOn":"2003-08-30T00:00:00.0000000Z","CopiesAvailable":5,"$type":"BookDto"},{"Id":2,"Title":"Clean Code","Author":"Robert C. Martin","Isbn":"9780132350884","PublishedOn":"2008-08-01T00:00:00.0000000Z","CopiesAvailable":7,"$type":"BookDto"},{"Id":3,"Title":"Clean Architecture","Author":"Robert C. Martin","Isbn":"9780134494166","PublishedOn":"2017-09-20T00:00:00.0000000Z","CopiesAvailable":4,"$type":"BookDto"},{"Id":4,"Title":"The Clean Coder","Author":"Robert C. Martin","Isbn":"9780137081073","PublishedOn":"2011-05-23T00:00:00.0000000Z","CopiesAvailable":6,"$type":"BookDto"},{"Id":5,"Title":"Pragmatic Thinking for Software Engineers","Author":"Robert J. Price","Isbn":"9780984782802","PublishedOn":"2012-03-15T00:00:00.0000000Z","CopiesAvailable":1,"$type":"BookDto"},{"Id":6,"Title":"Advanced Patterns in C#","Author":"Robert J. Price","Isbn":"9780984782819","PublishedOn":"2014-07-10T00:00:00.0000000Z","CopiesAvailable":2,"$type":"BookDto"},{"Id":7,"Title":"Microservices in Practice","Author":"Robert J. Price","Isbn":"9780984782826","PublishedOn":"2016-11-05T00:00:00.0000000Z","CopiesAvailable":5,"$type":"BookDto"}],"IsSuccess":true,"Error":null,"$type":"Result`1"}
+2025-11-15 15:20:46.497 +01:00 [INF] ✅ [Post] ListBooksQuery [d65a845aa4194c1b8806c679e7645d88] produced {"Value":[{"Id":1,"Title":"Domain-Driven Design","Author":"Eric Evans","Isbn":"9780321125217","PublishedOn":"2003-08-30T00:00:00.0000000Z","CopiesAvailable":5,"$type":"BookDto"},{"Id":2,"Title":"Clean Code","Author":"Robert C. Martin","Isbn":"9780132350884","PublishedOn":"2008-08-01T00:00:00.0000000Z","CopiesAvailable":7,"$type":"BookDto"},{"Id":3,"Title":"Clean Architecture","Author":"Robert C. Martin","Isbn":"9780134494166","PublishedOn":"2017-09-20T00:00:00.0000000Z","CopiesAvailable":4,"$type":"BookDto"},{"Id":4,"Title":"The Clean Coder","Author":"Robert C. Martin","Isbn":"9780137081073","PublishedOn":"2011-05-23T00:00:00.0000000Z","CopiesAvailable":6,"$type":"BookDto"},{"Id":5,"Title":"Pragmatic Thinking for Software Engineers","Author":"Robert J. Price","Isbn":"9780984782802","PublishedOn":"2012-03-15T00:00:00.0000000Z","CopiesAvailable":1,"$type":"BookDto"},{"Id":6,"Title":"Advanced Patterns in C#","Author":"Robert J. Price","Isbn":"9780984782819","PublishedOn":"2014-07-10T00:00:00.0000000Z","CopiesAvailable":2,"$type":"BookDto"},{"Id":7,"Title":"Microservices in Practice","Author":"Robert J. Price","Isbn":"9780984782826","PublishedOn":"2016-11-05T00:00:00.0000000Z","CopiesAvailable":5,"$type":"BookDto"}],"IsSuccess":true,"Error":null,"$type":"Result`1"}
+2025-11-15 15:20:46.581 +01:00 [INF] Executed action method Franz.API.Controllers.BooksController.GetAll (Franz.API), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 455.951ms.
+2025-11-15 15:20:46.597 +01:00 [DBG] List of registered output formatters, in the following order: ["Microsoft.AspNetCore.Mvc.Formatters.HttpNoContentOutputFormatter","Microsoft.AspNetCore.Mvc.Formatters.StringOutputFormatter","Microsoft.AspNetCore.Mvc.Formatters.StreamOutputFormatter","Microsoft.AspNetCore.Mvc.Formatters.NewtonsoftJsonOutputFormatter"]
+2025-11-15 15:20:46.605 +01:00 [DBG] Attempting to select an output formatter based on Accept header '["text/plain; x-api-version=1.0"]'.
+2025-11-15 15:20:46.611 +01:00 [DBG] Could not find an output formatter based on content negotiation. Accepted types were (["text/plain; x-api-version=1.0"])
+2025-11-15 15:20:46.615 +01:00 [DBG] Attempting to select an output formatter without using a content type as no explicit content types were specified for the response.
+2025-11-15 15:20:46.618 +01:00 [DBG] Attempting to select the first formatter in the output formatters list which can write the result.
+2025-11-15 15:20:46.622 +01:00 [DBG] Selected output formatter 'Microsoft.AspNetCore.Mvc.Formatters.NewtonsoftJsonOutputFormatter' and content type 'application/json' to write the response.
+2025-11-15 15:20:46.626 +01:00 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[Franz.Contracts.DTOs.BookDto, Franz.Contracts, Version=1.6.3.0, Culture=neutral, PublicKeyToken=null]]'.
+2025-11-15 15:20:46.650 +01:00 [INF] Executed action Franz.API.Controllers.BooksController.GetAll (Franz.API) in 589.0767ms
+2025-11-15 15:20:46.658 +01:00 [INF] Executed endpoint 'Franz.API.Controllers.BooksController.GetAll (Franz.API)'
+2025-11-15 15:20:46.663 +01:00 [INF] Request finished HTTP/2 GET https://localhost:7178/api/v1/api/books - 200 1040 application/json; charset=utf-8; x-api-version=1 688.9287ms
