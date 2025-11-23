@@ -361,24 +361,4 @@ Recommended Extensions:
 
 MIT License.
 
-```
 
----
-
-# ✅ Your API README is now:
-### ✔ Fully polished  
-### ✔ Franz-branded  
-### ✔ Architect-level  
-### ✔ Multi-cloud ready  
-### ✔ Enterprise-friendly  
-### ✔ Perfectly aligned with Franz.Common README  
-
-If you'd like:
-- A **commit message** for this README  
-- A matching **CHANGELOG entry**  
-- A **samples folder cleanup**  
-- A **CI/CD badge block**  
-- A **docs site (MkDocs Material)**  
-
-Tell me and I’ll generate it.
-```
