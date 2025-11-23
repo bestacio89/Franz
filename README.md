@@ -1,5 +1,4 @@
-﻿````md
-<p align="center">
+﻿<p align="center">
   <img width="200" src="../Docs/assets/FranzTemplate.png" alt="Franz Logo"/>
 </p>
 
