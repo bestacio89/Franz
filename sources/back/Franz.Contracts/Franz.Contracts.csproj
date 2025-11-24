@@ -3,9 +3,9 @@
   <Import Project="../../../common.targets" />
 
   <ItemGroup>
-    <PackageReference Include="Franz.Common.Business" Version="1.6.19" />
-    <PackageReference Include="Franz.Common.Caching" Version="1.6.19" />
-    <PackageReference Include="Franz.Common.Mediator" Version="1.6.19" />
+    <PackageReference Include="Franz.Common.Business" Version="1.6.20" />
+    <PackageReference Include="Franz.Common.Caching" Version="1.6.20" />
+    <PackageReference Include="Franz.Common.Mediator" Version="1.6.20" />
     <PackageReference Include="Refit" Version="8.0.0" />
   </ItemGroup>
 
