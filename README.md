@@ -6,7 +6,7 @@
 <p align="center"><b>Deterministic Architecture for Event-Driven .NET Microservices</b></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/.NET-9%2B-blueviolet" />
+  <img src="https://img.shields.io/badge/.NET-10%2B-blueviolet" />
   <img src="https://img.shields.io/badge/Architecture-Clean%20%7C%20DDD%20%7C%20CQRS-brightgreen" />
   <img src="https://img.shields.io/badge/Resilience-Polly-blue" />
   <img src="https://img.shields.io/badge/Observability-OpenTelemetry-yellow" />
