@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using Franz.Common.Messaging;
 using System.Text;
+using Franz.Common.Messaging.Messages;
 
 namespace Franz.Consumer.Services
 {
@@ -24,7 +25,7 @@ namespace Franz.Consumer.Services
     {
       _logger = logger;
       _messageHandler = messageHandler;
-      _topicName = TopicNamer.GetTopicName(typeof(KafkaConsumerService).Assembly);
+      _topicName = TopicNamer.GetTopicName((Common.Reflection.IAssembly)typeof(KafkaConsumerService).Assembly);
 
       var consumerConfig = new ConsumerConfig
       {
@@ -61,7 +62,7 @@ namespace Franz.Consumer.Services
                 ) ?? new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>();
 
             // Create the Franz Message object
-            var franzMessage = new Message(result.Message.Value, headers);
+            Message franzMessage = new Message(result.Message.Value, (IDictionary<string, IReadOnlyCollection<string>>)headers);
 
             // Pass the message to the handler
             _messageHandler.Process(franzMessage);

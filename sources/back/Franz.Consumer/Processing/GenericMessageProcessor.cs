@@ -2,6 +2,7 @@
 using Franz.Common.Business.Domain;
 using Newtonsoft.Json; // Example for JSON deserialization; use your preferred method.
 using Microsoft.Extensions.Logging;
+using Franz.Common.Messaging.Messages;
 
 namespace Franz.Consumer.Processing
 {

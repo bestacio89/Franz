@@ -25,7 +25,7 @@ public class DomainArchitectureTests : BaseArchitectureTest
         .GetObjects(BaseArchitecture)
         .Where(t =>
            
-            !t.ResidesInNamespace("Franz.Domain.ValueObjects", true) && // 🚫 exclude ValueObjects
+            !t.ResidesInNamespace("Franz.Domain.ValueObjects") && // 🚫 exclude ValueObjects
             !t.FullName.Contains("Infrastructure", StringComparison.OrdinalIgnoreCase) &&
             !t.FullName.Contains("Persistence", StringComparison.OrdinalIgnoreCase) &&
             !t.FullName.Contains("Mongo", StringComparison.OrdinalIgnoreCase) &&

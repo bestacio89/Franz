@@ -1,6 +1,7 @@
 ﻿using Franz.Common.Messaging;
 using Franz.Common.Messaging.Delegating;
 using Franz.Common.Messaging.Headers;
+using Franz.Common.Messaging.Messages;
 using Franz.Consumer.Processing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

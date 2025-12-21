@@ -3,6 +3,7 @@ using Confluent.Kafka.Admin;
 using Franz.Common.Messaging;
 using Franz.Common.Messaging.Configuration;
 using Franz.Common.Messaging.Delegating;
+using Franz.Common.Messaging.Messages;
 using Franz.Consumer.Services;
 using Franz.Consumer.Tests.config;
 using Microsoft.Extensions.DependencyInjection;
