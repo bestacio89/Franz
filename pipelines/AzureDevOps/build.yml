@@ -1,145 +1,177 @@
 # ========================================
-# 🧠 Franz Audit Suite - Build & Test Pipeline
+# 🧠 Franz API - Modern Build/Test + Container Pipeline
 # ========================================
-# ✅ Purpose:
-#   Automated build & verification of Franz.Common + Audit Test Suite
-#   Ensures all template & DTO logic (Book–Member etc.) compile & pass unit tests.
+# ✅ Linux-first (runtime parity with containers)
+# ✅ dotnet CLI (SDK-native, deterministic)
+# ✅ Unit tests by default
+# ✅ Optional Integration stage (TestContainers-ready)
+# ✅ Optional Docker build/push stage
 # ========================================
 
-# ----------------------------------------
-# 🏗️ Trigger
-# ----------------------------------------
 trigger:
   branches:
     include:
-      - Develop          # ✅ Run automatically on commits to develop
-pr: none                 # ❌ Skip PR validation builds (manual trigger only)
+      - develop
+pr: none
 
-# ----------------------------------------
-# 🧩 Build Environment
-# ----------------------------------------
 pool:
-  vmImage: 'windows-latest'   # 🪟 Required for MSBuild + VSTest integration
+  vmImage: 'ubuntu-latest'
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
   artifactName: 'drop'
 
-# ----------------------------------------
-# 🚀 Stage: Build & Test
-# ----------------------------------------
+  # ---- toggles (set at queue time) ----
+  runIntegration: 'false'
+  buildContainer: 'false'
+  pushContainer: 'false'
+
+  # ---- container metadata (adjust to your registry layout) ----
+  imageRepository: 'franz/franz.api'
+  imageTag: '$(Build.SourceVersion)'
+
 stages:
-  - stage: BuildAndTest
-    displayName: "🛠️ Build & Run Test Suite"
-    jobs:
-      - job: BuildTest
-        displayName: "🔨 Compile + Execute Tests"
-        steps:
+- stage: BuildAndUnitTest
+  displayName: "🛠️ Build & Unit Tests"
+  jobs:
+  - job: BuildTest
+    displayName: "🔨 Restore/Build/Test"
+    steps:
 
-          # ----------------------------------------
-          # 🧰 NuGet Setup & Caching
-          # ----------------------------------------
-          - task: NuGetToolInstaller@1
-            displayName: "📦 Install NuGet CLI"
+    - task: UseDotNet@2
+      displayName: "🔧 Install .NET SDK"
+      inputs:
+        packageType: 'sdk'
+        version: '10.x'
+        includePreviewVersions: true
 
-          - task: Cache@2
-            displayName: "⚡ Cache NuGet Packages"
-            inputs:
-              key: 'nuget | "$(Agent.OS)" | $(Build.SourcesDirectory)/**/*.csproj'
-              restoreKeys: |
-                nuget | "$(Agent.OS)"
-              path: '$(UserProfile)\.nuget\packages'
+    # NuGet cache (Linux path)
+    - task: Cache@2
+      displayName: "⚡ Cache NuGet Packages"
+      inputs:
+        key: |
+          nuget | "$(Agent.OS)" | nuget.config
+        restoreKeys: |
+          nuget | "$(Agent.OS)"
+        path: $(HOME)/.nuget/packages
 
-          # ----------------------------------------
-          # 🔐 Authenticate to Azure Artifacts feed
-          # ----------------------------------------
-          - task: NuGetAuthenticate@1
-            displayName: "🔐 Authenticate to Franz.Common feed"
+    # Authenticate to Azure Artifacts (if you use it)
+    - task: NuGetAuthenticate@1
+      displayName: "🔐 Authenticate to feeds"
 
-          # ----------------------------------------
-          # 📥 Restore Dependencies
-          # ----------------------------------------
-          - task: NuGetCommand@2
-            displayName: "📦 Restore NuGet Packages"
-            inputs:
-              restoreSolution: '$(solution)'
-              feedsToUse: 'config'                       # ✅ use your nuget.config
-              nugetConfigPath: 'nuget.config'            # ✅ points to Franz.Common feed
-              includeNuGetOrg: true
+    - script: |
+        dotnet --info
+        dotnet restore --configfile nuget.config
+      displayName: "📦 Restore"
 
-          # ----------------------------------------
-          # 🧱 Build Solution
-          # ----------------------------------------
-          - task: VSBuild@1
-            displayName: "🏗️ Build Franz Solution"
-            inputs:
-              solution: '$(solution)'
-              platform: '$(buildPlatform)'
-              configuration: '$(buildConfiguration)'
-              msbuildArgs: '/restore /verbosity:minimal'
-              clean: true
-              maximumCpuCount: true
-              logProjectEvents: false
+    - script: |
+        dotnet build --configuration $(buildConfiguration) --no-restore
+      displayName: "🏗️ Build"
 
-          # ----------------------------------------
-          # 🧪 Execute Unit Tests
-          # ----------------------------------------
-          - task: VSTest@2
-            displayName: "🧪 Run Unit Tests (skip Integration)"
-            inputs:
-              testAssemblyVer2: |
-                **\Franz.Testing.*.dll
-                !**\*TestAdapter.dll
-                !**\obj\**
-              testFiltercriteria: 'TestCategory!=Integration'
-              searchFolder: '$(System.DefaultWorkingDirectory)'
-              platform: '$(buildPlatform)'
-              configuration: '$(buildConfiguration)'
-              diagnosticsEnabled: true
-              testResultsDirectory: '$(Agent.TempDirectory)/TestResults'
-              runInParallel: true
-              codeCoverageEnabled: true
+    # Unit tests: filter out Integration by category/trait
+    - script: |
+        dotnet test \
+          --configuration $(buildConfiguration) \
+          --no-build \
+          --filter "TestCategory!=Integration" \
+          --collect:"XPlat Code Coverage" \
+          --results-directory "$(Agent.TempDirectory)/TestResults"
+      displayName: "🧪 Unit Tests (skip Integration)"
 
-          # ----------------------------------------
-          # 📊 Publish Test Results
-          # ----------------------------------------
-          - task: PublishTestResults@2
-            displayName: "📊 Publish Unit Test Results"
-            condition: succeededOrFailed()
-            inputs:
-              testResultsFormat: 'VSTest'
-              testResultsFiles: '$(Agent.TempDirectory)/**/*.trx'
-              failTaskOnFailedTests: true
-              mergeTestResults: true
+    - task: PublishTestResults@2
+      displayName: "📊 Publish Test Results"
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '$(Agent.TempDirectory)/TestResults/**/*.trx'
+        mergeTestResults: true
+        failTaskOnFailedTests: true
 
-          # ----------------------------------------
-          # 📦 Copy Build Outputs to Artifact Staging
-          # ----------------------------------------
-          - task: CopyFiles@2
-            displayName: "📂 Collect Compiled Binaries"
-            inputs:
-              SourceFolder: '$(Build.SourcesDirectory)'
-              Contents: '**/bin/$(buildConfiguration)/**'
-              TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    # Build output artifact (useful for template validation / debugging)
+    - task: CopyFiles@2
+      displayName: "📂 Collect Outputs"
+      inputs:
+        SourceFolder: '$(Build.SourcesDirectory)'
+        Contents: |
+          **/bin/$(buildConfiguration)/**
+          **/obj/$(buildConfiguration)/**/project.assets.json
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
-          # ----------------------------------------
-          # 🚢 Publish Build Artifacts
-          # ----------------------------------------
-          - task: PublishBuildArtifacts@1
-            displayName: "🚀 Publish Artifacts to Pipeline"
-            inputs:
-              pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: '$(artifactName)'
-              publishLocation: 'Container'
+    - task: PublishBuildArtifacts@1
+      displayName: "🚀 Publish Artifacts"
+      inputs:
+        pathToPublish: '$(Build.ArtifactStagingDirectory)'
+        artifactName: '$(artifactName)'
+        publishLocation: 'Container'
 
-# ========================================
-# ✅ Notes
-# ========================================
-#  - Uses NuGetAuthenticate for secure feed access (Franz.Common project scope)
-#  - Integration tests are skipped via filter (TestCategory!=Integration)
-#  - Compatible with xUnit, NUnit, MSTest
-#  - Code coverage enabled for analysis
-#  - Can extend with a TestContainers or Kafka stage in future
-# ========================================
+
+- stage: IntegrationTests
+  displayName: "🧪 Integration Tests (Optional)"
+  dependsOn: BuildAndUnitTest
+  condition: and(succeeded(), eq(variables['runIntegration'], 'true'))
+  jobs:
+  - job: Integration
+    displayName: "🧪 Run Integration Suite"
+    steps:
+    - task: UseDotNet@2
+      displayName: "🔧 Install .NET SDK"
+      inputs:
+        packageType: 'sdk'
+        version: '10.x'
+        includePreviewVersions: true
+
+    - task: NuGetAuthenticate@1
+      displayName: "🔐 Authenticate to feeds"
+
+    - script: |
+        dotnet restore --configfile nuget.config
+        dotnet test \
+          --configuration $(buildConfiguration) \
+          --filter "TestCategory=Integration" \
+          --results-directory "$(Agent.TempDirectory)/IntegrationResults"
+      displayName: "🧪 Integration Tests"
+
+    - task: PublishTestResults@2
+      displayName: "📊 Publish Integration Results"
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '$(Agent.TempDirectory)/IntegrationResults/**/*.trx'
+        mergeTestResults: true
+        failTaskOnFailedTests: true
+
+
+- stage: Container
+  displayName: "🐳 Container Build/Push (Optional)"
+  dependsOn: BuildAndUnitTest
+  condition: and(succeeded(), eq(variables['buildContainer'], 'true'))
+  jobs:
+  - job: DockerBuild
+    displayName: "🐳 Build (and optionally Push) Image"
+    steps:
+    - script: |
+        echo "Building image: $(imageRepository):$(imageTag)"
+      displayName: "ℹ️ Image Info"
+
+    # This assumes your repo has a Dockerfile at the root.
+    - task: Docker@2
+      displayName: "🐳 Docker Build"
+      inputs:
+        command: 'build'
+        Dockerfile: 'Dockerfile'
+        buildContext: '.'
+        repository: '$(imageRepository)'
+        tags: |
+          $(imageTag)
+
+    # Push is optional and requires a service connection (Docker registry / ACR)
+    - task: Docker@2
+      displayName: "🚢 Docker Push"
+      condition: and(succeeded(), eq(variables['pushContainer'], 'true'))
+      inputs:
+        command: 'push'
+        repository: '$(imageRepository)'
+        tags: |
+          $(imageTag)
+        # You must set this to your service connection name in Azure DevOps:
+        # containerRegistry: 'YOUR_REGISTRY_SERVICE_CONNECTION'
