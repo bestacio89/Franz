@@ -20,7 +20,7 @@
 
 # 🔥⚡ Overview — *Architecture as Code* ⚡🔥
 
-This API is built on top of **Franz 1.6.20**, inheriting Franz’s deterministic patterns:
+This API is built on top of **Franz 1.7.5**, inheriting Franz’s deterministic patterns:
 
 - **Architecture is not documentation — it is *law***.
 - Every rule is enforced at:

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
+using Microsoft.Azure.Cosmos.Fluent;
 
 namespace Franz.Consumer.Tests.config
 {
@@ -28,7 +30,7 @@ namespace Franz.Consumer.Tests.config
 
     public async Task StartAsync()
     {
-      await _kafkaContainer.StartAsync(); // Start the Kafka container
+      await _kafkaContainer.StartAsync; // Start the Kafka container
     }
 
     public async Task StopAsync()

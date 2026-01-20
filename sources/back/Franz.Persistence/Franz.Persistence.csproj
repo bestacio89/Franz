@@ -4,17 +4,17 @@
 
   <ItemGroup>
 	 
-	  <PackageReference Include="Franz.Common.Caching" Version="1.7.2" />
+	  <PackageReference Include="Franz.Common.Caching"/>
 	 
-	  <PackageReference Include="Franz.Common.EntityFramework" Version="1.7.2" />
+	  <PackageReference Include="Franz.Common.EntityFramework"/>
 	 
-	  <PackageReference Include="Franz.Common.EntityFramework.PostGres" Version="1.7.2" />
+	  <PackageReference Include="Franz.Common.EntityFramework.PostGres"/>
 	 
-	  <PackageReference Include="Franz.Common.Hosting" Version="1.7.2" />
+	  <PackageReference Include="Franz.Common.Hosting"/>
 	 
-	  <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+	  <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions"/>
 	  
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

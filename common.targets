@@ -5,7 +5,8 @@
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>1.7.2</Version>
+    <Version>1.7.5</Version>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <Authors> Bernardo Estacio Abreu</Authors>
   </PropertyGroup>
 

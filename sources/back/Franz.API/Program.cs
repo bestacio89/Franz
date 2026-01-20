@@ -9,7 +9,7 @@ using Franz.Common.Logging.Extensions;
 using Franz.Common.Mediator.Extensions;
 
 using Franz.Common.Mediator.Polly;
-
+using Franz.Common.Serialization.Extensions;
 using Franz.Persistence; // our new cowboy helper
 using Franz.Persistence.Seeders;
 using Microsoft.AspNetCore.Mvc;
@@ -40,8 +40,8 @@ builder.Services.RegisterPersistenceServices<ApplicationDbContext>(builder.Confi
 builder.Services.AddRelationalDatabase<ApplicationDbContext>(builder.Environment, builder.Configuration)
   .AddEntityRepositories<ApplicationDbContext>()
   .AddGenericRepositories<ApplicationDbContext>();
-  
-  
+
+
 
 
 // --- Http Architecture ---
