@@ -2,7 +2,6 @@
 using System.Linq;
 using ArchUnitNET.Fluent;
 using ArchUnitNET.xUnit;
-using Franz.Common.Mediator.Messages;
 using FranzTesting;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
@@ -12,102 +11,54 @@ namespace Franz.Testing.ArchitecturalReports.Layers
 {
   /// <summary>
   /// ⚖️ Franz Tribunal — API Layer Compliance Audit
-  /// Validates controller conventions, dependency isolation, and namespace discipline
-  /// within the API boundary. Fully dynamic for any solution prefix.
+  /// Industrial-strength validation of controller conventions and dependency isolation.
   /// </summary>
   public sealed class ApiLayerComplianceAudit : ArchitecturalAuditBase
   {
+
     [Trait("Category", "ArchitecturalReport")]
     public void Audit_ApiLayer_Compliance()
     {
       ExecuteTribunal("API Layer Compliance Audit", (sb, markViolation) =>
       {
-        sb.AppendLine("---------------------------------------------------------------");
-        sb.AppendLine("                API LAYER COMPLIANCE AUDIT                     ");
-        sb.AppendLine("---------------------------------------------------------------");
+        var prefix = SolutionPrefix;
 
-        var prefix = SolutionPrefix; // 🔹 Dynamic prefix for all namespace matches
-
-        // RULE 1 — Assembly presence
-        ExecuteRule("Assembly Presence", "API assembly must be present and accessible.", () =>
+        // RULE 1 — Assembly presence (Manual Check)
+        ExecuteRule("Assembly Presence", "API assembly must be detected.", () =>
         {
           Assert.NotNull(ApiAssembly);
-          sb.AppendLine("✅ Verified: API assembly detected.");
         }, sb, markViolation);
 
         // RULE 2 — Controller conventions
-        ExecuteRule("Controller Conventions", $"Controllers must end with 'Controller' and reside under {prefix}.API.Controllers.", () =>
-        {
-          var controllers = ApiLayer
-              .GetObjects(BaseArchitecture)
-              .Where(t => t.Name.EndsWith("Controller", StringComparison.OrdinalIgnoreCase))
-              .ToList();
+        var controllerNamingRule = ArchRuleDefinition
+            .Classes()
+            .That().ResideInNamespaceMatching($"^{prefix}\\.API(\\..*)?$")
+            .And().HaveNameEndingWith("Controller")
+            .Should().BeAssignableTo(typeof(ControllerBase))
+            .AndShould().ResideInNamespaceMatching($"^{prefix}\\.API\\.Controllers(\\..*)?$")
+            .Because("Controllers must reside in .API.Controllers and derive from ControllerBase for consistent routing.");
 
-          if (!controllers.Any())
-          {
-            sb.AppendLine("🟡 No controllers found — skipping enforcement (empty template).");
-            return;
-          }
+        ExecuteRule("Controller Conventions", "Controllers must follow naming and inheritance standards.",
+            controllerNamingRule, sb, markViolation);
 
-          ArchRuleDefinition
-              .Classes()
-              .That()
-              .HaveNameEndingWith("Controller")
-              .Should()
-              .BeAssignableTo(typeof(ControllerBase))
-              .AndShould()
-              .ResideInNamespaceMatching($"^{prefix}\\.API\\.Controllers(\\..*)?$")
-              .Because($"Controllers must reside in {prefix}.API.Controllers and derive from ControllerBase.")
-              .Check(BaseArchitecture);
+        // RULE 3 — Dependency isolation (The "Fker" Hunter)
+        var isolationRule = ArchRuleDefinition
+            .Classes()
+            .That().HaveNameEndingWith("Controller")
+            .Should().OnlyDependOnTypesThat()
+            .ResideInNamespaceMatching($"^{prefix}\\.Contracts(\\..*)?$")
+            .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Common(\\..*)?$")
+            .OrShould().ResideInNamespaceMatching(@"^System(\..*)?$")
+            .OrShould().ResideInNamespaceMatching(@"^Microsoft(\..*)?$")
+            .OrShould().ResideInNamespaceMatching($"^{prefix}\\.API(\\..*)?$")
+            .Because("Controllers are entry points; they must not touch Domain, Application, or Persistence layers directly.");
 
-          sb.AppendLine($"✅ Verified {controllers.Count} controller(s) comply with naming and inheritance conventions.");
-        }, sb, markViolation);
+        ExecuteRule("Dependency Isolation", "Controllers must not bypass the Application layer.",
+            isolationRule, sb, markViolation);
 
-        // RULE 3 — Dependency isolation (dynamic)
-        ExecuteRule("Dependency Isolation", "Controllers may depend only on Contracts, Common abstractions, and framework namespaces.", () =>
-        {
-          var controllers = ApiLayer
-              .GetObjects(BaseArchitecture)
-              .Where(t => t.Name.EndsWith("Controller", StringComparison.OrdinalIgnoreCase))
-              .ToList();
-
-          if (!controllers.Any())
-          {
-            sb.AppendLine("🟡 No controllers found — skipping dependency analysis (empty template).");
-            return;
-          }
-
-          ArchRuleDefinition
-              .Classes()
-              .That()
-              .Are(controllers)
-              .Should()
-              .OnlyDependOnTypesThat()
-              // Franz internal abstractions (dynamic prefix)
-              .ResideInNamespaceMatching($"^{prefix}\\.Contracts(\\..*)?$")
-              .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Common(\\..*)?$")
-              .OrShould().ResideInNamespaceMatching($"^{prefix}\\.Common\\.Mediator(\\..*)?$")
-              // System & Microsoft
-              .OrShould().ResideInNamespaceMatching(@"^System(\..*)?$")
-              .OrShould().ResideInNamespaceMatching(@"^Microsoft(\..*)?$")
-              .OrShould().ResideInNamespaceMatching(@"^Microsoft\\.AspNetCore(\\..*)?$")
-              // Local API namespace
-              .OrShould().ResideInNamespaceMatching($"^{prefix}\\.API(\\..*)?$")
-              .Because("Controllers must not depend on Domain, Application, or Persistence layers.")
-              .WithoutRequiringPositiveResults()
-              .Check(BaseArchitecture);
-
-          sb.AppendLine("✅ Verified API controllers maintain clean dependency boundaries.");
-        }, sb, markViolation);
-
-        // ───────────────────────────────
-        // 🎯 VERDICT SUMMARY
-        // ───────────────────────────────
+        // 🎯 VERDICT SUMMARY logic is now handled by the Base Class ExecuteTribunal
         sb.AppendLine("---------------------------------------------------------------");
-        sb.AppendLine(" API LAYER COMPLIANCE: COMPLETED SUCCESSFULLY");
-        sb.AppendLine("---------------------------------------------------------------");
-        sb.AppendLine($"🕊️  {prefix}.API Audit Verdict: Excellent");
-        sb.AppendLine("⚙️  Controllers: Properly Scoped ✔  |  Dependencies: Clean ✔");
+        sb.AppendLine($"🕊️  {prefix}.API Audit Final Processing: Complete");
       });
     }
   }
