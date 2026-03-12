@@ -19,14 +19,15 @@ using Serilog.Filters;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
-
+var env = builder.Environment;
+var config = builder.Configuration;
 // --- Logging (env-aware Serilog via UseHybridLog) ---
 builder.Host.UseLog();
 builder.Services.AddFranzSerilogAuditPipeline()
                 .AddFranzEventValidationPipeline()
                 .AddFranzSerilogLoggingPipeline()
-                .AddMediatorOpenTelemetry()
-                .AddMediatorEventOpenTelemetry(new System.Diagnostics.ActivitySource("Franz.Mediator"));
+                .AddFranzTelemetry(env, config);
+               
 
 
 
@@ -78,10 +79,10 @@ var app = builder.Build();
 // --- DB Initialization ---
 using (var scope = app.Services.CreateScope())
 {
-  var env = scope.ServiceProvider.GetRequiredService<IHostEnvironment>();
+  var env2 = scope.ServiceProvider.GetRequiredService<IHostEnvironment>();
   var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-  if (env.IsDevelopment())
+  if (env2.IsDevelopment())
   {
     db.Database.EnsureDeleted();
     db.Database.EnsureCreated();
