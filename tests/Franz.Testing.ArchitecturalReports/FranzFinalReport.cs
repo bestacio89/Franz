@@ -9,15 +9,6 @@ using Xunit;
 
 namespace Franz.Testing.ArchitecturalReports
 {
-  /// <summary>
-  /// Franz Architecture Compliance Report
-  /// -------------------------------------------------
-  /// Executes all layer-specific architecture audits
-  /// and consolidates a unified compliance summary.
-  /// 
-  /// Output is designed for enterprise audit trails,
-  /// CI/CD compliance gates, and documentation reports.
-  /// </summary>
   public sealed class ArchitectureComplianceReport
   {
     private record ReportEntry(string Tribunal, TimeSpan Duration, bool Passed, string Message);
@@ -30,11 +21,10 @@ namespace Franz.Testing.ArchitecturalReports
       var results = new List<ReportEntry>();
       var report = new StringBuilder();
 
-      report.AppendLine();
       report.AppendLine("===============================================================");
-      report.AppendLine("                 ARCHITECTURE COMPLIANCE REPORT                 ");
+      report.AppendLine("                FRANZ ARCHITECTURAL SUPREME COURT              ");
       report.AppendLine("===============================================================");
-      report.AppendLine($"Generated on: {DateTime.Now:G}");
+      report.AppendLine($"Session Convened: {DateTime.Now:G}");
       report.AppendLine();
 
       // Ordered tribunal execution
@@ -46,31 +36,47 @@ namespace Franz.Testing.ArchitecturalReports
 
       // Summary Section
       report.AppendLine("---------------------------------------------------------------");
-      report.AppendLine("                       COMPLIANCE SUMMARY                      ");
+      report.AppendLine("                        TRIBUNAL LOGS                          ");
       report.AppendLine("---------------------------------------------------------------");
-      report.AppendLine("Layer                                   | Result | Duration | Notes");
-      report.AppendLine("---------------------------------------------------------------");
+      report.AppendLine("Layer                    | Result | Duration | Notes");
+      report.AppendLine("-------------------------|--------|----------|-----------------");
 
       foreach (var r in results)
       {
-        var result = r.Passed ? "PASS" : "FAIL";
-        report.AppendLine($"{r.Tribunal,-40} | {result,-5} | {r.Duration.TotalSeconds,6:F2}s | {r.Message}");
+        var result = r.Passed ? "PASS ✅" : "FAIL ❌";
+        report.AppendLine($"{r.Tribunal,-24} | {result,-6} | {r.Duration.TotalSeconds,6:F2}s | {r.Message}");
       }
 
-      var failed = results.Count(r => !r.Passed);
+      // --- THE SASS ENGINE ---
+      int total = results.Count;
+      int failed = results.Count(r => !r.Passed);
+      double failureRate = (double)failed / total;
+
       report.AppendLine("---------------------------------------------------------------");
-      if (failed == 0)
-      {
-        report.AppendLine("STATUS: COMPLIANT — All architecture audits passed successfully.");
-      }
-      else
-      {
-        report.AppendLine($"STATUS: NON-COMPLIANT — {failed} audit(s) reported rule violations.");
-      }
+      report.AppendLine("                      FINAL JUDGMENT                           ");
+      report.AppendLine("---------------------------------------------------------------");
+
+      var (verdict, sass) = GetSassLevel(failureRate);
+
+      report.AppendLine($"STATUS: {verdict}");
+      report.AppendLine($"DECREE: \"{sass}\"");
       report.AppendLine("===============================================================");
 
       Console.WriteLine(report.ToString());
-      Assert.True(failed == 0, $"{failed} layer(s) failed compliance checks. See report above.");
+
+      Assert.True(failed == 0, $"The Tribunal has found {failed} layer(s) guilty of architectural treason.");
+    }
+
+    private static (string Verdict, string Sass) GetSassLevel(double failureRate)
+    {
+      return failureRate switch
+      {
+        0.0 => ("COMPLIANT (GOD-TIER)", "Absolute purity. Uncle Bob just shed a single, joyful tear."),
+        <= 0.2 => ("MINOR INFRACTIONS", "Mostly clean, but I found some 'temporary' hacks that look suspiciously permanent."),
+        <= 0.5 => ("NEEDS STEROIDS", "This isn't an architecture, it's a suggestion. Fix the bleeding before the Onion dies."),
+        <= 0.8 => ("ARCHITECTURAL ANARCHY", "Did you even read the README? The layers are so coupled they're basically married."),
+        _ => ("TOTAL DISASTER", "Burn it down. Start over. This code belongs in a museum of 'What Not To Do'.")
+      };
     }
 
     private static ReportEntry RunAudit<T>(string title)
@@ -80,13 +86,13 @@ namespace Franz.Testing.ArchitecturalReports
       {
         var instance = Activator.CreateInstance(typeof(T));
         var method = typeof(T).GetMethods(BindingFlags.Public | BindingFlags.Instance)
-          .FirstOrDefault(m =>
-            m.Name.Contains("Governance", StringComparison.OrdinalIgnoreCase) ||
-            m.Name.Contains("Audit", StringComparison.OrdinalIgnoreCase) ||
-            m.Name.Contains("Tribunal", StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(m =>
+                m.Name.Contains("Governance", StringComparison.OrdinalIgnoreCase) ||
+                m.Name.Contains("Audit", StringComparison.OrdinalIgnoreCase) ||
+                m.Name.Contains("Tribunal", StringComparison.OrdinalIgnoreCase));
 
         if (method == null)
-          return new ReportEntry(title, stopwatch.Elapsed, true, "No audit entry point (skipped).");
+          return new ReportEntry(title, stopwatch.Elapsed, true, "No audit found.");
 
         method.Invoke(instance, null);
         stopwatch.Stop();
@@ -95,7 +101,9 @@ namespace Franz.Testing.ArchitecturalReports
       catch (Exception ex)
       {
         stopwatch.Stop();
-        return new ReportEntry(title, stopwatch.Elapsed, false, ex.InnerException?.Message ?? ex.Message);
+        // Extract the real error from the reflection wrapper
+        var realError = ex.InnerException?.Message ?? ex.Message;
+        return new ReportEntry(title, stopwatch.Elapsed, false, realError);
       }
     }
   }
