@@ -9,7 +9,7 @@ using Franz.Contracts.DTOs;
 using Franz.Contracts.Persistence;
 using Franz.Contracts.Queries.Members;
 
-namespace Franz.Application.Members.Handlers
+namespace Franz.Application.Queries.Members.Handlers
 {
     public sealed class GetMemberByNameQueryHandler : IQueryHandler<GetMemberByNameQuery, Result<MemberDto>>
     {
