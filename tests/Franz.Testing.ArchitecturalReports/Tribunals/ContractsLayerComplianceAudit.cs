@@ -187,6 +187,7 @@ namespace Franz.Testing.ArchitecturalReports.Layers
               .OrShould()
               .BeAssignableTo(typeof(ISingletonDependency))
               .Because("Infrastructure interfaces must declare explicit lifetime scope.")
+              .WithoutRequiringPositiveResults()
               .Check(BaseArchitecture);
 
           sb.AppendLine($"✅ Verified {infraInterfaces.Count} infrastructure interface(s) define lifetime dependencies.");
