@@ -219,7 +219,7 @@ namespace Franz.Testing.ArchitecturalReports.Layers
               .Should()
               .BeAssignableTo(typeof(IScopedDependency))
               .AndShould()
-              .NotBeAssignableTo(typeof(IReadRepository<>))
+              .NotBeAssignableTo(typeof(IEntityRepository<,>))
               .AndShould()
               .NotBeAssignableTo(typeof(IAggregateRepository<,>))
               .Because("Custom repositories must declare scoped lifetime and remain independent of framework abstractions.")

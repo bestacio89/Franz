@@ -10,10 +10,10 @@ using Franz.Persistence;
 
 public sealed class ReturnBookCommandHandler : ICommandHandler<ReturnBookCommand, Result>
 {
-    private readonly EntityRepository<ApplicationDbContext, Book> _bookRepository;
-    private readonly EntityRepository<ApplicationDbContext, Member> _memberRepository;
+    private readonly EntityRepository<ApplicationDbContext, Book, int> _bookRepository;
+    private readonly EntityRepository<ApplicationDbContext, Member, int> _memberRepository;
 
-    public ReturnBookCommandHandler(EntityRepository<ApplicationDbContext, Book> bookRepository, EntityRepository<ApplicationDbContext, Member> memberRepository)
+    public ReturnBookCommandHandler(EntityRepository<ApplicationDbContext, Book, int> bookRepository, EntityRepository<ApplicationDbContext, Member, int> memberRepository)
     {
         _bookRepository = bookRepository;
         _memberRepository = memberRepository;

@@ -12,10 +12,10 @@ namespace Franz.Application.Books.Commands
 {
     public sealed class BorrowBookCommandHandler : ICommandHandler<BorrowBookCommand, Result>
     {
-        private readonly EntityRepository<ApplicationDbContext, Book> _bookRepository;
-        private readonly EntityRepository<ApplicationDbContext, Member> _memberRepository;
+        private readonly EntityRepository<ApplicationDbContext, Book, int> _bookRepository;
+        private readonly EntityRepository<ApplicationDbContext, Member, int> _memberRepository;
 
-        public BorrowBookCommandHandler(EntityRepository<ApplicationDbContext, Book> bookRepository, EntityRepository<ApplicationDbContext, Member> memberRepository)
+        public BorrowBookCommandHandler(EntityRepository<ApplicationDbContext, Book, int> bookRepository, EntityRepository<ApplicationDbContext, Member, int> memberRepository)
         {
             _bookRepository = bookRepository;
             _memberRepository = memberRepository;

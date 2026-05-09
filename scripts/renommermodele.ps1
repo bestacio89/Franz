@@ -1,234 +1,195 @@
 param (
-    [Alias('sp')]
-    [parameter(
-        HelpMessage = "Name of the existing project (Franz by default).",
-        Mandatory = $false,
-        ValueFromPipeline = $false)]
-    [ValidateScript({            
-            if (Test-Path "..\..\Franz\$_.sln".Trim().Trim('"')) { 
-                return $true 
-            } 
-            else { 
-                throw "The project solution template does not exist or has been renamed: \Something\$_.sln." 
-            }
-        })]
     [string]$SourceProjectName = "Franz",
-    
-    [Alias('tp')]
-    [parameter(
-        HelpMessage = "Name of the new project.",
-        Mandatory = $false,
-        ValueFromPipeline = $false)]
- 
-    [string]$TargetProjectName = "Something" ,
-    
-    [Alias('odtp')]
-    [parameter(
-        HelpMessage = "Output directory for the new project (default: ../).",
-        Mandatory = $false,
-        ValueFromPipeline = $false)]
+    [string]$TargetProjectName = "Something",
     [string]$TargetProjectRootOutputDir = "",
-
-    [Alias('ai')]
-    [parameter(
-        HelpMessage = "Relative path to the AssemblyInfo.cs file, e.g. "".\Properties\AssemblyInfo.cs"".`nSpecify empty string to skip AssemblyInfo processing.",
-        Mandatory = $false,
-        ValueFromPipeline = $false)]
-    [AllowEmptyString()]
-    [string]$RelativePathToAssemblyInfo = ""
+    [string]$RelativePathToAssemblyInfo = "",
+    [switch]$DryRun
 )
 
-$SourceProjectName = $SourceProjectName.Trim().Trim("")
+# ================================
+# CONFIGURATION
+# ================================
+
+$ProtectedNamespaces = @(
+    "Franz.Common"
+)
+
+# ================================
+# PATH SETUP
+# ================================
+
 $SourceProjectFullPath = "$(Resolve-Path "..")\"
 $SourceSolutionFullPath = "$SourceProjectFullPath$SourceProjectName.sln"
-$TargetProjectName = $TargetProjectName.Trim().Trim("")
 
-if ($isSameSourceAndTargetProject = ($TargetProjectRootOutputDir.Trim() -eq "") ) {    
+if ($TargetProjectRootOutputDir.Trim() -eq "") {
     $TargetProjectFullPath = "..\"
-}
-else {
+} else {
     $TargetProjectFullPath = "$TargetProjectRootOutputDir$TargetProjectName\"
 }
 
 $TargetSolutionFullPath = "$TargetProjectFullPath$TargetProjectName.sln"
 
-if ( (Test-Path $SourceSolutionFullPath -PathType Leaf) -ne $true) {
-    throw "The source solution file was not found: $SourceSolutionFullPath"
+if (!(Test-Path $SourceSolutionFullPath)) {
+    throw "Source solution not found: $SourceSolutionFullPath"
 }
 
-function Start-ProceedOrExit {
-    [OutputType([System.Void])]
-    param
-    (
-        [string]$currentStepName
-    )
-    if ($?) { Write-Output "$currentStepName - OK" } else { Write-Output "SCRIPT ERROR! Exiting."; exit 1 } 
+# ================================
+# UTILITIES
+# ================================
+
+function Write-Step($msg) {
+    Write-Host "---- $msg"
 }
 
-function Rename-Solution {
-    [OutputType([System.Void])]
-    param (
-        [string]$targetProjectFullPath,
-        [string]$sourceProjectName,
-        [string]$targetProjectName
-    )       
-
-    Get-ChildItem -Path "$targetProjectFullPath" -Include "$sourceProjectName.*" -Recurse  -File `
-    | ForEach-Object {
-        $OldName = $_.Name;
-        $NewName = $_.Name -replace "^$sourceProjectName\b", "$targetProjectName";
-        
-        if ($OldName -ne $NewName) {
-            Rename-Item -Path $_.PSPath -NewName $NewName;
-        }
-    };
-
-    Get-ChildItem -Path "$targetProjectFullPath" -Include "$sourceProjectName.*" -Recurse  -Directory `
-    | ForEach-Object {
-        $OldName = $_.Name;
-        $NewName = $_.Name -replace "^$sourceProjectName\b", "$targetProjectName";
-        
-        if ($OldName -ne $NewName) {
-            Rename-Item -Path $_.PSPath -NewName $NewName;
-        }
-    };
-}
-
-function Copy-BaseSolution {
-    [OutputType([string])]
-    param (
-        [string] $sourceProjectFullPath,
-        [string] $targetProjectFullPath
-    )
-
-    if ($sourceProjectFullPath -ne $targetProjectFullPath) {
-        New-Item $targetProjectFullPath -ItemType Directory -Force | Out-Null;
-        
-        Copy-Item -Path "$sourceProjectFullPath*" $targetProjectFullPath -Recurse -Force -Exclude @(".git","scripts") | Out-Null;
-        
-        return $targetProjectFullPath;
+function Apply-Change($path, $content) {
+    if ($DryRun) {
+        Write-Host "[DRY RUN] Would update: $path"
     }
-
-    return $sourceProjectFullPath;
-}
-
-function Save-CurrentDirectory {
-    [OutputType([string])]
-    param ()
-
-    return Get-Location
-}
-
-function Restore-CurrentDirectory {
-    [OutputType([System.Void])]
-    param (
-        [string]$currentLocation
-    )
-
-    Set-Location $currentLocation
-}
-
-function Rename-ReferencesInSolution {
-    [OutputType([System.Void])]
-    param (
-        [string]$targetSolutionFullPath, 
-        [string]$sourceProjectFullPath, 
-        [string]$targetProjectName
-    )     
-
-    $UpdatedSolution = Get-Content -Path $targetSolutionFullPath `
-    | ForEach-Object { 
-        if ($_ -match ("\b(" + $sourceProjectFullPath + ")\b")) {             
-            $_ -replace $($matches[1]), $targetProjectName 
-        } 
-        else { 
-            $_ 
-        } 
+    else {
+        $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+        [System.IO.File]::WriteAllLines($path, $content, $utf8NoBom)
     }
-    Set-Content -Path $targetSolutionFullPath -Value $UpdatedSolution -Encoding unicode;    
 }
 
-function Rename-AssemblyNameAndRootNamespace {
-    [OutputType([System.Void])]
-    param (
-        [string]$targetSolutionFullPath,
-        [string]$sourceProjectFullPath, 
-        [string]$targetProjectName
-    ) 
+# ================================
+# COPY BASE SOLUTION
+# ================================
 
-    $pattern = "$sourceProjectFullPath"
+function Copy-Solution {
+    Write-Step "Copying solution..."
 
-    Get-ChildItem -Path "$targetSolutionFullPath\*" -Recurse -Include *.csproj `
-    | Select-Object @{ label = 'Path'; expression = { ($_.FullName) } }, @{ label = 'Content'; expression = { (Get-Content $_.FullName) } } `
-    | ForEach-Object {            
-        if ($_.Content -match ($pattern)) { 
-            Set-Content -Path ($_.Path) -Value ($_.Content -replace $sourceProjectFullPath, $targetProjectName )
-        }
-    } 
-}
-
-function Rename-NamespacesAndUsingsFromClasses {
-    [OutputType([System.Void])]
-    param (
-        [string]$targetSolutionFullPath,
-        [string]$sourceProjectFullPath, 
-        [string]$targetProjectName
-    )
-
-    $pattern = "(?:namespace|using)\W(\b$sourceProjectFullPath)"
-
-    Get-ChildItem -Path "$targetSolutionFullPath\*" -Recurse -Include *.cs `
-    | Select-Object @{ label = 'Path'; expression = { ($_.FullName) } }, @{ label = 'Content'; expression = { (Get-Content $_.FullName) } } `
-    | ForEach-Object {                        
-        if ($_.Content -match ($pattern)) { 
-            Set-Content -Path ($_.Path) -Value ($_.Content -replace $sourceProjectFullPath, $targetProjectName )
-        }
-    } 
-}
-
-function Rename-AssemblyInfo {
-    [OutputType([System.Void])]
-    param (
-        [string]$targetSolutionFullPath,
-        [string]$sourceProjectFullPath, 
-        [string]$targetProjectName
-    )
-
-    $RelativePathToAssemblyInfo = $RelativePathToAssemblyInfo.Trim().Trim('"')
-    
-    if ($RelativePathToAssemblyInfo) {
-        $RelativePathToAssemblyInfo = "$targetSolutionFullPath$RelativePathToAssemblyInfo".Trim().Trim('"')
-        if (!(Test-Path $RelativePathToAssemblyInfo)) { throw "The path does not exist: $RelativePathToAssemblyInfo." }
-        else {
-            (Get-Content $RelativePathToAssemblyInfo) |
-            ForEach-Object { if ($_ -match "\b$sourceProjectFullPath") { $_ -replace $sourceProjectFullPath, $targetProjectName } else { $_ } } |
-            Set-Content $RelativePathToAssemblyInfo
+    if ($SourceProjectFullPath -ne $TargetProjectFullPath) {
+        if (!$DryRun) {
+            New-Item $TargetProjectFullPath -ItemType Directory -Force | Out-Null
+            Copy-Item "$SourceProjectFullPath*" $TargetProjectFullPath -Recurse -Force -Exclude @(".git", "scripts")
         }
     }
 }
 
-Write-Host "=====---- Starting configuration of your template."
+# ================================
+# RENAME FILES & FOLDERS
+# ================================
 
-$CurrentDirectory = Save-CurrentDirectory
+function Rename-FilesAndFolders {
+    Write-Step "Renaming files and folders..."
 
-Start-ProceedOrExit "---------.... Copying if target is different from source."
-$SourceProjectFullPath = Copy-BaseSolution $SourceProjectFullPath $TargetProjectFullPath;
+    Get-ChildItem -Path $TargetProjectFullPath -Recurse |
+    Sort-Object FullName -Descending |
+    ForEach-Object {
 
-Start-ProceedOrExit "---------.... Renaming files and directories in the new solution: $SourceProjectName to $TargetProjectName."
-Rename-Solution $TargetProjectFullPath $SourceProjectName $TargetProjectName
+        foreach ($ns in $ProtectedNamespaces) {
+            if ($_.FullName -like "*$ns*") {
+                return
+            }
+        }
 
-Start-ProceedOrExit "---------.... Updating references in the target solution file: $TargetSolutionFullPath."
-Rename-ReferencesInSolution $TargetSolutionFullPath $SourceProjectName $TargetProjectName
+        if ($_.Name -like "$SourceProjectName*") {
 
-Start-ProceedOrExit "---------.... Renaming assemblies and root namespaces in target: $TargetProjectFullPath."
-Rename-AssemblyNameAndRootNamespace $TargetProjectFullPath $SourceProjectName $TargetProjectName
+            $newName = $_.Name -replace "^$SourceProjectName\b", $TargetProjectName
 
-Start-ProceedOrExit "---------.... Renaming namespaces and usings in cs files: $TargetProjectFullPath."
-Rename-NamespacesAndUsingsFromClasses $TargetProjectFullPath $SourceProjectName $TargetProjectName
+            if ($DryRun) {
+                Write-Host "[DRY RUN] Rename $($_.FullName) -> $newName"
+            }
+            else {
+                Rename-Item $_.FullName -NewName $newName
+            }
+        }
+    }
+}
 
-Start-ProceedOrExit "---------.... Updating AssemblyInfo if it exists: $TargetProjectFullPath."
-Rename-AssemblyInfo $TargetProjectFullPath $SourceProjectName $TargetProjectName
+# ================================
+# SAFE CONTENT REPLACEMENT
+# ================================
 
-Restore-CurrentDirectory $CurrentDirectory
+function Replace-Content {
+    param (
+        [string]$filePath
+    )
 
-Write-Host "=====---- Template configuration completed."
+    $content = Get-Content $filePath -Raw
+
+    # Replace base project name
+    $updated = $content -replace "\b$SourceProjectName\b", $TargetProjectName
+
+    # Restore protected namespaces if accidentally modified
+    foreach ($ns in $ProtectedNamespaces) {
+        $updated = $updated -replace "\b$TargetProjectName\.$($ns.Split('.')[-1])\b", $ns
+    }
+
+    Apply-Change $filePath $updated
+}
+
+# ================================
+# PROCESS FILE TYPES
+# ================================
+
+function Process-CodeFiles {
+    Write-Step "Processing .cs files..."
+
+    Get-ChildItem $TargetProjectFullPath -Recurse -Include *.cs |
+    ForEach-Object {
+        Replace-Content $_.FullName
+    }
+}
+
+function Process-ProjectFiles {
+    Write-Step "Processing .csproj files..."
+
+    Get-ChildItem $TargetProjectFullPath -Recurse -Include *.csproj |
+    ForEach-Object {
+        Replace-Content $_.FullName
+    }
+}
+
+function Process-SolutionFile {
+    Write-Step "Processing solution file..."
+
+    if (!(Test-Path $TargetSolutionFullPath)) {
+        Write-Host "Solution file not found, skipping."
+        return
+    }
+
+    $content = Get-Content $TargetSolutionFullPath -Raw
+
+    $updated = $content -replace "\b$SourceProjectName\b", $TargetProjectName
+
+    Apply-Change $TargetSolutionFullPath $updated
+}
+
+# ================================
+# ASSEMBLY INFO (OPTIONAL)
+# ================================
+
+function Process-AssemblyInfo {
+    if ([string]::IsNullOrWhiteSpace($RelativePathToAssemblyInfo)) {
+        return
+    }
+
+    Write-Step "Processing AssemblyInfo..."
+
+    $path = "$TargetProjectFullPath$RelativePathToAssemblyInfo"
+
+    if (!(Test-Path $path)) {
+        throw "AssemblyInfo not found: $path"
+    }
+
+    $content = Get-Content $path -Raw
+    $updated = $content -replace "\b$SourceProjectName\b", $TargetProjectName
+
+    Apply-Change $path $updated
+}
+
+# ================================
+# EXECUTION
+# ================================
+
+Write-Host "===== SAFE TEMPLATE CLONING STARTED ====="
+
+Copy-Solution
+Rename-FilesAndFolders
+Process-SolutionFile
+Process-ProjectFiles
+Process-CodeFiles
+Process-AssemblyInfo
+
+Write-Host "===== COMPLETED SUCCESSFULLY ====="

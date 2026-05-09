@@ -11,9 +11,9 @@ namespace Franz.Application.Books.Commands
 {
     public sealed class DeleteBookCommandHandler : ICommandHandler<DeleteBookCommand, Result>
     {
-        private readonly EntityRepository<ApplicationDbContext, Book> _bookRepository;
+        private readonly EntityRepository<ApplicationDbContext, Book, int> _bookRepository;
 
-        public DeleteBookCommandHandler(EntityRepository<ApplicationDbContext, Book> bookRepository) =>
+        public DeleteBookCommandHandler(EntityRepository<ApplicationDbContext, Book, int> bookRepository) =>
             _bookRepository = bookRepository;
 
         public async Task<Result> Handle(DeleteBookCommand request, CancellationToken cancellationToken)

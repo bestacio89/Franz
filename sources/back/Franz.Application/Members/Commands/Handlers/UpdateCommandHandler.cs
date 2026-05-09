@@ -14,9 +14,9 @@ namespace Franz.Application.Members.Commands.Handlers;
 public sealed class UpdateMemberCommandHandler
     : ICommandHandler<UpdateMemberCommand, Result>
 {
-    private readonly EntityRepository<ApplicationDbContext, Member> _memberRepository;
+    private readonly EntityRepository<ApplicationDbContext, Member, int> _memberRepository;
 
-    public UpdateMemberCommandHandler(EntityRepository<ApplicationDbContext, Member> memberRepository)
+    public UpdateMemberCommandHandler(EntityRepository<ApplicationDbContext, Member, int> memberRepository)
     {
         _memberRepository = memberRepository;
     }

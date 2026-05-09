@@ -12,7 +12,7 @@ namespace Franz.Consumer.Extensions
     {
       // Register Kafka-related services
       services.AddKafkaMessaging(configuration);
-      services.AddHostedService<KafkaConsumerService>();
+     // services.AddHostedService<KafkaConsumerService>();
       return services;
     }
   }

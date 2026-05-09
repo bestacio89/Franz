@@ -8,16 +8,18 @@ using Franz.Contracts.DTOs;
 using Franz.Domain.Entities;
 
 using Franz.Contracts.Queries.Members;
+using Franz.Persistence;
+using Franz.Common.EntityFramework.Repositories;
 
 namespace Franz.Application.Members.Queries;
 
 public sealed class ListMembersQueryHandler
     : IQueryHandler<ListMembersQuery, Result<IReadOnlyCollection<MemberDto>>>
 {
-    private readonly IReadRepository<Member> _memberRepository;
+    private readonly EntityRepository<ApplicationDbContext, Member, int> _memberRepository;
     private readonly IFranzMapper _mapper;
 
-    public ListMembersQueryHandler(IReadRepository<Member> memberRepository, IFranzMapper mapper)
+    public ListMembersQueryHandler(EntityRepository<ApplicationDbContext, Member, int> memberRepository, IFranzMapper mapper)
     {
         _memberRepository = memberRepository;
         _mapper = mapper;

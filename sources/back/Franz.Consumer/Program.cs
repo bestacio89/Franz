@@ -38,7 +38,7 @@ namespace Franz.Consumer
             services.AddSqlServerDatabase<ApplicationDbContext>(configuration);
 
             // 🧠 Business domain and consumer services
-            services.AddScoped<IMessageHandler, KafkaMessageHandler>();
+           // services.AddScoped<IMessageHandler, KafkaMessageHandler>();
             services.AddKafkaMessagingServices(configuration); // from Franz.Consumer.Extensions
           })
           .Build();

@@ -15,10 +15,10 @@ namespace Franz.Application.Members.Commands.Handlers;
 public sealed class AddMemberCommandHandler
     : ICommandHandler<AddMemberCommand, Result<int>>
 {
-    private readonly EntityRepository<ApplicationDbContext,Member> _memberRepository;
+    private readonly EntityRepository<ApplicationDbContext,Member, int> _memberRepository;
     private readonly IFranzMapper _mapper;
 
-    public AddMemberCommandHandler(EntityRepository<ApplicationDbContext, Member> memberRepository, IFranzMapper mapper)
+    public AddMemberCommandHandler(EntityRepository<ApplicationDbContext, Member, int> memberRepository, IFranzMapper mapper)
     {
         _memberRepository = memberRepository;
         _mapper = mapper;

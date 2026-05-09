@@ -39,11 +39,10 @@ namespace Franz.Persistence
           opt.LogHitLevel = Microsoft.Extensions.Logging.LogLevel.Debug;
           opt.LogMissLevel = Microsoft.Extensions.Logging.LogLevel.Information;
         });*/
-      services.AddFranzCaching();
       services.AddCustomRepositoriesFromAssembly(typeof(ApplicationDbContext).Assembly);
-      services.AddGenericRepositories<ApplicationDbContext>();
+     
       services.AddEntityRepositories<ApplicationDbContext>();
-      services.AddScoped(typeof(EntityRepository<,>), typeof(EntityRepository<,>));
+      services.AddScoped(typeof(EntityRepository<,,>), typeof(EntityRepository<,,>));
 
       // ✅ Add persistence services with dynamically determined types (if needed)
       // Example: services.AddDatabase<TDbContext>(configuration);

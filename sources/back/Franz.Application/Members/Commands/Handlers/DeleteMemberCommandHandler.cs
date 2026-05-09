@@ -12,9 +12,9 @@ namespace Franz.Application.Members.Commands;
 public sealed class DeleteMemberCommandHandler
     : ICommandHandler<DeleteMemberCommand, Result>
 {
-    private readonly EntityRepository<ApplicationDbContext, Member> _memberRepository;
+    private readonly EntityRepository<ApplicationDbContext, Member, int> _memberRepository;
 
-    public DeleteMemberCommandHandler(EntityRepository<ApplicationDbContext, Member> memberRepository)
+    public DeleteMemberCommandHandler(EntityRepository<ApplicationDbContext, Member, int> memberRepository)
     {
         _memberRepository = memberRepository;
     }

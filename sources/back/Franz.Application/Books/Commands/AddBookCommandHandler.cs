@@ -9,9 +9,9 @@ namespace Franz.Application.Books.Commands;
 
 public sealed class AddBookCommandHandler : ICommandHandler<AddBookCommand, int>
 {
-    private readonly EntityRepository<ApplicationDbContext, Book> _bookRepository;
+    private readonly EntityRepository<ApplicationDbContext, Book, int> _bookRepository;
 
-    public AddBookCommandHandler(EntityRepository<ApplicationDbContext, Book> bookRepository)
+    public AddBookCommandHandler(EntityRepository<ApplicationDbContext, Book, int> bookRepository)
     {
         _bookRepository = bookRepository;
     }

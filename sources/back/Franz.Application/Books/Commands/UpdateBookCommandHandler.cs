@@ -12,9 +12,9 @@ namespace Franz.Application.Books.Commands
 {
     public sealed class UpdateBookCommandHandler : ICommandHandler<UpdateBookCommand, Result>
     {
-        private readonly EntityRepository<ApplicationDbContext, Book> _bookRepository;
+        private readonly EntityRepository<ApplicationDbContext, Book, int> _bookRepository;
 
-        public UpdateBookCommandHandler(EntityRepository<ApplicationDbContext, Book> bookRepository)
+        public UpdateBookCommandHandler(EntityRepository<ApplicationDbContext, Book, int> bookRepository)
         {
             _bookRepository = bookRepository;
         }

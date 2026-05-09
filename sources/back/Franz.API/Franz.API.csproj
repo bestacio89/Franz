@@ -10,6 +10,9 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
+
+
+
   <ItemGroup>
     <PackageReference Include="AspNetCoreRateLimit"/>
     <PackageReference Include="Franz.Common.Hosting"/>
@@ -19,7 +22,6 @@
     <PackageReference Include="Franz.Common.Http.EntityFramework"/>
     <PackageReference Include="Franz.Common.Mediator.Polly"/>
     <PackageReference Include="Franz.Common.Mediator.OpenTelemetry"/>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
     <PackageReference Include="Microsoft.Extensions.Hosting"/>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets"/>
     <PackageReference Include="Swashbuckle.AspNetCore"/>
@@ -37,11 +39,11 @@
   </ItemGroup>
 
   <Target Name="GenerateCSharpClient" AfterTargets="Build" Condition="Exists('Controllers\*.cs')">
-    <Exec Command="dotnet nswag run /variables:Configuration=$(Configuration) /variables:Platform=$(Platform) /variables:OutputPath=$(OutputPath) /variables:ProjectName=$(MSBuildProjectName) /variables:AssemblyName=$(AssemblyName) /variables:TargetFramework=$(TargetFramework) /variables:SwaggerFile=$(OutputPath)$(AssemblyName).xml /variables:CSharpClientOutput=..\Franz.ClientHTTP\Client\CSharp\$(MSBuildProjectName)Client.cs /variables:ClientNamespace=$(MSBuildProjectName).Client.CSharp /runtime:net8.0" />
+    <Exec Command="dotnet nswag run /variables:Configuration=$(Configuration) /variables:Platform=$(Platform) /variables:OutputPath=$(OutputPath) /variables:ProjectName=$(MSBuildProjectName) /variables:AssemblyName=$(AssemblyName) /variables:TargetFramework=$(TargetFramework) /variables:SwaggerFile=$(OutputPath)$(AssemblyName).xml /variables:CSharpClientOutput=..\Franz.ClientHTTP\Client\CSharp\$(MSBuildProjectName)Client.cs /variables:ClientNamespace=$(MSBuildProjectName).Client.CSharp /runtime:net10.0" />
   </Target>
 
   <Target Name="GenerateTypeScriptClient" AfterTargets="Build" Condition="Exists('Controllers\*.cs')">
-    <Exec Command="dotnet nswag run /variables:Configuration=$(Configuration) /variables:Platform=$(Platform) /variables:OutputPath=$(OutputPath) /variables:ProjectName=$(MSBuildProjectName) /variables:AssemblyName=$(AssemblyName) /variables:TargetFramework=$(TargetFramework) /variables:SwaggerFile=$(OutputPath)$(AssemblyName).xml /variables:TypeScriptClientOutput=..\Franz.ClientHTTP\Client\TypeScript\$(MSBuildProjectName)Client.ts /variables:ClientNamespace=$(MSBuildProjectName).Client.TypeScript /runtime:net8.0" />
+    <Exec Command="dotnet nswag run /variables:Configuration=$(Configuration) /variables:Platform=$(Platform) /variables:OutputPath=$(OutputPath) /variables:ProjectName=$(MSBuildProjectName) /variables:AssemblyName=$(AssemblyName) /variables:TargetFramework=$(TargetFramework) /variables:SwaggerFile=$(OutputPath)$(AssemblyName).xml /variables:TypeScriptClientOutput=..\Franz.ClientHTTP\Client\TypeScript\$(MSBuildProjectName)Client.ts /variables:ClientNamespace=$(MSBuildProjectName).Client.TypeScript /runtime:net10.0" />
   </Target>
 
-</Project>
+</Project> 

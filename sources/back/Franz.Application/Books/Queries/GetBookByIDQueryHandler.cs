@@ -10,16 +10,17 @@ using Franz.Domain.Entities;
 using Franz.Common.Business.Domain;
 using Franz.Contracts.DTOs;
 using Franz.Contracts.Queries.Books;
+using Franz.Common.Business.Repositories;
 
 namespace Franz.Application.Books.Queries
 {
     public sealed class GetBookByIdQueryHandler
     : IQueryHandler<GetBookByIdQuery, Result<BookDto>>
     {
-        private readonly IReadRepository<Book> _bookRepository;
+        private readonly IEntityRepository<Book, int> _bookRepository;
     private readonly IFranzMapper _mapper;
 
-        public GetBookByIdQueryHandler(IReadRepository<Book> bookRepository, IFranzMapper mapper)
+        public GetBookByIdQueryHandler(IEntityRepository<Book, int> bookRepository, IFranzMapper mapper)
         {
             _bookRepository = bookRepository;
             _mapper = mapper;
@@ -27,7 +28,7 @@ namespace Franz.Application.Books.Queries
 
         public async Task<Result<BookDto>> Handle(GetBookByIdQuery request, CancellationToken cancellationToken)
         {
-            var book = await _bookRepository.GetEntity(request.BookId);
+            var book = await _bookRepository.GetByIdAsync(request.BookId);
 
             if (book is null)
                 return "Book not found".ToFailure<BookDto>();
