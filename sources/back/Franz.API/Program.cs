@@ -1,139 +1,62 @@
 ﻿using Franz.API.Extensions;
 using Franz.Application;
-using Franz.Application.Books.Queries;
-using Franz.Common.EntityFramework;
 using Franz.Common.Http.Bootstrap.Extensions;
-using Franz.Common.Http.Client.Extensions;
-using Franz.Common.Http.EntityFramework.Extensions;
 using Franz.Common.Logging.Extensions;
-using Franz.Common.Mediator.Extensions;
-using Franz.Common.Mediator.Polly;
-using Franz.Common.Serialization.Extensions;
 using Franz.Persistence;
-using Franz.Persistence.Seeders;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
 var config = builder.Configuration;
 
-// =========================
-// LOGGING (CLEANED)
-// =========================
+// =========================================================================
+// 1. HOST & OBSERVABILITY SUBSYSTEM
+// =========================================================================
 builder.Host.UseLog();
-builder.Services.AddFranzSerilogAuditPipeline()
-                .AddFranzEventValidationPipeline()
-                .AddFranzSerilogLoggingPipeline()
-                .AddFranzTelemetry(env, config);
+builder.Services.AddFranzTelemetry(env, config);
 
-// =========================
-// CORE WEB LAYER
-// =========================
-builder.Services.AddControllers();
-
-// ⚠️ Choose ONE OpenAPI pipeline
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-// =========================
-// APPLICATION LAYER
-// =========================
+// =========================================================================
+// 2. SELF-HEALING ARCHITECTURE CORE (AUTONOMOUS DISCOVERY)
+// =========================================================================
 builder.Services.RegisterApplicationServices();
 
-// =========================
-// PERSISTENCE
-// =========================
+// Manages Caching, DbContext, and Automated Generic CRUD Topologies
 builder.Services.RegisterPersistenceServices<ApplicationDbContext>(config);
 
-builder.Services
-    .AddRelationalDatabase<ApplicationDbContext>(env, config)
-    .AddEntityRepositories<ApplicationDbContext>();
-
-// =========================
-// HTTP ARCHITECTURE (FRANZ)
-// =========================
+// 🔥 AUTOMATIC DISCOVERY GATE: Hydrates Web Stack, Controllers, Routing, 
+// Auth, Swagger, Versioning, Mediator Handlers, and ISeeder Implementations.
 builder.Services.AddHttpArchitecture(env, config);
-
-// =========================
-// MEDIATOR
-// =========================
-builder.Services.AddFranzMediator(new[]
-{
-    typeof(ListBooksQueryHandler).Assembly
-});
-
-// =========================
-// RESILIENCE
-// =========================
-builder.Services.AddFranzResilience(config);
-
-// =========================
-// API VERSIONING / CORS
-// =========================
-builder.Services.AddApiVersioning(options =>
-{
-  options.DefaultApiVersion = new ApiVersion(1, 0);
-  options.AssumeDefaultVersionWhenUnspecified = true;
-  options.ReportApiVersions = true;
-});
-
-builder.Services.AddCors(options =>
-{
-  options.AddPolicy("AllowAll", p =>
-      p.AllowAnyOrigin()
-       .AllowAnyMethod()
-       .AllowAnyHeader());
-});
 
 var app = builder.Build();
 
-// =========================
-// DB INITIALIZATION (SAFE)
-// =========================
+// =========================================================================
+// 3. LIFECYCLE & ENVIRONMENT BOUNDARY STATES
+// =========================================================================
 using (var scope = app.Services.CreateScope())
 {
-  var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-  if (env.IsDevelopment())
+  if (app.Environment.IsDevelopment())
   {
-    // SAFE DEV STRATEGY: no destructive rebuilds
-    db.Database.Migrate();
-    BookSeeder.Seed(db);
-    MemberSeeder.Seed(db);
+    // One engine call evaluates, migrates, and runs seeders in explicit contract order
+    TemplateDatabaseSeeder.Run(scope.ServiceProvider);
   }
   else
   {
-    db.Database.Migrate();
+    Log.Information("Higher Environment detected. Runtime database migrations blocked.");
   }
 }
 
-// ensure Serilog flush
 app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
-// =========================
-// MIDDLEWARE
-// =========================
-app.UseHttpsRedirection();
+// =========================================================================
+// 4. MIDDLEWARE PIPELINE
+// =========================================================================
+app.UseHttpArchitecture();
 
-app.UseCors("AllowAll");
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-// =========================
-// OPENAPI (SINGLE PIPELINE)
-// =========================
-if (env.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
-  app.UseSwagger();
-  app.UseSwaggerUI(c =>
-  {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Franz API v1");
-    c.RoutePrefix = "swagger";
-  });
+  app.UseDocumentation();
 }
+
+var _ = app.MapControllers();
 
 app.Run();
