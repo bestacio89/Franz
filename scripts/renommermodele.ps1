@@ -3,7 +3,8 @@ param (
     [string]$TargetProjectName = "Something",
     [string]$TargetProjectRootOutputDir = "",
     [string]$RelativePathToAssemblyInfo = "",
-    [switch]$DryRun
+    [switch]$DryRun,
+    [switch]$SkipSolutionProcessing
 )
 
 # ================================
@@ -19,7 +20,7 @@ $ProtectedNamespaces = @(
 # ================================
 
 $SourceProjectFullPath = "$(Resolve-Path "..")\"
-$SourceSolutionFullPath = "$SourceProjectFullPath$SourceProjectName.sln"
+$SourceSolutionFullPath = "$SourceProjectFullPath$SourceProjectName.slnx"
 
 if ($TargetProjectRootOutputDir.Trim() -eq "") {
     $TargetProjectFullPath = "..\"
@@ -27,7 +28,7 @@ if ($TargetProjectRootOutputDir.Trim() -eq "") {
     $TargetProjectFullPath = "$TargetProjectRootOutputDir$TargetProjectName\"
 }
 
-$TargetSolutionFullPath = "$TargetProjectFullPath$TargetProjectName.sln"
+$TargetSolutionFullPath = "$TargetProjectFullPath$TargetProjectName.slnx"
 
 if (!(Test-Path $SourceSolutionFullPath)) {
     throw "Source solution not found: $SourceSolutionFullPath"
@@ -44,11 +45,16 @@ function Write-Step($msg) {
 function Apply-Change($path, $content) {
     if ($DryRun) {
         Write-Host "[DRY RUN] Would update: $path"
+        return
     }
-    else {
-        $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-        [System.IO.File]::WriteAllLines($path, $content, $utf8NoBom)
-    }
+
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllLines($path, $content, $utf8NoBom)
+}
+
+function Safe-Replace([string]$content, [string]$source, [string]$target) {
+    $pattern = [regex]::Escape($source)
+    return ($content -replace $pattern, $target)
 }
 
 # ================================
@@ -61,7 +67,10 @@ function Copy-Solution {
     if ($SourceProjectFullPath -ne $TargetProjectFullPath) {
         if (!$DryRun) {
             New-Item $TargetProjectFullPath -ItemType Directory -Force | Out-Null
-            Copy-Item "$SourceProjectFullPath*" $TargetProjectFullPath -Recurse -Force -Exclude @(".git", "scripts")
+
+            Copy-Item "$SourceProjectFullPath*" $TargetProjectFullPath `
+                -Recurse -Force `
+                -Exclude @(".git", "bin", "obj", "scripts")
         }
     }
 }
@@ -85,7 +94,7 @@ function Rename-FilesAndFolders {
 
         if ($_.Name -like "$SourceProjectName*") {
 
-            $newName = $_.Name -replace "^$SourceProjectName\b", $TargetProjectName
+            $newName = $_.Name -replace "^$SourceProjectName", $TargetProjectName
 
             if ($DryRun) {
                 Write-Host "[DRY RUN] Rename $($_.FullName) -> $newName"
@@ -102,25 +111,23 @@ function Rename-FilesAndFolders {
 # ================================
 
 function Replace-Content {
-    param (
-        [string]$filePath
-    )
+    param ([string]$filePath)
 
     $content = Get-Content $filePath -Raw
 
-    # Replace base project name
-    $updated = $content -replace "\b$SourceProjectName\b", $TargetProjectName
+    $updated = Safe-Replace $content $SourceProjectName $TargetProjectName
 
-    # Restore protected namespaces if accidentally modified
+    # Restore protected namespaces
     foreach ($ns in $ProtectedNamespaces) {
-        $updated = $updated -replace "\b$TargetProjectName\.$($ns.Split('.')[-1])\b", $ns
+        $leaf = $ns.Split('.')[-1]
+        $updated = $updated -replace "\b$TargetProjectName\.$leaf\b", $ns
     }
 
     Apply-Change $filePath $updated
 }
 
 # ================================
-# PROCESS FILE TYPES
+# FILE PROCESSING
 # ================================
 
 function Process-CodeFiles {
@@ -141,19 +148,34 @@ function Process-ProjectFiles {
     }
 }
 
+# ================================
+# SLNX PROCESSING (SAFE MODE)
+# ================================
+
 function Process-SolutionFile {
-    Write-Step "Processing solution file..."
+    Write-Step "Processing .slnx solution file..."
+
+    if ($SkipSolutionProcessing) {
+        Write-Host "Skipping solution processing (flag enabled)."
+        return
+    }
 
     if (!(Test-Path $TargetSolutionFullPath)) {
         Write-Host "Solution file not found, skipping."
         return
     }
 
-    $content = Get-Content $TargetSolutionFullPath -Raw
+    # SAFETY: treat .slnx as structured artifact, not regex text
+    try {
+        $content = Get-Content $TargetSolutionFullPath -Raw
 
-    $updated = $content -replace "\b$SourceProjectName\b", $TargetProjectName
+        $updated = Safe-Replace $content $SourceProjectName $TargetProjectName
 
-    Apply-Change $TargetSolutionFullPath $updated
+        Apply-Change $TargetSolutionFullPath $updated
+    }
+    catch {
+        throw "Failed processing .slnx safely: $($_.Exception.Message)"
+    }
 }
 
 # ================================
@@ -174,7 +196,7 @@ function Process-AssemblyInfo {
     }
 
     $content = Get-Content $path -Raw
-    $updated = $content -replace "\b$SourceProjectName\b", $TargetProjectName
+    $updated = Safe-Replace $content $SourceProjectName $TargetProjectName
 
     Apply-Change $path $updated
 }
@@ -183,7 +205,7 @@ function Process-AssemblyInfo {
 # EXECUTION
 # ================================
 
-Write-Host "===== SAFE TEMPLATE CLONING STARTED ====="
+Write-Host "===== SAFE .SLNX TEMPLATE CLONING STARTED ====="
 
 Copy-Solution
 Rename-FilesAndFolders

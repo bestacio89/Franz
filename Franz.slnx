@@ -1,0 +1,34 @@
+<Solution>
+  <Folder Name="/1- Core/">
+    <Project Path="sources/back/Franz.Application/Franz.Application.csproj" />
+    <Project Path="sources/back/Franz.Contracts/Franz.Contracts.csproj" />
+    <Project Path="sources/back/Franz.Domain/Franz.Domain.csproj" />
+  </Folder>
+  <Folder Name="/2-Infrastructure/">
+    <Project Path="sources/back/Franz.ClientHttp/Franz.ClientHttp.csproj" />
+    <Project Path="sources/back/Franz.Consumer/Franz.Consumer.csproj" />
+    <Project Path="sources/back/Franz.Persistence/Franz.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/3- Adapters/">
+    <Project Path="sources/back/Franz.API/Franz.API.csproj" />
+  </Folder>
+  <Folder Name="/4- Tests/">
+    <Project Path="TestProject1/Franz.Testing.csproj" />
+    <Project Path="tests/Franz.Testing.ArchitecturalReports/Franz.Testing.ArchitecturalReports.csproj" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <File Path="main.bicep" />
+  </Folder>
+  <Folder Name="/Infrastructure/Modules/" />
+  <Folder Name="/Infrastructure/Modules/MongoDB/" />
+  <Folder Name="/Infrastructure/Modules/Multidatabase/" />
+  <Folder Name="/Infrastructure/Modules/PosgrsSql/" />
+  <Folder Name="/Infrastructure/Modules/SingleDatabase/" />
+  <Folder Name="/Solution Elements/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="common.targets" />
+    <File Path="Directory.Packages.props" />
+    <File Path="README.md" />
+  </Folder>
+</Solution>
