@@ -1,4 +1,5 @@
 ﻿using Franz.Common.Mapping;
+using Franz.Common.Mapping.Profiles;
 using Franz.Contracts.DTOs;
 using Franz.Domain.Entities;
 using Franz.Domain.ValueObjects;

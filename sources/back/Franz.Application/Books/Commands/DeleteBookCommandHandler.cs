@@ -22,7 +22,7 @@ namespace Franz.Application.Books.Commands
             if (book is null)
                 return Result.Failure(Error.NotFound("Book", request.Id));
 
-            await _bookRepository.DeleteAsync(book, cancellationToken);
+            await _bookRepository.DeleteAsync(book,false);
           
 
             return Result.Success();

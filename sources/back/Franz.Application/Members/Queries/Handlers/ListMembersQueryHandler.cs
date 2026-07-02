@@ -27,7 +27,7 @@ public sealed class ListMembersQueryHandler
 
     public async Task<Result<IReadOnlyCollection<MemberDto>>> Handle(ListMembersQuery request, CancellationToken cancellationToken)
     {
-        var members = await _memberRepository.GetAll(cancellationToken);
+        var members = await _memberRepository.GetAllAsync(cancellationToken);
         var mapped = _mapper.Map<IReadOnlyCollection<Member>,IReadOnlyCollection<MemberDto>>((IReadOnlyCollection<Member>)members);
 
         return mapped.ToResult();
