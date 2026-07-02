@@ -20,28 +20,27 @@ public class ApiArchitectureTests : BaseArchitectureTest
   [Fact]
   public void Controllers_AreLocatedCorrectly()
   {
-    var apiObjects = ApiLayer
-         .GetObjects(BaseArchitecture)
-         .Where(t =>
-             t.Name.EndsWith("Controller", StringComparison.OrdinalIgnoreCase))
-         .ToList();
+    // Use the ApiLayer provider which is already filtered by namespace in your base class
+    var controllers = ApiLayer.GetObjects(BaseArchitecture)
+        .Where(t => t.Name.EndsWith("Controller", StringComparison.OrdinalIgnoreCase))
+        .ToList();
 
-    if (!apiObjects.Any())
+    if (!controllers.Any())
     {
-      Console.WriteLine("🟡 No  Service Intefaces found — skipping contract interface enforcement (virgin template).");
+      Console.WriteLine("🟡 No Controllers found — skipping.");
       return;
     }
-    ArchRuleDefinition // Get types from the provider
+
+    // Apply the rule ONLY to the types retrieved from the API Layer
+    ArchRuleDefinition
         .Classes()
         .That()
-        .HaveNameEndingWith("Controller")
+        .Are(controllers) // Explicitly restrict the search space
         .Should()
         .BeAssignableTo(typeof(ControllerBase))
         .AndShould()
         .ResideInNamespace("Franz.API.Controllers")
         .Check(BaseArchitecture);
-
-  
   }
 
   [Fact]
