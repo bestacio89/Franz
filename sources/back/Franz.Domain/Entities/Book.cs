@@ -5,7 +5,7 @@ using Franz.Common.Mediator.Errors;
 
 namespace Franz.Domain.Entities
 {
-    public sealed class Book : Entity<int>, IEntity
+    public sealed class Book : Entity<int>
     {
         public int Id { get; set; }
         public ISBN Isbn { get; private set; }

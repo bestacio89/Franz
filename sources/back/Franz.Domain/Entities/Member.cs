@@ -5,7 +5,7 @@ using Franz.Common.Mediator.Errors;
 
 namespace Franz.Domain.Entities
 {
-    public sealed class Member : Entity<int>, IEntity
+    public sealed class Member : Entity<int>
     {
         public FullName Name { get; private set; }
         public Email Email { get; private set; }
