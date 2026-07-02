@@ -7,17 +7,16 @@ param (
     [switch]$SkipSolutionProcessing
 )
 
-# ================================
-# CONFIGURATION
-# ================================
+# =========================================================
+# ROSLYN LOADING
+# =========================================================
 
-$ProtectedNamespaces = @(
-    "Franz.Common"
-)
+Add-Type -AssemblyName "Microsoft.CodeAnalysis"
+Add-Type -AssemblyName "Microsoft.CodeAnalysis.CSharp"
 
-# ================================
+# =========================================================
 # PATH SETUP
-# ================================
+# =========================================================
 
 $SourceProjectFullPath = "$(Resolve-Path "..")\"
 $SourceSolutionFullPath = "$SourceProjectFullPath$SourceProjectName.slnx"
@@ -30,13 +29,15 @@ if ($TargetProjectRootOutputDir.Trim() -eq "") {
 
 $TargetSolutionFullPath = "$TargetProjectFullPath$TargetProjectName.slnx"
 
+$EscapedSource = [regex]::Escape($SourceProjectName)
+
 if (!(Test-Path $SourceSolutionFullPath)) {
     throw "Source solution not found: $SourceSolutionFullPath"
 }
 
-# ================================
+# =========================================================
 # UTILITIES
-# ================================
+# =========================================================
 
 function Write-Step($msg) {
     Write-Host "---- $msg"
@@ -44,60 +45,134 @@ function Write-Step($msg) {
 
 function Apply-Change($path, $content) {
     if ($DryRun) {
-        Write-Host "[DRY RUN] Would update: $path"
+        Write-Host "[DRY RUN] $path"
         return
     }
 
-    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllLines($path, $content, $utf8NoBom)
+    $utf8 = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($path, $content, $utf8)
 }
 
-function Safe-Replace([string]$content, [string]$source, [string]$target) {
-    $pattern = [regex]::Escape($source)
-    return ($content -replace $pattern, $target)
+function Is-FranzFrameworkFile {
+    param([string]$path)
+
+    # NEVER TOUCH FRAMEWORK LAYER
+    return $path -match "Franz\.Common"
 }
 
-# ================================
-# COPY BASE SOLUTION
-# ================================
+# =========================================================
+# ROSLYN REWRITER (ONLY SAFE STRUCTURAL ELEMENTS)
+# =========================================================
+
+Add-Type -TypeDefinition @"
+using System;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
+public class SafeNamespaceRewriter : CSharpSyntaxRewriter
+{
+    private readonly string _source;
+    private readonly string _target;
+
+    public SafeNamespaceRewriter(string source, string target)
+    {
+        _source = source;
+        _target = target;
+    }
+
+    public override SyntaxNode VisitNamespaceDeclaration(NamespaceDeclarationSyntax node)
+    {
+        var name = node.Name.ToString();
+
+        if (name.StartsWith(_source))
+        {
+            return node.WithName(
+                SyntaxFactory.ParseName(name.Replace(_source, _target))
+            );
+        }
+
+        return base.VisitNamespaceDeclaration(node);
+    }
+
+    public override SyntaxNode VisitUsingDirective(UsingDirectiveSyntax node)
+    {
+        if (node.Name == null)
+            return base.VisitUsingDirective(node);
+
+        var name = node.Name.ToString();
+
+        if (name.StartsWith(_source))
+        {
+            return node.WithName(
+                SyntaxFactory.ParseName(name.Replace(_source, _target))
+            );
+        }
+
+        return base.VisitUsingDirective(node);
+    }
+}
+"@ -Language CSharp
+
+function Rewrite-CsFile {
+    param([string]$filePath)
+
+    if (Is-FranzFrameworkFile $filePath) {
+        return
+    }
+
+    $code = [System.IO.File]::ReadAllText($filePath)
+
+    $tree = [Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree]::ParseText($code)
+    $root = $tree.GetRoot()
+
+    $rewriter = New-Object SafeNamespaceRewriter $SourceProjectName $TargetProjectName
+    $newRoot = $rewriter.Visit($root)
+
+    $result = $newRoot.NormalizeWhitespace().ToFullString()
+
+    Apply-Change $filePath $result
+}
+
+# =========================================================
+# COPY SOLUTION
+# =========================================================
 
 function Copy-Solution {
     Write-Step "Copying solution..."
 
-    if ($SourceProjectFullPath -ne $TargetProjectFullPath) {
-        if (!$DryRun) {
-            New-Item $TargetProjectFullPath -ItemType Directory -Force | Out-Null
-
-            Copy-Item "$SourceProjectFullPath*" $TargetProjectFullPath `
-                -Recurse -Force `
-                -Exclude @(".git", "bin", "obj", "scripts")
-        }
+    if (!(Test-Path $TargetProjectFullPath)) {
+        New-Item $TargetProjectFullPath -ItemType Directory -Force | Out-Null
     }
+
+    if ($DryRun) { return }
+
+    Copy-Item "$SourceProjectFullPath*" $TargetProjectFullPath `
+        -Recurse -Force `
+        -Exclude @(".git", "bin", "obj")
 }
 
-# ================================
-# RENAME FILES & FOLDERS
-# ================================
+# =========================================================
+# RENAME FILES / FOLDERS
+# =========================================================
 
 function Rename-FilesAndFolders {
-    Write-Step "Renaming files and folders..."
+    Write-Step "Renaming files/folders..."
 
-    Get-ChildItem -Path $TargetProjectFullPath -Recurse |
+    Get-ChildItem $TargetProjectFullPath -Recurse -Force |
     Sort-Object FullName -Descending |
     ForEach-Object {
 
-        foreach ($ns in $ProtectedNamespaces) {
-            if ($_.FullName -like "*$ns*") {
-                return
-            }
+        if ($_.FullName -match "Franz\.Common") {
+            return
         }
 
         if ($_.Name -like "$SourceProjectName*") {
 
-            $newName = $_.Name -replace "^$SourceProjectName", $TargetProjectName
+            $newName = $_.Name -replace "^$EscapedSource", $TargetProjectName
 
             if ($DryRun) {
-                Write-Host "[DRY RUN] Rename $($_.FullName) -> $newName"
+                Write-Host "[DRY RUN] $($_.FullName) -> $newName"
             }
             else {
                 Rename-Item $_.FullName -NewName $newName
@@ -106,81 +181,71 @@ function Rename-FilesAndFolders {
     }
 }
 
-# ================================
-# SAFE CONTENT REPLACEMENT
-# ================================
-
-function Replace-Content {
-    param ([string]$filePath)
-
-    $content = Get-Content $filePath -Raw
-
-    $updated = Safe-Replace $content $SourceProjectName $TargetProjectName
-
-    # Restore protected namespaces
-    foreach ($ns in $ProtectedNamespaces) {
-        $leaf = $ns.Split('.')[-1]
-        $updated = $updated -replace "\b$TargetProjectName\.$leaf\b", $ns
-    }
-
-    Apply-Change $filePath $updated
-}
-
-# ================================
-# FILE PROCESSING
-# ================================
-
-function Process-CodeFiles {
-    Write-Step "Processing .cs files..."
-
-    Get-ChildItem $TargetProjectFullPath -Recurse -Include *.cs |
-    ForEach-Object {
-        Replace-Content $_.FullName
-    }
-}
-
-function Process-ProjectFiles {
-    Write-Step "Processing .csproj files..."
-
-    Get-ChildItem $TargetProjectFullPath -Recurse -Include *.csproj |
-    ForEach-Object {
-        Replace-Content $_.FullName
-    }
-}
-
-# ================================
-# SLNX PROCESSING (SAFE MODE)
-# ================================
+# =========================================================
+# SOLUTION FILE (.slnx)
+# =========================================================
 
 function Process-SolutionFile {
-    Write-Step "Processing .slnx solution file..."
+    Write-Step "Processing solution..."
 
     if ($SkipSolutionProcessing) {
-        Write-Host "Skipping solution processing (flag enabled)."
         return
     }
 
     if (!(Test-Path $TargetSolutionFullPath)) {
-        Write-Host "Solution file not found, skipping."
         return
     }
 
-    # SAFETY: treat .slnx as structured artifact, not regex text
-    try {
-        $content = Get-Content $TargetSolutionFullPath -Raw
+    $content = Get-Content $TargetSolutionFullPath -Raw
 
-        $updated = Safe-Replace $content $SourceProjectName $TargetProjectName
+    # ONLY project identity replacement
+    $updated = $content -replace "$EscapedSource(?=\.csproj)", $TargetProjectName
 
-        Apply-Change $TargetSolutionFullPath $updated
-    }
-    catch {
-        throw "Failed processing .slnx safely: $($_.Exception.Message)"
+    Apply-Change $TargetSolutionFullPath $updated
+}
+
+# =========================================================
+# CSPROJ FILES
+# =========================================================
+
+function Process-ProjectFiles {
+    Write-Step "Processing csproj..."
+
+    Get-ChildItem $TargetProjectFullPath -Recurse -Include *.csproj |
+    ForEach-Object {
+
+        $content = Get-Content $_.FullName -Raw
+
+        $content = [regex]::Replace($content, "<AssemblyName>.*?</AssemblyName>",
+            "<AssemblyName>$TargetProjectName</AssemblyName>")
+
+        $content = [regex]::Replace($content, "<RootNamespace>.*?</RootNamespace>",
+            "<RootNamespace>$TargetProjectName</RootNamespace>")
+
+        $content = [regex]::Replace($content,
+            "$EscapedSource(?=\.csproj)",
+            $TargetProjectName)
+
+        Apply-Change $_.FullName $content
     }
 }
 
-# ================================
-# ASSEMBLY INFO (OPTIONAL)
-# ================================
+# =========================================================
+# C# CODE (SAFE ONLY)
+# =========================================================
+
+function Process-CodeFiles {
+    Write-Step "Processing C# files (safe mode)..."
+
+    Get-ChildItem $TargetProjectFullPath -Recurse -Include *.cs |
+    ForEach-Object {
+        Rewrite-CsFile $_.FullName
+    }
+}
+
+# =========================================================
+# ASSEMBLY INFO
+# =========================================================
 
 function Process-AssemblyInfo {
     if ([string]::IsNullOrWhiteSpace($RelativePathToAssemblyInfo)) {
@@ -196,16 +261,16 @@ function Process-AssemblyInfo {
     }
 
     $content = Get-Content $path -Raw
-    $updated = Safe-Replace $content $SourceProjectName $TargetProjectName
+    $content = $content -replace $EscapedSource, $TargetProjectName
 
-    Apply-Change $path $updated
+    Apply-Change $path $content
 }
 
-# ================================
+# =========================================================
 # EXECUTION
-# ================================
+# =========================================================
 
-Write-Host "===== SAFE .SLNX TEMPLATE CLONING STARTED ====="
+Write-Host "===== API TEMPLATE CLONER (SAFE MODE) ====="
 
 Copy-Solution
 Rename-FilesAndFolders
@@ -214,4 +279,8 @@ Process-ProjectFiles
 Process-CodeFiles
 Process-AssemblyInfo
 
-Write-Host "===== COMPLETED SUCCESSFULLY ====="
+Write-Host "===== DONE ====="
+
+Write-Host ""
+Write-Host "Press any key to exit..."
+[System.Console]::ReadKey($true) | Out-Null
