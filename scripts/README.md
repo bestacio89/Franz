@@ -1,89 +1,370 @@
-Got it ✅
-Here’s a **README.md** tailored for this PowerShell script that explains clearly how to use it to rename/clone a .NET solution template into a new project.
+# ServiceCloner
+
+A PowerShell utility for creating new .NET services from a stable template repository.
+
+ServiceCloner does **not modify the original template**. Instead, it creates a new project instance from the template, updates the project identity, cleans generated artifacts, and prepares the repository for independent development.
+
+The intended workflow is:
+
+```
+Franz (Template Repository)
+        |
+        +---- HeroService
+        |
+        +---- UserService
+        |
+        +---- InventoryService
+        |
+        +---- Any future service
+```
+
+Each generated service becomes its own Git repository while preserving the architectural standards, structure, and conventions of the template.
 
 ---
 
-# 🛠 Project Cloner & Renamer Script
+# Why ServiceCloner Exists
 
-This PowerShell script automates the process of creating a new .NET project from an existing template solution.
-It **copies the template**, **renames the solution**, **updates namespaces**, and **fixes references** — all in one go.
+Large .NET ecosystems often suffer from service creation drift:
 
----
+* inconsistent folder structures
+* missing architectural layers
+* different dependency registration patterns
+* duplicated setup work
+* forgotten configuration files
+* inconsistent CI/CD foundations
 
-## 📌 Features
+ServiceCloner solves this by making the template repository the single source of truth.
 
-* Copy an existing solution as a base.
-* Rename solution files, folders, and references.
-* Update project namespaces and using statements.
-* Update `AssemblyInfo.cs` if provided.
-* Works with `.sln`, `.csproj`, and `.cs` files.
-
----
-
-## 🚀 Usage
-
-### 1. Open PowerShell
-
-Run the script from the root folder where your **source solution** is located.
-
-### 2. Parameters
-
-| Parameter                            | Alias   | Description                                                                        | Default   |
-| ------------------------------------ | ------- | ---------------------------------------------------------------------------------- | --------- |
-| `-NomProjetSource`                   | `-sp`   | Name of the existing source project (template).                                    | `Minerva` |
-| `-NomProjetCible`                    | `-tp`   | Name of the new target project.                                                    | `Franz`   |
-| `-RepertoireRacineSortieProjetCible` | `-odtp` | Output directory for the new project (leave empty to place it next to the source). | `""`      |
-| `-CheminRelatifVersAssemblyInfo`     | `-ai`   | Relative path to `AssemblyInfo.cs` (empty string = skip).                          | `""`      |
+A new service starts from a proven architecture instead of being assembled manually.
 
 ---
 
-### 3. Example Commands
+# Features
 
-**Basic usage (clone template `Minerva` into `Franz` in the same folder):**
+## Solution cloning
+
+Creates a complete copy of the template solution.
+
+Included:
+
+* solution files
+* projects
+* source code
+* configuration files
+* documentation
+* build configuration
+
+Excluded:
+
+* `.git`
+* `bin`
+* `obj`
+* generated build artifacts
+
+---
+
+## Project identity replacement
+
+Updates the generated project name across:
+
+* solution files
+* `.csproj` files
+* assembly names
+* root namespaces
+* project references
+
+Example:
+
+```
+Template:
+Franz.Domain
+Franz.Application
+Franz.Persistence
+
+Generated:
+HeroService.Domain
+HeroService.Application
+HeroService.Persistence
+```
+
+---
+
+## Namespace migration
+
+Updates C# namespaces and using statements safely.
+
+Example:
+
+Before:
+
+```csharp
+namespace Franz.Domain.Users;
+```
+
+After:
+
+```csharp
+namespace HeroService.Domain.Users;
+```
+
+The original template remains untouched.
+
+---
+
+## Repository isolation
+
+The generated project is intended to become an independent repository.
+
+Typical workflow:
 
 ```powershell
-.\Clone-Project.ps1 -sp Minerva -tp Franz
+ServiceCloner.ps1 -Source Franz -Target HeroService
 ```
 
-**Clone into a different directory:**
+Then:
 
 ```powershell
-.\Clone-Project.ps1 -sp Minerva -tp Franz -odtp "..\NewProjects\"
+cd HeroService
+
+git init
+git remote add origin <repository-url>
+git add .
+git commit -m "Initial service creation"
+git push -u origin main
 ```
 
-**Clone and also update AssemblyInfo.cs:**
+The template and generated service now evolve independently.
+
+---
+
+# Installation
+
+Requirements:
+
+* PowerShell 7+
+* .NET SDK installed
+* Git installed
+
+The script should be executed from the template repository.
+
+Example:
+
+```
+Franz/
+ |
+ ├── scripts/
+ │    └── ServiceCloner.ps1
+ |
+ ├── Franz.slnx
+ |
+ └── src/
+```
+
+Run:
 
 ```powershell
-.\Clone-Project.ps1 -sp Minerva -tp Franz -ai ".\Properties\AssemblyInfo.cs"
+./ServiceCloner.ps1
 ```
 
 ---
 
-## ⚠️ Notes
+# Parameters
 
-* The script excludes `.git` and `scripts` folders when copying the base solution.
-* If the **source solution file** cannot be found, the script will exit with an error.
-* Namespace and using statements will be replaced everywhere in `.cs` files.
+| Parameter               | Description                           | Default          |
+| ----------------------- | ------------------------------------- | ---------------- |
+| `SourceProjectName`     | Template project name                 | Current template |
+| `TargetProjectName`     | Generated service name                | Required         |
+| `TargetOutputDirectory` | Where the new service is created      | Parent directory |
+| `DryRun`                | Preview changes without writing files | Disabled         |
+
+Example:
+
+```powershell
+./ServiceCloner.ps1 `
+    -SourceProjectName Franz `
+    -TargetProjectName HeroService
+```
+
+Creates:
+
+```
+../HeroService
+```
+
+without changing:
+
+```
+../Franz
+```
 
 ---
 
-## ✅ Output
+# Recommended Workflow
 
-When executed successfully, you’ll see logs like:
+## 1. Maintain the template
+
+The template repository should contain:
+
+* architecture foundations
+* common project structure
+* dependency conventions
+* CI/CD configuration
+* testing setup
+* coding standards
+
+Example:
 
 ```
-=====---- Starting configuration of your template.
----------.... Copying if target is different from source. - OK
----------.... Renaming files and directories in the new solution: Minerva to Franz. - OK
----------.... Updating references in the target solution file: Franz.sln. - OK
----------.... Renaming assemblies and root namespaces in target: ..\Franz. - OK
----------.... Renaming namespaces and usings in cs files: ..\Franz. - OK
----------.... Updating AssemblyInfo if it exists: ..\Franz. - OK
-=====---- Template configuration completed.
+Franz
+ ├── Domain
+ ├── Application
+ ├── Infrastructure
+ ├── Persistence
+ ├── API
+ └── Tests
 ```
-
-Your new project is ready to use 🎉
 
 ---
 
-👉 Do you want me to also make a **French version of this README.md** so you can switch depending on the repo’s target audience?
+## 2. Generate a service
+
+Run ServiceCloner:
+
+```powershell
+./ServiceCloner.ps1 `
+    -TargetProjectName UserService
+```
+
+---
+
+## 3. Connect the new repository
+
+Create an empty repository in your Git provider.
+
+Then:
+
+```powershell
+cd ../UserService
+
+git init
+git remote add origin <remote-url>
+
+git add .
+git commit -m "Initial UserService creation"
+
+git push -u origin main
+```
+
+---
+
+# Design Principles
+
+## Template first
+
+The template repository is the architectural reference.
+
+Changes that improve all services should happen in the template first.
+
+---
+
+## No destructive operations
+
+ServiceCloner never:
+
+* renames the original repository
+* modifies the source template
+* deletes source files
+* rewrites Git history
+
+It only creates a new project.
+
+---
+
+## Repeatable service creation
+
+A new service should be predictable.
+
+Given:
+
+```
+Template + Service Name
+```
+
+the result should always be:
+
+```
+Consistent Service Repository
+```
+
+---
+
+# Example Generated Structure
+
+After cloning:
+
+```
+HeroService
+ |
+ ├── HeroService.slnx
+ |
+ ├── src
+ │    ├── HeroService.Domain
+ │    ├── HeroService.Application
+ │    ├── HeroService.Infrastructure
+ │    ├── HeroService.Persistence
+ │    └── HeroService.Api
+ |
+ ├── tests
+ |
+ └── README.md
+```
+
+---
+
+# Troubleshooting
+
+## Target already exists
+
+ServiceCloner does not overwrite existing projects.
+
+Choose another output directory or remove the existing target manually.
+
+---
+
+## Source and target are identical
+
+The template repository cannot be cloned into itself.
+
+Example of invalid usage:
+
+```
+Source:
+Franz
+
+Target:
+Franz
+```
+
+Use a different service name.
+
+---
+
+## Namespace replacement issues
+
+The replacement process is designed for .NET projects following standard namespace conventions.
+
+Custom generated code or external generated files may require manual review.
+
+---
+
+# License
+
+Use according to the license of the template repository.
+
+---
+
+# Summary
+
+ServiceCloner turns a mature .NET architecture into a reusable service factory.
+
+Instead of repeatedly rebuilding foundations, create new services from a validated baseline and let each service evolve independently.
