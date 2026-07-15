@@ -1,274 +1,742 @@
-﻿<p align="center">
-  <img width="200" src="./Docs/assets/FranzTemplate.png" alt="Franz Logo"/>
+﻿```markdown
+<p align="center">
+  <img width="200" src="./Docs/assets/FranzTemplate.png" alt="Franz API Template Logo"/>
 </p>
 
-<h1 align="center">API Project — Powered by Franz</h1>
-<p align="center"><b>Deterministic Architecture for Event-Driven .NET Microservices</b></p>
+<h1 align="center">Franz API Template</h1>
+
+<p align="center">
+  <b>Enterprise .NET Service Industrialization Platform</b>
+</p>
+
+<p align="center">
+  <b>Architecture as Code • DDD • CQRS • Event Driven • Cloud Ready</b>
+</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/.NET-10%2B-blueviolet" />
   <img src="https://img.shields.io/badge/Architecture-Clean%20%7C%20DDD%20%7C%20CQRS-brightgreen" />
-  <img src="https://img.shields.io/badge/Resilience-Polly-blue" />
-  <img src="https://img.shields.io/badge/Observability-OpenTelemetry-yellow" />
   <img src="https://img.shields.io/badge/Messaging-Kafka%20%7C%20RabbitMQ-orange" />
-  <img src="https://img.shields.io/badge/MultiCloud-Azure%20%7C%20AWS%20%7C%20GCP-9cf" />
+  <img src="https://img.shields.io/badge/Observability-OpenTelemetry-yellow" />
+  <img src="https://img.shields.io/badge/Cloud-Azure%20%7C%20AWS%20%7C%20GCP-blue" />
   <img src="https://img.shields.io/badge/IaC-Terraform%20%7C%20Bicep-success" />
-  <img src="https://img.shields.io/badge/CI%2FCD-Azure%20DevOps%20%7C%20GitHub%20%7C%20GitLab-informational" />
 </p>
 
 ---
 
-# 🔥⚡ Overview — *Architecture as Code* ⚡🔥
+# ⚡ Overview — Architecture as Code
 
-This API is built on top of **Franz 1.7.5**, inheriting Franz’s deterministic patterns:
+Franz API Template is a proprietary enterprise application template designed to
+accelerate the creation of production-grade .NET services.
 
-- **Architecture is not documentation — it is *law***.
-- Every rule is enforced at:
-  - **compile-time** (ArchUnitNET tests)  
-  - **runtime** (Franz pipelines & DI enforcement)  
-- The project ships with:
-  - **multi-cloud IaC**,  
-  - **multi-CI/CD**,  
-  - **Docker-first builds**,  
-  - **observability**,  
-  - and **resilience** baked in.
+It provides a complete architectural foundation built around:
 
-> **Spaghetti-free by design. Compliant by force. Enterprise by nature.**
+- Domain Driven Design
+- Clean Architecture
+- CQRS
+- Event Driven Architecture
+- Cloud-native deployment patterns
+- Observability
+- Resilience engineering
+- Automated architecture governance
 
----
+The objective is simple:
 
-# ✨ Features
+> Reduce months of architectural groundwork into a deterministic,
+> repeatable engineering foundation.
 
-### 🏗 Architecture as Code (ArchUnitNET)
-Strict rules for:
-- Handlers  
-- Repositories  
-- DTO naming  
-- Dependency boundaries  
-- Layer isolation  
+Franz API Template is not a code generator.
 
-> *No PR merges if architecture rules fail.*
-
-### 📦 Mediator Pipelines (Franz.Mediator)
-- Validation  
-- Logging  
-- Resilience (Polly)  
-- OpenTelemetry instrumentation  
-- Correlation + tenant propagation  
-
-### 🔒 Resilience (Polly)
-Fully integrated:
-- Retries  
-- Timeouts  
-- Circuit breakers  
-- Bulkheads  
-- Fallbacks
-
-### 📊 Observability
-- Serilog + structured logs  
-- OpenTelemetry tracing  
-- CorrelationId everywhere  
-- ELK enrichers  
-
-### 📡 Messaging-Ready
-- Kafka  
-- RabbitMQ  
-- Azure Event Grid  
-- Outbox/inbox via Franz persistence providers  
-
-### 🐳 Container-First
-- Multi-stage Dockerfile  
-- Non-root runtime  
-- Built-in healthchecks  
-
-### ☁ Cloud-Ready
-- Terraform (AWS + GCP)  
-- Azure Bicep  
-- Built-in networking, service wiring, secrets  
-
-### 🔄 Multi-CI/CD
-- Azure DevOps  
-- GitHub Actions  
-- GitLab CI  
-- Shared job templates
+It is an opinionated engineering platform where architecture decisions,
+operational practices, and production patterns are encoded from day one.
 
 ---
 
-# 🚀 Getting Started
+# 🏛 Relationship With Franz.Common
 
-## Prerequisites
-- **.NET 9+ SDK**
-- Docker (optional)
+Franz API Template is built on top of the open Franz.Common ecosystem.
 
-## Install Dependencies
-```bash
-dotnet restore
-````
+Franz.Common provides reusable infrastructure capabilities:
 
-## Run the API
+- Dependency injection extensions
+- Mediator pipelines
+- Messaging abstractions
+- Persistence patterns
+- Observability integrations
+- Cross-cutting application foundations
 
-```bash
-dotnet run
+The API Template adds the enterprise application structure:
+
+- Service boundaries
+- Domain organization
+- Infrastructure layout
+- CI/CD foundations
+- Infrastructure as Code
+- Architecture enforcement
+- Production deployment patterns
+
+Architecture is the product.
+
+The template exists to preserve architectural consistency across projects.
+
+---
+
+# ⚠️ Independence Notice
+
+This project is an independent software project created by:
+
+**Bernardo Estacio Abreu**
+
+It is not affiliated with, sponsored by, endorsed by, or connected to any
+company, organization, or product using the name "Franz".
+
+The name Franz in this project originates from the Kafka ecosystem reference
+and represents this software ecosystem only.
+
+---
+
+# ✨ Core Capabilities
+
+## 🏗 Architecture Enforcement
+
+The template is designed around the principle:
+
+> Architecture should be executable, not documented.
+
+Included patterns:
+
+- Layer isolation
+- Domain boundaries
+- Dependency direction enforcement
+- CQRS separation
+- Repository conventions
+- Handler conventions
+- DTO contracts
+- Infrastructure isolation
+
+Architectural violations should fail before reaching production.
+
+---
+
+# 🧩 Application Structure
+
+Generated services follow a deterministic structure:
+
 ```
 
-Swagger UI:
-👉 [http://localhost:5000/swagger](http://localhost:5000/swagger)
+ServiceName
+│
+├── ServiceName.Api
+│   ├── Controllers
+│   ├── Middleware
+│   └── Configuration
+│
+├── ServiceName.Application
+│   ├── Commands
+│   ├── Queries
+│   ├── Handlers
+│   ├── Validators
+│   └── Mappings
+│
+├── ServiceName.Domain
+│   ├── Entities
+│   ├── Aggregates
+│   ├── ValueObjects
+│   ├── DomainEvents
+│   └── Rules
+│
+├── ServiceName.Infrastructure
+│   ├── Persistence
+│   ├── Messaging
+│   ├── ExternalServices
+│   └── Configuration
+│
+├── ServiceName.Tests
+│
+└── Infrastructure
+├── Terraform
+├── Bicep
+└── Docker
+
+```
+
+The structure is designed to remain maintainable as the service grows.
 
 ---
 
-# 🧩 Franz Bootstrap Template
+# 🚀 Creating a New Service
+
+The template is designed to be cloned into a new service.
+
+Example:
+
+```
+
+Franz API Template
+|
+|
++---- CustomerService
+|
++---- OrderService
+|
++---- PaymentService
+
+```
+
+Each generated service becomes an independent application.
+
+The generated application belongs to the organization using the template.
+
+The template itself remains proprietary.
+
+---
+
+````markdown
+# 🧠 Engineering Philosophy
+
+Franz API Template follows a strict engineering philosophy:
+
+> Defaults are architecture decisions.
+
+The goal is not to provide a blank project.
+
+The goal is to provide a production-ready starting point where the difficult
+decisions have already been made.
+
+The template promotes:
+
+- Explicit boundaries
+- Strong domain ownership
+- Deterministic dependency flow
+- Operational readiness
+- Repeatable deployment
+
+---
+
+# 📦 Technology Foundation
+
+## Runtime
+
+- .NET 10+
+- ASP.NET Core
+- Entity Framework Core
+- Docker-first execution
+
+---
+
+## Application Architecture
+
+Built around:
+
+- Domain Driven Design
+- Clean Architecture
+- CQRS
+- Event-driven workflows
+- Dependency inversion
+
+The application layer coordinates behavior.
+
+The domain owns business rules.
+
+Infrastructure provides technical capabilities.
+
+---
+
+# 🔄 Mediator Pipeline
+
+Franz-based applications use a pipeline-oriented execution model.
+
+Example:
 
 ```csharp
-var builder = WebApplication.CreateBuilder(args);
-
-// Logging + Observability
-builder.Host.UseHybridLog();
-builder.Services.AddOpenApi();
-
-// Application & Persistence
-builder.Services.RegisterApplicationServices();
-builder.Services.RegisterPersistenceServices<ApplicationDbContext>(builder.Configuration);
-builder.Services.AddDatabase<ApplicationDbContext>(builder.Environment, builder.Configuration);
-
-// HTTP Architecture
-builder.Services.AddHttpArchitecture(builder.Environment, builder.Configuration);
-builder.Services.AddMessagingInHttpContext(builder.Configuration);
-builder.Services.AddHttpServices(builder.Configuration, TimeSpan.FromSeconds(30));
-builder.Services.AddExternalServices(builder.Configuration);
-
-// Mediator Pipelines
-builder.Services.AddFranzMediatorDefault()
+builder.Services
+    .AddFranzMediatorDefault()
     .AddFranzEventValidationPipeline()
     .AddMediatorOpenTelemetry()
-    .AddMediatorEventOpenTelemetry(new ActivitySource("Franz.Mediator"));
+    .AddMediatorEventOpenTelemetry();
+````
 
-// Resilience
-builder.Services.AddFranzResilience(builder.Configuration);
+The pipeline provides:
 
-// CORS + API Versioning
-builder.Services.AddApiVersioning(o => o.DefaultApiVersion = new ApiVersion(1, 0));
-builder.Services.AddCors(p => p.AddPolicy("AllowAll", b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+* Validation
+* Logging
+* Correlation propagation
+* Telemetry
+* Resilience policies
+* Cross-cutting execution rules
 
-var app = builder.Build();
+---
 
-// HTTP Pipeline
-app.UseCors("AllowAll");
-app.UseHttpArchitecture();
+# 📡 Messaging Architecture
 
-app.MapControllers();
-app.Run();
+The template supports event-driven communication patterns.
+
+Supported messaging providers:
+
+* Kafka
+* RabbitMQ
+* Azure Event Grid
+* Azure Service Bus
+
+Typical workflow:
+
+```
+Domain Event
+      |
+      v
+Outbox
+      |
+      v
+Message Broker
+      |
+      v
+Consumer
+      |
+      v
+Application Handler
 ```
 
----
-
-# 🔄 CI/CD Matrix
-
-| Platform           | Path                 | Notes                               |
-| ------------------ | -------------------- | ----------------------------------- |
-| **Azure DevOps**   | `pipelines/`         | Library templates + infra pipelines |
-| **GitHub Actions** | `.github/workflows/` | GH-native runners + OIDC            |
-| **GitLab CI**      | `.gitlab/ci/`        | Complete GitLab chains              |
+The architecture supports asynchronous communication while maintaining domain
+boundaries.
 
 ---
 
-# ☁ Multi-Cloud Infrastructure (IaC)
+# 🔒 Resilience Engineering
 
-### **Azure (Bicep)**
+Production services require predictable failure behavior.
 
-* AppService / AKS
-* Private networking
-* KeyVault integration
+Integrated resilience patterns include:
 
-### **AWS (Terraform)**
+* Retries
+* Timeouts
+* Circuit breakers
+* Bulkheads
+* Fallback strategies
 
-* EKS / ECS
-* ALB / NLB
-* RDS / DynamoDB
-
-### **GCP (Terraform)**
-
-* GKE
-* Cloud Run
-* Pub/Sub
-
----
-
-# 🐳 Docker
-
-```bash
-docker build -t api-project .
-docker run -p 8080:80 api-project
-```
-
-Includes:
-
-* Non-root execution
-* Health endpoint
-* Multi-stage build
-
----
-
-# 🧪 Architecture Rules (Franz Tribunal)
-
-Franz enforces rules such as:
-
-* `*CommandHandler` must implement `ICommandHandler<,>`
-* `*QueryHandler` must implement `IQueryHandler<,>`
-* DTOs must end with `Dto`
-* Repositories follow scoped lifetime rules
-* No cycle dependencies
-* No infrastructure leak into domain
-
-> **If architecture fails, the merge fails.**
-
----
-
-# 📡 Messaging Example
+Example:
 
 ```csharp
-public class KafkaConsumerService : IHostedService
-{
-    private readonly IConsumer<string, string> _consumer;
-    private readonly IMessageHandler _handler;
+builder.Services.AddFranzResilience(
+    builder.Configuration);
+```
 
-    public KafkaConsumerService(IOptions<MessagingOptions> opts, IMessageHandler handler)
-    {
-        _consumer = new ConsumerBuilder<string, string>(
-            new ConsumerConfig { BootstrapServers = opts.Value.BootStrapServers, GroupId = opts.Value.GroupID }
-        ).Build();
-        _handler = handler;
-    }
+Failure handling is treated as part of the architecture, not an afterthought.
 
-    public Task StartAsync(CancellationToken ct)
-    {
-        _consumer.Subscribe("my-topic");
+---
 
-        Task.Run(() =>
-        {
-            while (!ct.IsCancellationRequested)
-            {
-                var msg = _consumer.Consume(ct);
-                _handler.Process(new Message(msg.Message.Value));
-            }
-        });
+# 📊 Observability
 
-        return Task.CompletedTask;
-    }
-}
+Every service is prepared for operational monitoring.
+
+Included foundations:
+
+## Logging
+
+* Structured logging
+* Serilog integration
+* Correlation identifiers
+
+## Distributed tracing
+
+* OpenTelemetry instrumentation
+* Activity propagation
+* Service dependency visibility
+
+## Monitoring
+
+Designed for:
+
+* Elastic Stack
+* Azure Monitor
+* OpenTelemetry collectors
+* Cloud-native observability platforms
+
+---
+
+# 🐳 Container First
+
+Services include container-ready foundations.
+
+Characteristics:
+
+* Multi-stage Docker builds
+* Minimal runtime images
+* Non-root execution
+* Health endpoints
+* Environment-based configuration
+
+Example:
+
+```bash
+docker build -t service-name .
+
+docker run \
+  -p 8080:8080 \
+  service-name
 ```
 
 ---
 
-# 👑 Philosophy — *The Anti-Spaghetti Manifesto*
+# ☁ Multi-Cloud Infrastructure
 
-> “Most teams enforce architecture through code reviews.
-> This repo enforces it through **law**.”
+Franz API Template is designed for cloud portability.
 
-* Architecture is deterministic
-* Rules > opinions
-* Defaults are sacred
-* DI rejects invalid code
-* Creativity is allowed — spaghetti is not
+Supported infrastructure patterns:
+
+## Azure
+
+Using:
+
+* Bicep
+* Azure Container Apps
+* AKS
+* Key Vault
+* Managed identities
+
+---
+
+## AWS
+
+Using:
+
+* Terraform
+* ECS
+* EKS
+* RDS
+* Networking modules
+
+---
+
+## Google Cloud
+
+Using:
+
+* Terraform
+* GKE
+* Cloud Run
+* Pub/Sub patterns
+
+---
+
+# 🔧 Infrastructure as Code
+
+Infrastructure is treated as versioned software.
+
+Example:
+
+```
+Infrastructure
+│
+├── terraform
+│   ├── aws
+│   └── gcp
+│
+├── bicep
+│   └── azure
+│
+└── docker
+```
+
+Benefits:
+
+* Repeatable environments
+* Reviewable infrastructure changes
+* Automated provisioning
+
+---
+
+# 🔄 CI/CD Ready
+
+The template includes foundations for multiple CI/CD ecosystems.
+
+Supported platforms:
+
+| Platform       | Purpose                         |
+| -------------- | ------------------------------- |
+| GitHub Actions | GitHub-native automation        |
+| GitLab CI      | Enterprise pipelines            |
+| Azure DevOps   | Microsoft ecosystem deployments |
+
+Typical pipeline stages:
+
+```
+Restore
+   |
+Build
+   |
+Unit Tests
+   |
+Architecture Tests
+   |
+Security Checks
+   |
+Container Build
+   |
+Deployment
+```
+
+---
+
+# 🧪 Architecture Validation
+
+Architecture rules should be executable.
+
+Typical validation rules:
+
+* Handlers follow naming conventions
+* DTOs remain isolated
+* Dependencies respect boundaries
+* Domain does not depend on infrastructure
+* Repository contracts remain consistent
+
+Example principle:
+
+```
+Domain
+  |
+  v
+Application
+  |
+  v
+Infrastructure
+
+Never:
+
+Infrastructure
+       |
+       v
+Domain
+```
+
+---
+
+# 🛠 Developer Experience
+
+The template aims to provide an identical engineering environment across teams.
+
+Recommended tooling:
+
+* Visual Studio / Rider
+* Docker
+* Git
+* Terraform tooling
+* Bicep tooling
+* YAML tooling
+* Markdown Mermaid preview
+
+The objective:
+
+> Same architecture, same workflow, every developer.
+
+---
+
+```markdown id="qk9sm2"
+# 🏗 Service Creation Workflow
+
+Franz API Template is designed to eliminate repetitive project initialization.
+
+A new service is created by cloning the template foundation.
+
+Example:
+
+```
+
+Franz API Template
+
+```
+    |
+    |
+    +---- Customer Service
+    |
+    +---- Inventory Service
+    |
+    +---- Payment Service
+    |
+    +---- Notification Service
+```
+
+```
+
+Each generated service becomes an independent application with:
+
+- Its own repository
+- Its own deployment lifecycle
+- Its own configuration
+- Its own domain model
+
+The template provides the foundation.
+
+The generated application becomes the customer's software product.
+
+---
+
+# 🔄 Template Industrialization Workflow
+
+Typical enterprise workflow:
+
+```
+
+1. Clone Franz API Template
+
+   ```
+        |
+        v
+   ```
+
+2. Rename service boundaries
+
+   ```
+        |
+        v
+   ```
+
+3. Connect new repository
+
+   ```
+        |
+        v
+   ```
+
+4. Configure infrastructure
+
+   ```
+        |
+        v
+   ```
+
+5. Implement business domain
+
+   ```
+        |
+        v
+   ```
+
+6. Deploy using existing pipelines
+
+````
+
+The purpose is not generating code.
+
+The purpose is preserving engineering standards while allowing teams to focus on business capabilities.
+
+---
+
+# 📁 Repository Initialization
+
+After creating a service from the template:
+
+```bash
+git init
+
+git remote add origin <repository-url>
+
+git add .
+
+git commit -m "Initialize service from Franz API Template"
+
+git push -u origin main
+````
+
+The generated repository should become the ownership boundary of the organization using it.
+
+---
+
+# 🧱 Enterprise Usage Model
+
+Franz API Template is intended for:
+
+* Software companies
+* Enterprise development teams
+* Product teams
+* Consulting organizations
+* Internal platform teams
+
+Typical use cases:
+
+* Creating microservice ecosystems
+* Standardizing backend development
+* Reducing architectural drift
+* Accelerating delivery of new products
+
+---
+
+# 🎯 Why Use an Application Template?
+
+Most organizations repeatedly rebuild:
+
+* Project structure
+* Dependency configuration
+* Logging setup
+* Messaging infrastructure
+* CI/CD pipelines
+* Docker configuration
+* Cloud infrastructure
+* Architecture rules
+
+This creates inconsistency.
+
+Franz API Template turns those repeated decisions into a reusable engineering asset.
+
+---
+
+# 📜 License
+
+Copyright (c) 2025 Bernardo Estacio Abreu
+
+All rights reserved.
+
+This repository contains proprietary software.
+
+The Franz API Template is licensed under the terms described in the
+`LICENSE` file.
+
+The license grants authorized users the right to use the template internally
+for software development and deployment.
+
+The following actions are prohibited without explicit written permission:
+
+* Redistribution of the template
+* Reselling the template
+* Sublicensing the template
+* Publishing modified versions of the template
+* Creating competing template products from this software
+* Reverse engineering the template
+
+The ownership of the template remains exclusively with:
+
+**Bernardo Estacio Abreu**
+
+---
+
+# 📌 Generated Application Ownership
+
+Applications created using Franz API Template are separate software products.
+
+Unless otherwise agreed through a commercial agreement:
+
+* The generated application's source code belongs to the organization creating it.
+* Business logic implemented by the organization remains its property.
+* Domain models created by the organization remain its property.
+
+The license restrictions apply to the template itself, not to independently developed applications created from it.
+
+---
+
+# 🤝 Commercial Licensing
+
+For:
+
+* Enterprise agreements
+* Consulting engagements
+* Custom template extensions
+* Architecture reviews
+* Commercial support
+
+Contact:
+
+```
+bernardo.estacio89@gmail.com
+```
 
 ---
 
@@ -282,83 +750,20 @@ F         R   R    A     A  N  NN    ZZ
 F         R    R   A     A  N   N   ZZZZZZZ
 ```
 
----
+Architecture is not a document.
 
-# 🏗 C4 Architecture (Mermaid)
-
-### C1 — System Context
-
-```mermaid
-C4Context
-    Person(user, "Client", "Uses the API")
-    System(api, "Franz-Powered API", "Provides domain services")
-    SystemDb(db, "Database", "Stores application data")
-    SystemQueue(kafka, "Kafka / RabbitMQ", "Message broker")
-    System_Ext(ext, "External Services", "Third-party APIs")
-
-    Rel(user, api, "Consumes")
-    Rel(api, db, "Reads/Writes")
-    Rel(api, kafka, "Publishes/Consumes")
-    Rel(api, ext, "Integrates with")
-```
-
-### C2 — Containers
-
-```mermaid
-C4Container
-    System_Boundary(api, "Franz API") {
-        Container(web, "API Service", "ASP.NET + Franz", "Controllers, DI, mediator")
-        ContainerDb(db, "Database", "SQL/NoSQL", "Application state")
-        Container(queue, "Kafka/RabbitMQ", "Message Broker", "Async messaging")
-    }
-
-    Person(user, "Client")
-    System_Ext(ext, "External Service")
-
-    Rel(user, web, "REST/JSON")
-    Rel(web, db, "Reads/Writes")
-    Rel(web, queue, "Publishes")
-    Rel(web, ext, "Integrates with")
-```
-
-### C3 — Components
-
-```mermaid
-C4Component
-    Container_Boundary(api, "API Service") {
-        Component(controller, "Controllers", "ASP.NET", "Expose endpoints")
-        Component(mediator, "Mediator", "Franz.Mediator", "Dispatches requests")
-        Component(handler, "Handlers", "Command/Query Handlers", "Business logic")
-        Component(repo, "Repositories", "EF Core", "Persistence layer")
-    }
-
-    Rel(controller, mediator, "Dispatches")
-    Rel(mediator, handler, "Routes to")
-    Rel(handler, repo, "Reads/Writes")
-```
+Architecture is a system of enforceable decisions.
 
 ---
 
-# 🛠 Developer Environment (IDE-as-Code)
+# Final Statement
 
-Recommended Extensions:
+Franz API Template exists to answer one question:
 
-* GitLens
-* Terraform
-* Bicep
-* Docker
-* Kubernetes
-* Serilog Analyzer
-* YAML
-* Markdown Mermaid Preview
-* Copilot
+> How do we build production-grade services repeatedly without rebuilding the same foundations every time?
 
-> **Same workspace, same cockpit — every developer, every machine.**
+The answer:
+
+**Encode the architecture once. Reuse it everywhere.**
 
 ---
-
-# 📜 License
-
-MIT License.
-
-

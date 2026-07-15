@@ -13,8 +13,8 @@
     <Project Path="sources/back/Franz.API/Franz.API.csproj" />
   </Folder>
   <Folder Name="/4- Tests/">
-    <Project Path="TestProject1/Franz.Testing.csproj" />
-    <Project Path="tests/Franz.Testing.ArchitecturalReports/Franz.Testing.ArchitecturalReports.csproj" />
+    <Project Path="Tests/Franz.Testing/Franz.Testing.csproj" />
+    <Project Path="Tests/Franz.Testing.ArchitecturalReports/Franz.Testing.ArchitecturalReports.csproj" />
   </Folder>
   <Folder Name="/Infrastructure/">
     <File Path="main.bicep" />
