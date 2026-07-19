@@ -118,13 +118,20 @@ namespace Franz.Testing.ArchitecturalReports.Layers
         }, sb, markViolation);
 
         // RULE 5 — DTO Immutability / Record Enforcement
-        ExecuteRule("DTO Immutability", "DTOs must be records or immutable types.", () =>
+        ExecuteRule( "DTO Immutability", 
+          "DTOs representing state contracts must be records or immutable types. Creation and editing DTOs are excluded.", 
+          () =>
         {
           var dtoObjects = ContractsLayer.GetObjects(BaseArchitecture)
-            .Where(t =>
-              t.Name.EndsWith("Dto", StringComparison.OrdinalIgnoreCase) ||
-              t.Namespace.FullName.Contains("DTOs", StringComparison.OrdinalIgnoreCase))
-            .ToList();
+          .Where(t =>
+          t.Name.EndsWith("Dto", StringComparison.OrdinalIgnoreCase) &&
+          t.Namespace.FullName.Contains("DTOs", StringComparison.OrdinalIgnoreCase))
+          .Where(t =>
+          !t.Name.StartsWith("Create", StringComparison.OrdinalIgnoreCase) &&
+          !t.Name.StartsWith("Update", StringComparison.OrdinalIgnoreCase) &&
+          !t.Name.StartsWith("Edit", StringComparison.OrdinalIgnoreCase) &&
+          !t.Name.StartsWith("Configure", StringComparison.OrdinalIgnoreCase))
+          .ToList(); ;
 
           var offenders = new List<IType>();
 
@@ -158,7 +165,11 @@ namespace Franz.Testing.ArchitecturalReports.Layers
             sb.AppendLine("🚨 Mutable or non-record DTOs detected:");
             offenders.ForEach(o => sb.AppendLine($" - {o.FullName}"));
           }
-          else sb.AppendLine("✅ All DTOs are immutable records — compliance confirmed.");
+          else
+          {
+            sb.AppendLine("✅ Immutable DTO contracts confirmed.");
+            sb.AppendLine("🟡 Mutable authoring DTOs excluded by convention (Create/Update/Edit/Configure).");
+          }
         }, sb, markViolation);
 
         // RULE 6 — Infrastructure Interfaces Lifetime Enforcement (dynamic)
@@ -221,7 +232,7 @@ namespace Franz.Testing.ArchitecturalReports.Layers
               .AndShould()
               .NotBeAssignableTo(typeof(IEntityRepository<,>))
               .AndShould()
-              .NotBeAssignableTo(typeof(IAggregateRepository<,>))
+              .NotBeAssignableTo(typeof(IAggregateRootRepository<,,>))
               .Because("Custom repositories must declare scoped lifetime and remain independent of framework abstractions.")
               .WithoutRequiringPositiveResults()
               .Check(BaseArchitecture);

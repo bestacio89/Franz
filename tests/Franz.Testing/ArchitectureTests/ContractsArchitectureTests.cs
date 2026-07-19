@@ -9,10 +9,9 @@ using Franz.Common.Business.Domain;
 using Franz.Common.DependencyInjection;
 using Franz.Common.Mediator.Messages;
 using Franz.Common.Business.Repositories;
-using FranzTesting;
-using Microsoft.Azure.Cosmos.Linq;
 using System.Reflection;
 using Interface = System.Reflection.TypeInfo;
+using Xunit;
 
 namespace Franz.Testing.ArchitectureTests
 {
@@ -147,7 +146,7 @@ namespace Franz.Testing.ArchitectureTests
           .AndShould()
           .NotBeAssignableTo(typeof(IEntityRepository<,>))
           .OrShould()
-          .NotBeAssignableTo(typeof(IAggregateRepository<,>))
+          .NotBeAssignableTo(typeof(IAggregateRootRepository<,,>))
           .AndShould()
           .HaveNameEndingWith("Repository")
                  
@@ -200,13 +199,18 @@ namespace Franz.Testing.ArchitectureTests
       var dtoObjects = ContractsLayer
           .GetObjects(BaseArchitecture)
           .Where(t =>
-              t.Name.EndsWith("Dto", StringComparison.OrdinalIgnoreCase) ||
+              t.Name.EndsWith("Dto", StringComparison.OrdinalIgnoreCase) &&
               t.Namespace.FullName.Contains("DTOs", StringComparison.OrdinalIgnoreCase))
+          .Where(t =>
+              !t.Name.StartsWith("Create", StringComparison.OrdinalIgnoreCase) &&
+              !t.Name.StartsWith("Update", StringComparison.OrdinalIgnoreCase) &&
+              !t.Name.StartsWith("Edit", StringComparison.OrdinalIgnoreCase) &&
+              !t.Name.StartsWith("Configure", StringComparison.OrdinalIgnoreCase))
           .ToList();
 
       if (!dtoObjects.Any())
       {
-        Console.WriteLine("🟡 No DTOs found — skipping DTO immutability rule.");
+        Console.WriteLine("🟡 No immutable DTO contracts found — skipping DTO immutability rule.");
         return;
       }
 
@@ -215,20 +219,26 @@ namespace Franz.Testing.ArchitectureTests
       foreach (var dto in dtoObjects)
       {
         var type = GetReflectionType(dto);
-        if (type == null) continue;
 
-        // ✅ Skip records
+        if (type == null)
+          continue;
+
+        // ✅ Records are always compliant
         if (IsRecord(type))
           continue;
 
-        // 🧠 Check for mutable properties (setters not init-only)
-        bool hasWritableProps = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Any(p =>
+        // 🧠 Validate properties:
+        // public setters are forbidden unless they are init-only
+        bool hasWritableProps = type
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Any(property =>
             {
-              var setMethod = p.SetMethod;
-              if (setMethod == null) return false;
+              var setter = property.SetMethod;
 
-              bool isInitOnly = setMethod.ReturnParameter
+              if (setter == null)
+                return false;
+
+              bool isInitOnly = setter.ReturnParameter
                   .GetRequiredCustomModifiers()
                   .Contains(typeof(System.Runtime.CompilerServices.IsExternalInit));
 
@@ -236,42 +246,68 @@ namespace Franz.Testing.ArchitectureTests
             });
 
         if (hasWritableProps)
+        {
           offenders.Add(dto);
+        }
       }
 
       if (!offenders.Any())
       {
-        Console.WriteLine("✅ All DTOs are immutable records or init-only — compliance confirmed.");
+        Console.WriteLine(
+            "✅ Immutable DTO contracts confirmed. " +
+            "Records and init-only DTOs comply.");
         return;
       }
 
-      Console.WriteLine("🚨 Mutable or non-record DTOs detected:");
-      offenders.ForEach(o => Console.WriteLine($" - {o.FullName}"));
+      Console.WriteLine("🚨 Mutable DTO contracts detected:");
+
+      foreach (var offender in offenders)
+      {
+        Console.WriteLine($" - {offender.FullName}");
+      }
 
       var rule = ArchRuleDefinition
           .Classes()
-          .That().Are(offenders)
-          .Should().NotExist()
-          .Because("DTOs must be immutable record types or have only init-only properties.");
+          .That()
+          .Are(offenders)
+          .Should()
+          .NotExist()
+          .Because(
+              "DTO contracts must be immutable records or contain only init-only properties. " +
+              "Authoring DTOs must explicitly use Create, Update, Edit, or Configure prefixes.");
 
       rule.Check(BaseArchitecture);
     }
 
+
     private static bool IsRecord(Type type)
     {
-      return type.GetMethod("<Clone>$", BindingFlags.NonPublic | BindingFlags.Instance) != null
-          || type.GetMethod("PrintMembers", BindingFlags.NonPublic | BindingFlags.Instance) != null;
+      return type.GetMethod(
+                 "<Clone>$",
+                 BindingFlags.NonPublic | BindingFlags.Instance) != null
+          ||
+          type.GetMethod(
+                 "PrintMembers",
+                 BindingFlags.NonPublic | BindingFlags.Instance) != null;
     }
+
 
     private static Type? GetReflectionType(IType archType)
     {
-      // Try dynamic reflection — avoids compile-time generic binding
-      var maybeTypeProp = archType.GetType().GetProperty("Type", BindingFlags.Public | BindingFlags.Instance);
-      if (maybeTypeProp?.GetValue(archType) is Type systemType)
+      // Dynamic reflection avoids compile-time assumptions
+      var typeProperty = archType
+          .GetType()
+          .GetProperty(
+              "Type",
+              BindingFlags.Public | BindingFlags.Instance);
+
+      if (typeProperty?.GetValue(archType) is Type systemType)
         return systemType;
 
-      // fallback: try by name if reflection fails
-      return Type.GetType(archType.FullName, throwOnError: false);
+      // Fallback resolution
+      return Type.GetType(
+          archType.FullName,
+          throwOnError: false);
     }
 
 

@@ -35,11 +35,11 @@
   </Target>
   
   <ItemGroup>
-    <ProjectReference Include="..\sources\back\Franz.API\Franz.API.csproj" />
-    <ProjectReference Include="..\sources\back\Franz.Application\Franz.Application.csproj" />
-    <ProjectReference Include="..\sources\back\Franz.Contracts\Franz.Contracts.csproj" />
-    <ProjectReference Include="..\sources\back\Franz.Domain\Franz.Domain.csproj" />
-    <ProjectReference Include="..\sources\back\Franz.Persistence\Franz.Persistence.csproj" />
+    <ProjectReference Include="..\..\sources\back\Franz.API\Franz.API.csproj" />
+    <ProjectReference Include="..\..\sources\back\Franz.Application\Franz.Application.csproj" />
+    <ProjectReference Include="..\..\sources\back\Franz.Contracts\Franz.Contracts.csproj" />
+    <ProjectReference Include="..\..\sources\back\Franz.Domain\Franz.Domain.csproj" />
+    <ProjectReference Include="..\..\sources\back\Franz.Persistence\Franz.Persistence.csproj" />
   </ItemGroup>
 
 </Project>
