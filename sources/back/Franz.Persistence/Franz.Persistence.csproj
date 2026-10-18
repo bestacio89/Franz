@@ -4,13 +4,15 @@
 
   <ItemGroup>
 	 
-	  <PackageReference Include="Franz.Common.Caching"/>
+	  <PackageReference Include="Franz.Common.Caching" />
 	 
-	  <PackageReference Include="Franz.Common.EntityFramework"/>
+	  <PackageReference Include="Franz.Common.EntityFramework" />
 	 
-	  <PackageReference Include="Franz.Common.EntityFramework.PostGres"/>
+	  <PackageReference Include="Franz.Common.EntityFramework.PostGres" />
 	 
-	  <PackageReference Include="Franz.Common.Hosting"/>
+	  <PackageReference Include="Franz.Common.Hosting" />
+	 
+	  <PackageReference Include="Microsoft.CodeAnalysis.Common" />
 	 
 	  
 	  
