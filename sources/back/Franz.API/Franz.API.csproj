@@ -14,17 +14,18 @@
 
 
   <ItemGroup>
-    <PackageReference Include="AspNetCoreRateLimit"/>
-    <PackageReference Include="Franz.Common.Hosting"/>
-    <PackageReference Include="Franz.Common.Http"/>
-    <PackageReference Include="Franz.Common.Http.Bootstrap"/>
-    <PackageReference Include="Franz.Common.Http.Client"/>
-    <PackageReference Include="Franz.Common.Http.EntityFramework"/>
-    <PackageReference Include="Franz.Common.Mediator.Polly"/>
-    <PackageReference Include="Franz.Common.Mediator.OpenTelemetry"/>
-    <PackageReference Include="Microsoft.Extensions.Hosting"/>
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets"/>
-    <PackageReference Include="Swashbuckle.AspNetCore"/>
+    <PackageReference Include="AspNetCoreRateLimit" />
+    <PackageReference Include="Franz.Common.Hosting" />
+    <PackageReference Include="Franz.Common.Http" />
+    <PackageReference Include="Franz.Common.Http.Bootstrap" />
+    <PackageReference Include="Franz.Common.Http.Client" />
+    <PackageReference Include="Franz.Common.Http.EntityFramework" />
+    <PackageReference Include="Franz.Common.Mediator.Polly" />
+    <PackageReference Include="Franz.Common.Mediator.OpenTelemetry" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
 
   <ItemGroup>
