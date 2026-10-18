@@ -1,4 +1,5 @@
 ﻿using Franz.Common.Mapping.Extensions;
+using Franz.Common.Mediator.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
@@ -11,7 +12,7 @@ public static class ApplicationServiceCollectionExtensions
 
 
    collection.AddFranzMapping(Assembly.GetExecutingAssembly());
-
+   collection.AddFranzMediatorV2Default(null, Assembly.GetExecutingAssembly());
 
     return collection;
   }
