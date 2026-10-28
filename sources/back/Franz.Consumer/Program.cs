@@ -1,6 +1,6 @@
 using Franz.Common.Http.EntityFramework.Extensions;
 using Franz.Common.Messaging.Bootstrap.Extenstions;
-using Franz.Common.Messaging.Hosting.Kafka.Extensions;
+using Franz.Common.Messaging.Hosting.Kafka;
 using Franz.Common.Messaging.Kafka.Extensions;
 using Franz.Persistence;
 using Microsoft.Extensions.Hosting;
@@ -22,8 +22,10 @@ public static class Program
         // Register messaging contracts, Kafka transport, and host-owned listeners.
         builder.Services.AddMessagingArchitecture(environment, configuration);
         builder.Services.AddKafkaMessaging(configuration);
-        builder.Services.AddKafkaHostedListener(configuration);
-        builder.Services.AddOutboxHostedListener(configuration);
+        builder.Services.AddKafkaHostedListener(
+            options => configuration.GetSection("Messaging:Kafka").Bind(options));
+        builder.Services.AddOutboxHostedListener(
+            options => configuration.GetSection("Messaging:Outbox").Bind(options));
 
         using var host = builder.Build();
         await host.RunAsync();
