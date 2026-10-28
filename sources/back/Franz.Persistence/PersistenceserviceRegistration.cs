@@ -56,7 +56,6 @@ public static class PersistenceServiceRegistration
     });
 
     services.AddCustomRepositoriesFromAssembly(typeof(ApplicationDbContext).Assembly);
-    services.AddEntityRepositories<ApplicationDbContext>();
 
     return services;
   }
