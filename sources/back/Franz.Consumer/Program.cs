@@ -1,50 +1,42 @@
-﻿using Franz.Common.EntityFramework.SQLServer.Extensions;
+using Franz.Application;
+using Franz.Common.Business.Extensions;
+using Franz.Common.Http.EntityFramework.Extensions;
+using Franz.Common.Mediator.Extensions;
 using Franz.Common.Messaging.Bootstrap.Extenstions;
-using Franz.Common.Messaging.Delegating;
-
-using Franz.Consumer.Extensions;
-using Franz.Consumer.Handlers;
-
+using Franz.Common.Messaging.Hosting.Kafka;
+using Franz.Common.Messaging.Kafka.Extensions;
+using Franz.Domain.Entities;
 using Franz.Persistence;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-using Franz.Common.Messaging.Kafka.Extensions;
-namespace Franz.Consumer
+namespace Franz.Consumer;
+
+public static class Program
 {
-  public static class Program
-  {
     public static async Task Main(string[] args)
     {
-      using IHost host = Host.CreateDefaultBuilder(args)
-          .ConfigureAppConfiguration((context, config) =>
-          {
-            // Load base configuration
-            config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                        .AddJsonFile($"appsettings.{context.HostingEnvironment.EnvironmentName}.json", optional: true)
-                        .AddEnvironmentVariables();
-          })
-          .ConfigureServices((context, services) =>
-          {
-            var configuration = context.Configuration;
-            var environment = context.HostingEnvironment;
+        var builder = Host.CreateApplicationBuilder(args);
+        var environment = builder.Environment;
+        var configuration = builder.Configuration;
 
-            // 🧩 Messaging architecture setup (Kafka + Delegating)
-            services.AddMessagingArchitecture(environment, configuration);
-            services.AddKafkaMessaging(configuration);
+        // Register the domain and application handlers used by inbound messages.
+        builder.Services.AddBusiness(typeof(Book).Assembly);
+        builder.Services.AddFranzMediator(new[] { typeof(ApplicationServiceCollectionExtensions).Assembly });
 
-            // 🗄️ Database setup (SQL Server)
-            services.AddSqlServerDatabase<ApplicationDbContext>(configuration);
+        // Provider-neutral database wiring; select the engine through configuration.
+        builder.Services.AddRelationalDatabase<ApplicationDbContext>(environment, configuration);
+        builder.Services.RegisterPersistenceServices<ApplicationDbContext>(configuration);
 
-            // 🧠 Business domain and consumer services
-           // services.AddScoped<IMessageHandler, KafkaMessageHandler>();
-            services.AddKafkaMessagingServices(configuration); // from Franz.Consumer.Extensions
-          })
-          .Build();
+        // Register messaging contracts, Kafka transport, and host-owned listeners.
+        builder.Services.AddMessagingArchitecture(environment, configuration);
+        builder.Services.AddKafkaMessaging(configuration);
+        builder.Services.AddKafkaHostedListener(
+            options => configuration.GetSection("Messaging:Kafka").Bind(options));
+        builder.Services.AddOutboxHostedListener(
+            options => configuration.GetSection("Messaging:Outbox").Bind(options));
 
-      // ✅ Start host (graceful lifetime)
-      await host.RunAsync();
+        using var host = builder.Build();
+        await host.RunAsync();
     }
-  }
 }

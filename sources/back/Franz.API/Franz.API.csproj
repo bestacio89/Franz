@@ -7,23 +7,21 @@
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>..\..\..</DockerfileContext>
     <DockerComposeProjectPath>..\..\Franz.DockerCompose.dcproj</DockerComposeProjectPath>
-    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-
-
-
 
   <ItemGroup>
     <PackageReference Include="AspNetCoreRateLimit" />
+    <PackageReference Include="Franz.Common.Business" />
     <PackageReference Include="Franz.Common.Hosting" />
     <PackageReference Include="Franz.Common.Http" />
     <PackageReference Include="Franz.Common.Http.Bootstrap" />
     <PackageReference Include="Franz.Common.Http.Client" />
     <PackageReference Include="Franz.Common.Http.EntityFramework" />
+    <PackageReference Include="Franz.Common.Logging" />
+    <PackageReference Include="Franz.Common.Mediator" />
     <PackageReference Include="Franz.Common.Mediator.Polly" />
     <PackageReference Include="Franz.Common.Mediator.OpenTelemetry" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
@@ -34,17 +32,4 @@
     <ProjectReference Include="..\Franz.Persistence\Franz.Persistence.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\NewFolder\" />
-    <Folder Include="logs\" />
-  </ItemGroup>
-
-  <Target Name="GenerateCSharpClient" AfterTargets="Build" Condition="Exists('Controllers\*.cs')">
-    <Exec Command="dotnet nswag run /variables:Configuration=$(Configuration) /variables:Platform=$(Platform) /variables:OutputPath=$(OutputPath) /variables:ProjectName=$(MSBuildProjectName) /variables:AssemblyName=$(AssemblyName) /variables:TargetFramework=$(TargetFramework) /variables:SwaggerFile=$(OutputPath)$(AssemblyName).xml /variables:CSharpClientOutput=..\Franz.ClientHTTP\Client\CSharp\$(MSBuildProjectName)Client.cs /variables:ClientNamespace=$(MSBuildProjectName).Client.CSharp /runtime:net10.0" />
-  </Target>
-
-  <Target Name="GenerateTypeScriptClient" AfterTargets="Build" Condition="Exists('Controllers\*.cs')">
-    <Exec Command="dotnet nswag run /variables:Configuration=$(Configuration) /variables:Platform=$(Platform) /variables:OutputPath=$(OutputPath) /variables:ProjectName=$(MSBuildProjectName) /variables:AssemblyName=$(AssemblyName) /variables:TargetFramework=$(TargetFramework) /variables:SwaggerFile=$(OutputPath)$(AssemblyName).xml /variables:TypeScriptClientOutput=..\Franz.ClientHTTP\Client\TypeScript\$(MSBuildProjectName)Client.ts /variables:ClientNamespace=$(MSBuildProjectName).Client.TypeScript /runtime:net10.0" />
-  </Target>
-
-</Project> 
+</Project>

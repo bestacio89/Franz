@@ -9,25 +9,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="appsettings.development.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Franz.Common.Hosting"/>
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets"/>
-	  <PackageReference Include="Microsoft.Extensions.Hosting" />
-	  <PackageReference Include="Franz.Common.Messaging.Bootstrap"/>
-	  <PackageReference Include="Franz.Common.Messaging.EntityFramework"/>
-	  <PackageReference Include="Franz.Common.Messaging.KafKa"/>
+    <PackageReference Include="Franz.Common.Business" />
+    <PackageReference Include="Franz.Common.Hosting" />
+    <PackageReference Include="Franz.Common.Http.EntityFramework" />
+    <PackageReference Include="Franz.Common.Mediator" />
+    <PackageReference Include="Franz.Common.Messaging.Bootstrap" />
+    <PackageReference Include="Franz.Common.Messaging.EntityFramework" />
+    <PackageReference Include="Franz.Common.Messaging.Hosting.Kafka" />
+    <PackageReference Include="Franz.Common.Messaging.KafKa" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Franz.Application\Franz.Application.csproj" />
     <ProjectReference Include="..\Franz.Persistence\Franz.Persistence.csproj" />
   </ItemGroup>
+
 </Project>

@@ -2,6 +2,7 @@
 
 using Franz.Contracts.Persistence;
 using Franz.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 using System.Linq.Expressions;
 

@@ -42,4 +42,8 @@
     <ProjectReference Include="..\..\sources\back\Franz.Persistence\Franz.Persistence.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
 </Project>
