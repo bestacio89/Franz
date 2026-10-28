@@ -1,30 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Franz.Common.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Franz.Common.Data;
 
 namespace Franz.Persistence;
 
 public static class TemplateDatabaseSeeder
 {
   /// <summary>
-  /// Executes all self-discovered ISeeder implementations sequentially based on their defined priority.
+  /// Applies pending migrations and runs discovered seeders in their declared order.
   /// </summary>
-  public static void Run(IServiceProvider serviceProvider)
+  public static async Task RunAsync(
+      IServiceProvider serviceProvider,
+      CancellationToken cancellationToken = default)
   {
+    ArgumentNullException.ThrowIfNull(serviceProvider);
+
     var db = serviceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync(cancellationToken).ConfigureAwait(false);
 
-    // Relational schema migration safe-check
-    db.Database.Migrate();
+    var seeders = serviceProvider.GetServices<ISeeder>()
+        .OrderBy(seeder => seeder.Order);
 
-    // Self-discovered array resolution
-    var seeders = serviceProvider.GetServices<ISeeder>();
-
-    foreach (var seeder in seeders.OrderBy(s => s.Order))
+    foreach (var seeder in seeders)
     {
-      seeder.SeedAsync();
+      cancellationToken.ThrowIfCancellationRequested();
+      await seeder.SeedAsync(cancellationToken).ConfigureAwait(false);
     }
   }
 }
