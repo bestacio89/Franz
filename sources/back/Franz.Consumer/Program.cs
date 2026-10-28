@@ -7,6 +7,7 @@ using Franz.Common.Messaging.Hosting.Kafka;
 using Franz.Common.Messaging.Kafka.Extensions;
 using Franz.Domain.Entities;
 using Franz.Persistence;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
 namespace Franz.Consumer;
