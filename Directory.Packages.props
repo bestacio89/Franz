@@ -9,7 +9,6 @@
     <PackageVersion Include="Franz.Common.Caching" Version="2.3.3" />
     <PackageVersion Include="Franz.Common.DependencyInjection" Version="2.3.3" />
     <PackageVersion Include="Franz.Common.EntityFramework" Version="2.3.3" />
-    <PackageVersion Include="Franz.Common.EntityFramework.PostGres" Version="2.3.3" />
     <PackageVersion Include="Franz.Common.Errors" Version="2.3.3" />
     <PackageVersion Include="Franz.Common.Hosting" Version="2.3.3" />
     <PackageVersion Include="Franz.Common.Http" Version="2.3.3" />
