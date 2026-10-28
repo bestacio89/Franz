@@ -767,3 +767,7 @@ The answer:
 **Encode the architecture once. Reuse it everywhere.**
 
 ---
+
+## Current service baseline
+
+The `develop` branch is being maintained against **Franz.Common 2.3.3**. Refer to [Service Template Setup](Docs/Service-Template-Setup.md) for provider-neutral database configuration, Kafka hosted services, secret handling, runtime migration policy, and CI validation.
