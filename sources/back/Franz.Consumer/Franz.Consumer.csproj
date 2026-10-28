@@ -9,8 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Franz.Common.Business" />
     <PackageReference Include="Franz.Common.Hosting" />
     <PackageReference Include="Franz.Common.Http.EntityFramework" />
+    <PackageReference Include="Franz.Common.Mediator" />
     <PackageReference Include="Franz.Common.Messaging.Bootstrap" />
     <PackageReference Include="Franz.Common.Messaging.EntityFramework" />
     <PackageReference Include="Franz.Common.Messaging.Hosting.Kafka" />
