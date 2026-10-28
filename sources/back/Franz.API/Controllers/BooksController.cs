@@ -2,6 +2,7 @@
 using Franz.Contracts.Commands.Books;
 using Franz.Contracts.DTOs;
 using Franz.Contracts.Queries.Books;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Franz.API.Controllers;
     
@@ -45,7 +46,7 @@ namespace Franz.API.Controllers;
   }
 
   [HttpPost]
-  public async Task<ActionResult<Guid>> Create([FromBody] AddBookCommand command, CancellationToken ct)
+  public async Task<ActionResult<int>> Create([FromBody] AddBookCommand command, CancellationToken ct)
   {
     var result = await _dispatcher.SendAsync(command, ct);
     if (result == 0)
@@ -64,7 +65,7 @@ namespace Franz.API.Controllers;
     return result.IsSuccess ? Ok() : NotFound(result.Error.Message);
   }
 
-  [HttpDelete("{id:guid}")]
+  [HttpDelete("{id:int}")]
   public async Task<ActionResult> Delete(int id, CancellationToken ct)
   {
     var result = await _dispatcher.SendAsync(new DeleteBookCommand(id), ct);
