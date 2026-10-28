@@ -3,19 +3,10 @@
   <Import Project="../../../common.targets" />
 
   <ItemGroup>
-	 
-	  <PackageReference Include="Franz.Common.Caching" />
-	 
-	  <PackageReference Include="Franz.Common.EntityFramework" />
-	 
-	  <PackageReference Include="Franz.Common.EntityFramework.PostGres" />
-	 
-	  <PackageReference Include="Franz.Common.Hosting" />
-	 
-	  <PackageReference Include="Microsoft.CodeAnalysis.Common" />
-	 
-	  
-	  
+    <PackageReference Include="Franz.Common.Caching" />
+    <PackageReference Include="Franz.Common.EntityFramework" />
+    <PackageReference Include="Franz.Common.Hosting" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -26,7 +17,7 @@
     <Folder Include="Configurations\" />
     <Folder Include="Depots\" />
     <Folder Include="Migrations\" />
-    <Folder Include="Persistence\Seeders\NewFolder\" />
+    <Folder Include="Persistence\Seeders\" />
     <Folder Include="Semoirs\" />
   </ItemGroup>
 
