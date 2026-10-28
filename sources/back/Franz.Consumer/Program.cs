@@ -1,9 +1,8 @@
 using Franz.Common.Http.EntityFramework.Extensions;
-using Franz.Common.Messaging.Bootstrap.Extensions;
+using Franz.Common.Messaging.Bootstrap.Extenstions;
 using Franz.Common.Messaging.Hosting.Kafka.Extensions;
 using Franz.Common.Messaging.Kafka.Extensions;
 using Franz.Persistence;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace Franz.Consumer;
@@ -20,7 +19,7 @@ public static class Program
         builder.Services.AddRelationalDatabase<ApplicationDbContext>(environment, configuration);
         builder.Services.RegisterPersistenceServices<ApplicationDbContext>(configuration);
 
-        // Register the shared messaging contracts, Kafka transport, and host-owned listeners.
+        // Register messaging contracts, Kafka transport, and host-owned listeners.
         builder.Services.AddMessagingArchitecture(environment, configuration);
         builder.Services.AddKafkaMessaging(configuration);
         builder.Services.AddKafkaHostedListener(configuration);
