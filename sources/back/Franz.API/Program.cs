@@ -9,7 +9,6 @@ using Franz.Common.Mediator.Extensions;
 using Franz.Common.Mediator.Polly;
 using Franz.Domain.Entities;
 using Franz.Persistence;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -70,4 +69,4 @@ app.MapControllers();
 
 app.Run();
 
-public partial class Program;
+public partial class Program { }
