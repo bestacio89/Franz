@@ -1,4 +1,5 @@
 
+[CmdletBinding()]
 param(
     [string]$SourceProjectName = "Franz",
     [string]$TargetProjectName = "Orbita",
@@ -12,6 +13,7 @@ param(
 # ============================================================
 
 $ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest
 
 # ============================================================
 # CONFIGURATION
@@ -26,9 +28,9 @@ $IgnoredDirectories = @(
     "node_modules"
 )
 
-# Protected identifiers are never renamed, regardless of
-# whether they occur in paths, source code, project files,
-# configuration, solutions or documentation.
+# Framework identifiers are never renamed.
+# Matching is case-insensitive, restoration preserves original
+# casing and spelling.
 $ProtectedIdentifiers = @(
     "Franz.Common"
 )
@@ -82,9 +84,7 @@ if ([string]::IsNullOrWhiteSpace($TargetProjectRootOutputDir)) {
     $TargetRoot = Join-Path $RepositoryRoot $TargetProjectName
 }
 else {
-    $TargetRoot = Join-Path `
-        $TargetProjectRootOutputDir `
-        $TargetProjectName
+    $TargetRoot = Join-Path $TargetProjectRootOutputDir $TargetProjectName
 }
 
 $TargetRoot = [System.IO.Path]::GetFullPath($TargetRoot)
@@ -92,7 +92,11 @@ $TargetRoot = [System.IO.Path]::GetFullPath($TargetRoot)
 $SourceRoot = $SourceRoot.TrimEnd('\', '/')
 $TargetRoot = $TargetRoot.TrimEnd('\', '/')
 
-if ($SourceRoot -eq $TargetRoot) {
+if ([string]::Equals(
+    $SourceRoot,
+    $TargetRoot,
+    [System.StringComparison]::OrdinalIgnoreCase
+)) {
     throw "Source and target paths cannot be identical."
 }
 
@@ -104,22 +108,32 @@ if (Test-Path -LiteralPath $TargetRoot) {
     throw "Target already exists: $TargetRoot"
 }
 
+# Prevent cloning into the source tree.
+$SourcePrefix = $SourceRoot + [System.IO.Path]::DirectorySeparatorChar
+
+if ($TargetRoot.StartsWith(
+    $SourcePrefix,
+    [System.StringComparison]::OrdinalIgnoreCase
+)) {
+    throw "Target directory cannot be inside the source directory."
+}
+
 # ============================================================
 # HELPERS
 # ============================================================
 
-function Write-Step(
-    [string]$Message
-) {
+function Write-Step {
+    param([string]$Message)
+
     Write-Host ""
     Write-Host "============================================================"
     Write-Host " $Message"
     Write-Host "============================================================"
 }
 
-function Is-IgnoredPath(
-    [string]$Path
-) {
+function Is-IgnoredPath {
+    param([string]$Path)
+
     foreach ($directory in $IgnoredDirectories) {
         $pattern = "(^|[\\/])$([regex]::Escape($directory))([\\/]|$)"
 
@@ -131,9 +145,9 @@ function Is-IgnoredPath(
     return $false
 }
 
-function Is-ProtectedPath(
-    [string]$Path
-) {
+function Is-ProtectedPath {
+    param([string]$Path)
+
     foreach ($identifier in $ProtectedIdentifiers) {
         if ($Path.IndexOf(
             $identifier,
@@ -146,10 +160,12 @@ function Is-ProtectedPath(
     return $false
 }
 
-function Write-FileSafe(
-    [string]$Path,
-    [string]$Content
-) {
+function Write-FileSafe {
+    param(
+        [string]$Path,
+        [string]$Content
+    )
+
     if ($DryRun) {
         Write-Host "[DRY] Write $Path"
         return
@@ -162,64 +178,114 @@ function Write-FileSafe(
     )
 }
 
-function Replace-Names(
-    [string]$Content
-) {
-    if ([string]::IsNullOrEmpty($Content)) {
-        return $Content
-    }
+# ============================================================
+# IDENTIFIER PROTECTION
+# ============================================================
 
-    # Protect framework identifiers before any replacement.
+function Protect-FrameworkIdentifiers {
+    param([string]$Content)
+
     $protectedValues = @{}
     $index = 0
 
     foreach ($identifier in $ProtectedIdentifiers) {
-        $token = "__CLONER_PROTECTED_$index`__"
 
-        $protectedValues[$token] = $identifier
+        $pattern = [regex]::Escape($identifier)
 
         $Content = [regex]::Replace(
             $Content,
-            [regex]::Escape($identifier),
-            $token,
+            $pattern,
+            {
+                param($match)
+
+                $token = "__CLONER_PROTECTED_$index`__"
+                $index++
+
+                $protectedValues[$token] = $match.Value
+
+                return $token
+            },
             [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
         )
-
-        $index++
     }
 
-    # Rename the service-template identity.
-    $Content = $Content.Replace(
-        $SourceProjectName,
-        $TargetProjectName
+    return @{
+        Content = $Content
+        Tokens  = $protectedValues
+    }
+}
+
+function Restore-FrameworkIdentifiers {
+    param(
+        [string]$Content,
+        [hashtable]$Tokens
     )
 
-    # Restore protected identifiers.
-    foreach ($token in $protectedValues.Keys) {
+    foreach ($token in $Tokens.Keys) {
         $Content = $Content.Replace(
             $token,
-            $protectedValues[$token]
+            $Tokens[$token]
         )
     }
 
     return $Content
 }
 
+# ============================================================
+# PROJECT IDENTITY REPLACEMENT
+# ============================================================
+
+function Replace-ProjectIdentity {
+    param([string]$Content)
+
+    if ([string]::IsNullOrEmpty($Content)) {
+        return $Content
+    }
+
+    # Protect framework namespaces and references first.
+    $protected = Protect-FrameworkIdentifiers $Content
+
+    $Content = $protected.Content
+
+    # Replace only the template identity.
+    $Content = $Content.Replace(
+        $SourceProjectName,
+        $TargetProjectName
+    )
+
+    # Restore framework identifiers exactly as they were.
+    $Content = Restore-FrameworkIdentifiers `
+        $Content `
+        $protected.Tokens
+
+    return $Content
+}
+
+# ============================================================
+# SAFE FILE ENUMERATION
+# ============================================================
+
 function Get-SafeFiles {
+
     Get-ChildItem `
         -LiteralPath $TargetRoot `
         -Recurse `
-        -File |
+        -File `
+        -Force |
+
     Where-Object {
         !(Is-IgnoredPath $_.FullName)
     }
 }
 
 function Get-SafeDirectories {
+
     Get-ChildItem `
         -LiteralPath $TargetRoot `
         -Recurse `
-        -Directory |
+        -Directory `
+        -Force |
+
     Where-Object {
         !(Is-IgnoredPath $_.FullName)
     }
@@ -230,7 +296,13 @@ function Get-SafeDirectories {
 # ============================================================
 
 function Copy-Template {
+
     Write-Step "Copying template"
+
+    if ($DryRun) {
+        Write-Host "[DRY] Create target directory: $TargetRoot"
+        return
+    }
 
     New-Item `
         -ItemType Directory `
@@ -240,9 +312,11 @@ function Copy-Template {
     Get-ChildItem `
         -LiteralPath $SourceRoot `
         -Force |
+
     Where-Object {
         $_.Name -notin $IgnoredDirectories
     } |
+
     Copy-Item `
         -Destination $TargetRoot `
         -Recurse `
@@ -254,18 +328,23 @@ function Copy-Template {
 # ============================================================
 
 function Rename-Tree {
+
     Write-Step "Renaming directories and files"
 
-    $items = Get-ChildItem `
-        -LiteralPath $TargetRoot `
-        -Recurse `
-        -Force |
-    Where-Object {
-        !(Is-IgnoredPath $_.FullName)
-    } |
-    Sort-Object {
-        $_.FullName.Length
-    } -Descending
+    $items = @(
+        Get-ChildItem `
+            -LiteralPath $TargetRoot `
+            -Recurse `
+            -Force |
+
+        Where-Object {
+            !(Is-IgnoredPath $_.FullName)
+        } |
+
+        Sort-Object {
+            $_.FullName.Length
+        } -Descending
+    )
 
     foreach ($item in $items) {
 
@@ -298,7 +377,8 @@ function Rename-Tree {
 # ============================================================
 
 function Process-TextFiles {
-    Write-Step "Updating source references"
+
+    Write-Step "Updating project references"
 
     foreach ($file in Get-SafeFiles) {
 
@@ -314,7 +394,7 @@ function Process-TextFiles {
             $file.FullName
         )
 
-        $updated = Replace-Names $content
+        $updated = Replace-ProjectIdentity $content
 
         if ($updated -eq $content) {
             continue
@@ -331,15 +411,19 @@ function Process-TextFiles {
 # ============================================================
 
 function Process-Projects {
-    Write-Step "Normalizing projects"
+
+    Write-Step "Normalizing project identities"
 
     Get-ChildItem `
         -LiteralPath $TargetRoot `
         -Recurse `
-        -Filter "*.csproj" |
+        -Filter "*.csproj" `
+        -File |
+
     Where-Object {
         !(Is-IgnoredPath $_.FullName)
     } |
+
     ForEach-Object {
 
         if (Is-ProtectedPath $_.FullName) {
@@ -350,8 +434,7 @@ function Process-Projects {
             $_.FullName
         )
 
-        # Only normalize identity properties when they match
-        # the source service identity.
+        # Normalize exact template identity properties.
         $content = [regex]::Replace(
             $content,
             "(<AssemblyName>)$([regex]::Escape($SourceProjectName))(?=</AssemblyName>)",
@@ -364,7 +447,7 @@ function Process-Projects {
             "`$1$TargetProjectName"
         )
 
-        $updated = Replace-Names $content
+        $updated = Replace-ProjectIdentity $content
 
         if ($updated -eq $content) {
             return
@@ -381,7 +464,9 @@ function Process-Projects {
 # ============================================================
 
 function Process-Solutions {
+
     if ($SkipSolutionProcessing) {
+        Write-Host "Solution processing skipped."
         return
     }
 
@@ -391,10 +476,12 @@ function Process-Solutions {
         -LiteralPath $TargetRoot `
         -Recurse `
         -File |
+
     Where-Object {
         $_.Extension -in @(".sln", ".slnx") -and
         !(Is-IgnoredPath $_.FullName)
     } |
+
     ForEach-Object {
 
         if (Is-ProtectedPath $_.FullName) {
@@ -405,7 +492,7 @@ function Process-Solutions {
             $_.FullName
         )
 
-        $updated = Replace-Names $content
+        $updated = Replace-ProjectIdentity $content
 
         if ($updated -eq $content) {
             return
@@ -418,6 +505,59 @@ function Process-Solutions {
 }
 
 # ============================================================
+# POST-PROCESS VALIDATION
+# ============================================================
+
+function Validate-Clone {
+
+    Write-Step "Validating cloned project"
+
+    $remaining = @()
+
+    foreach ($file in Get-SafeFiles) {
+
+        if ($TextExtensions -notcontains $file.Extension) {
+            continue
+        }
+
+        if (Is-ProtectedPath $file.FullName) {
+            continue
+        }
+
+        $content = [System.IO.File]::ReadAllText(
+            $file.FullName
+        )
+
+        if ($content.Contains($SourceProjectName)) {
+            $remaining += $file.FullName
+        }
+    }
+
+    if ($remaining.Count -gt 0) {
+
+        Write-Warning "Some source identity references remain:"
+
+        foreach ($path in $remaining) {
+            Write-Warning $path
+        }
+    }
+    else {
+        Write-Host "No remaining source identity references found."
+    }
+
+    # Verify framework identifiers have not been lost.
+    $frameworkReferences = @(
+        Get-SafeFiles |
+        Where-Object {
+            $_.Extension -in $TextExtensions
+        } |
+        Select-String -Pattern "Franz\.Common" -List
+    )
+
+    Write-Host "Files retaining Franz.Common references: $($frameworkReferences.Count)"
+}
+
+# ============================================================
 # EXECUTION
 # ============================================================
 
@@ -425,6 +565,7 @@ Write-Host ""
 Write-Host "============================================================"
 Write-Host " SERVICE TEMPLATE CLONER"
 Write-Host "============================================================"
+
 Write-Host "Source       : $SourceRoot"
 Write-Host "Target       : $TargetRoot"
 Write-Host "Source name  : $SourceProjectName"
@@ -434,13 +575,26 @@ Write-Host "Protected    : $($ProtectedIdentifiers -join ', ')"
 
 Copy-Template
 
-Rename-Tree
+if (!$DryRun) {
 
-Process-TextFiles
+    Rename-Tree
 
-Process-Projects
+    Process-TextFiles
 
-Process-Solutions
+    Process-Projects
+
+    Process-Solutions
+
+    Validate-Clone
+}
+else {
+
+    # Dry-run performs the planned operations without creating
+    # or modifying the destination.
+    Write-Step "Dry run completed"
+
+    Write-Host "No files or directories were modified."
+}
 
 Write-Host ""
 Write-Host "============================================================"
@@ -448,7 +602,7 @@ Write-Host " CLONING COMPLETED"
 Write-Host "============================================================"
 
 if ($DryRun) {
-    Write-Host "Mode: DRY RUN - no file contents were modified."
+    Write-Host "Mode: DRY RUN"
 }
 else {
     Write-Host "Mode: EXECUTION"
