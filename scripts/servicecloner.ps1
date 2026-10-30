@@ -1,6 +1,7 @@
+
 param(
     [string]$SourceProjectName = "Franz",
-    [string]$TargetProjectName = "Nexus",
+    [string]$TargetProjectName = "Orbita",
     [string]$TargetProjectRootOutputDir = "",
     [switch]$DryRun,
     [switch]$SkipSolutionProcessing
@@ -11,7 +12,6 @@ param(
 # ============================================================
 
 $ErrorActionPreference = "Stop"
-
 
 # ============================================================
 # CONFIGURATION
@@ -26,7 +26,10 @@ $IgnoredDirectories = @(
     "node_modules"
 )
 
-$ProtectedPaths = @(
+# Protected identifiers are never renamed, regardless of
+# whether they occur in paths, source code, project files,
+# configuration, solutions or documentation.
+$ProtectedIdentifiers = @(
     "Franz.Common"
 )
 
@@ -45,6 +48,23 @@ $TextExtensions = @(
     ".txt"
 )
 
+$Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+
+# ============================================================
+# VALIDATION
+# ============================================================
+
+if ([string]::IsNullOrWhiteSpace($SourceProjectName)) {
+    throw "SourceProjectName cannot be empty."
+}
+
+if ([string]::IsNullOrWhiteSpace($TargetProjectName)) {
+    throw "TargetProjectName cannot be empty."
+}
+
+if ($SourceProjectName -eq $TargetProjectName) {
+    throw "Source and target project names must be different."
+}
 
 # ============================================================
 # PATH RESOLUTION
@@ -52,46 +72,37 @@ $TextExtensions = @(
 
 $ScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-$SourceRoot = Resolve-Path (
-    Join-Path $ScriptRoot ".."
+$SourceRoot = [System.IO.Path]::GetFullPath(
+    (Join-Path $ScriptRoot "..")
 )
-
-$SourceRoot = [System.IO.Path]::GetFullPath($SourceRoot)
 
 $RepositoryRoot = Split-Path $SourceRoot -Parent
 
-
-if ([string]::IsNullOrWhiteSpace($TargetProjectRootOutputDir))
-{
-    $TargetRoot = Join-Path `
-        $RepositoryRoot `
-        $TargetProjectName
+if ([string]::IsNullOrWhiteSpace($TargetProjectRootOutputDir)) {
+    $TargetRoot = Join-Path $RepositoryRoot $TargetProjectName
 }
-else
-{
+else {
     $TargetRoot = Join-Path `
         $TargetProjectRootOutputDir `
         $TargetProjectName
 }
 
+$TargetRoot = [System.IO.Path]::GetFullPath($TargetRoot)
 
-$TargetRoot =
-    [System.IO.Path]::GetFullPath($TargetRoot)
+$SourceRoot = $SourceRoot.TrimEnd('\', '/')
+$TargetRoot = $TargetRoot.TrimEnd('\', '/')
 
-
-
-if ($SourceRoot.TrimEnd("\") -eq $TargetRoot.TrimEnd("\"))
-{
+if ($SourceRoot -eq $TargetRoot) {
     throw "Source and target paths cannot be identical."
 }
 
-
-if (!(Test-Path $SourceRoot))
-{
+if (!(Test-Path -LiteralPath $SourceRoot -PathType Container)) {
     throw "Source path does not exist: $SourceRoot"
 }
 
-
+if (Test-Path -LiteralPath $TargetRoot) {
+    throw "Target already exists: $TargetRoot"
+}
 
 # ============================================================
 # HELPERS
@@ -99,122 +110,138 @@ if (!(Test-Path $SourceRoot))
 
 function Write-Step(
     [string]$Message
-)
-{
+) {
     Write-Host ""
-    Write-Host "---- $Message"
+    Write-Host "============================================================"
+    Write-Host " $Message"
+    Write-Host "============================================================"
 }
-
 
 function Is-IgnoredPath(
     [string]$Path
-)
-{
-    foreach ($dir in $IgnoredDirectories)
-    {
-        if ($Path -match "(\\|/)$([regex]::Escape($dir))(\\|/|$)")
-        {
+) {
+    foreach ($directory in $IgnoredDirectories) {
+        $pattern = "(^|[\\/])$([regex]::Escape($directory))([\\/]|$)"
+
+        if ($Path -match $pattern) {
             return $true
         }
     }
 
     return $false
 }
-
 
 function Is-ProtectedPath(
     [string]$Path
-)
-{
-    foreach ($protected in $ProtectedPaths)
-    {
-        if ($Path -match [regex]::Escape($protected))
-        {
+) {
+    foreach ($identifier in $ProtectedIdentifiers) {
+        if ($Path.IndexOf(
+            $identifier,
+            [System.StringComparison]::OrdinalIgnoreCase
+        ) -ge 0) {
             return $true
         }
     }
 
     return $false
 }
-
 
 function Write-FileSafe(
     [string]$Path,
     [string]$Content
-)
-{
-    if ($DryRun)
-    {
+) {
+    if ($DryRun) {
         Write-Host "[DRY] Write $Path"
         return
     }
 
-
-    $utf8 =
-        New-Object System.Text.UTF8Encoding($false)
-
-
     [System.IO.File]::WriteAllText(
         $Path,
         $Content,
-        $utf8
+        $Utf8NoBom
     )
 }
-
 
 function Replace-Names(
     [string]$Content
-)
-{
-    return $Content.Replace(
+) {
+    if ([string]::IsNullOrEmpty($Content)) {
+        return $Content
+    }
+
+    # Protect framework identifiers before any replacement.
+    $protectedValues = @{}
+    $index = 0
+
+    foreach ($identifier in $ProtectedIdentifiers) {
+        $token = "__CLONER_PROTECTED_$index`__"
+
+        $protectedValues[$token] = $identifier
+
+        $Content = [regex]::Replace(
+            $Content,
+            [regex]::Escape($identifier),
+            $token,
+            [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
+        )
+
+        $index++
+    }
+
+    # Rename the service-template identity.
+    $Content = $Content.Replace(
         $SourceProjectName,
         $TargetProjectName
     )
+
+    # Restore protected identifiers.
+    foreach ($token in $protectedValues.Keys) {
+        $Content = $Content.Replace(
+            $token,
+            $protectedValues[$token]
+        )
+    }
+
+    return $Content
 }
 
-
-function Get-SafeFiles()
-{
+function Get-SafeFiles {
     Get-ChildItem `
-        -Path $TargetRoot `
+        -LiteralPath $TargetRoot `
         -Recurse `
         -File |
     Where-Object {
-
         !(Is-IgnoredPath $_.FullName)
-
     }
 }
 
+function Get-SafeDirectories {
+    Get-ChildItem `
+        -LiteralPath $TargetRoot `
+        -Recurse `
+        -Directory |
+    Where-Object {
+        !(Is-IgnoredPath $_.FullName)
+    }
+}
 
 # ============================================================
 # COPY
 # ============================================================
 
-function Copy-Template()
-{
+function Copy-Template {
     Write-Step "Copying template"
-
-
-    if (Test-Path $TargetRoot)
-    {
-        throw "Target already exists: $TargetRoot"
-    }
-
 
     New-Item `
         -ItemType Directory `
         -Path $TargetRoot |
     Out-Null
 
-
     Get-ChildItem `
-        -Path $SourceRoot `
+        -LiteralPath $SourceRoot `
         -Force |
     Where-Object {
-
         $_.Name -notin $IgnoredDirectories
-
     } |
     Copy-Item `
         -Destination $TargetRoot `
@@ -222,216 +249,188 @@ function Copy-Template()
         -Force
 }
 
-
-
 # ============================================================
 # RENAME TREE
 # ============================================================
 
-function Rename-Tree()
-{
+function Rename-Tree {
     Write-Step "Renaming directories and files"
 
-
-    Get-ChildItem `
-        -Path $TargetRoot `
+    $items = Get-ChildItem `
+        -LiteralPath $TargetRoot `
         -Recurse `
         -Force |
     Where-Object {
-
         !(Is-IgnoredPath $_.FullName)
-
     } |
     Sort-Object {
-
         $_.FullName.Length
+    } -Descending
 
-    } `
-    -Descending |
-    ForEach-Object {
+    foreach ($item in $items) {
 
-
-        if (Is-ProtectedPath $_.FullName)
-        {
-            return
+        if (Is-ProtectedPath $item.FullName) {
+            continue
         }
 
-
-        if ($_.Name -like "*$SourceProjectName*")
-        {
-
-            $newName =
-                $_.Name.Replace(
-                    $SourceProjectName,
-                    $TargetProjectName
-                )
-
-
-            if ($DryRun)
-            {
-                Write-Host `
-                    "[DRY] Rename $($_.FullName) -> $newName"
-            }
-            else
-            {
-                Rename-Item `
-                    -Path $_.FullName `
-                    -NewName $newName
-            }
+        if ($item.Name -notlike "*$SourceProjectName*") {
+            continue
         }
+
+        $newName = $item.Name.Replace(
+            $SourceProjectName,
+            $TargetProjectName
+        )
+
+        if ($DryRun) {
+            Write-Host "[DRY] Rename $($item.FullName) -> $newName"
+            continue
+        }
+
+        Rename-Item `
+            -LiteralPath $item.FullName `
+            -NewName $newName
     }
 }
-
-
 
 # ============================================================
 # TEXT PROCESSING
 # ============================================================
 
-function Process-TextFiles()
-{
+function Process-TextFiles {
     Write-Step "Updating source references"
 
+    foreach ($file in Get-SafeFiles) {
 
-    foreach ($file in Get-SafeFiles)
-    {
-
-        if (Is-ProtectedPath $file.FullName)
-        {
+        if (Is-ProtectedPath $file.FullName) {
             continue
         }
 
-
-        if ($TextExtensions -notcontains $file.Extension)
-        {
+        if ($TextExtensions -notcontains $file.Extension) {
             continue
         }
 
+        $content = [System.IO.File]::ReadAllText(
+            $file.FullName
+        )
 
-        $content =
-            Get-Content `
-                -Path $file.FullName `
-                -Raw
+        $updated = Replace-Names $content
 
-
-        $updated =
-            Replace-Names $content
-
-
-        if ($updated -ne $content)
-        {
-            Write-FileSafe `
-                $file.FullName `
-                $updated
+        if ($updated -eq $content) {
+            continue
         }
+
+        Write-FileSafe `
+            $file.FullName `
+            $updated
     }
 }
-
-
 
 # ============================================================
 # CSPROJ NORMALIZATION
 # ============================================================
 
-function Process-Projects()
-{
+function Process-Projects {
     Write-Step "Normalizing projects"
 
-
     Get-ChildItem `
-        -Path $TargetRoot `
+        -LiteralPath $TargetRoot `
         -Recurse `
         -Filter "*.csproj" |
+    Where-Object {
+        !(Is-IgnoredPath $_.FullName)
+    } |
     ForEach-Object {
 
-
-        if (Is-ProtectedPath $_.FullName)
-        {
+        if (Is-ProtectedPath $_.FullName) {
             return
         }
 
+        $content = [System.IO.File]::ReadAllText(
+            $_.FullName
+        )
 
-        $content =
-            Get-Content `
-                $_.FullName `
-                -Raw
+        # Only normalize identity properties when they match
+        # the source service identity.
+        $content = [regex]::Replace(
+            $content,
+            "(<AssemblyName>)$([regex]::Escape($SourceProjectName))(?=</AssemblyName>)",
+            "`$1$TargetProjectName"
+        )
 
+        $content = [regex]::Replace(
+            $content,
+            "(<RootNamespace>)$([regex]::Escape($SourceProjectName))(?=</RootNamespace>)",
+            "`$1$TargetProjectName"
+        )
 
-        $content =
-            $content -replace
-            "<AssemblyName>.*?</AssemblyName>",
-            "<AssemblyName>$TargetProjectName</AssemblyName>"
+        $updated = Replace-Names $content
 
-
-        $content =
-            $content -replace
-            "<RootNamespace>.*?</RootNamespace>",
-            "<RootNamespace>$TargetProjectName</RootNamespace>"
-
-
-        $content =
-            Replace-Names $content
-
+        if ($updated -eq $content) {
+            return
+        }
 
         Write-FileSafe `
             $_.FullName `
-            $content
+            $updated
     }
 }
 
-
-
 # ============================================================
-# SOLUTION
+# SOLUTION PROCESSING
 # ============================================================
 
-function Process-Solutions()
-{
-    if ($SkipSolutionProcessing)
-    {
+function Process-Solutions {
+    if ($SkipSolutionProcessing) {
         return
     }
 
-
     Write-Step "Updating solutions"
 
-
     Get-ChildItem `
-        -Path $TargetRoot `
+        -LiteralPath $TargetRoot `
         -Recurse `
-        -Include "*.sln","*.slnx" |
+        -File |
+    Where-Object {
+        $_.Extension -in @(".sln", ".slnx") -and
+        !(Is-IgnoredPath $_.FullName)
+    } |
     ForEach-Object {
 
+        if (Is-ProtectedPath $_.FullName) {
+            return
+        }
 
-        $content =
-            Get-Content `
-                $_.FullName `
-                -Raw
+        $content = [System.IO.File]::ReadAllText(
+            $_.FullName
+        )
 
+        $updated = Replace-Names $content
 
-        $content =
-            Replace-Names $content
-
+        if ($updated -eq $content) {
+            return
+        }
 
         Write-FileSafe `
             $_.FullName `
-            $content
+            $updated
     }
 }
-
-
 
 # ============================================================
 # EXECUTION
 # ============================================================
 
 Write-Host ""
-Write-Host "=========================================="
-Write-Host " TEMPLATE CLONER"
-Write-Host "=========================================="
-Write-Host "Source : $SourceRoot"
-Write-Host "Target : $TargetRoot"
-
+Write-Host "============================================================"
+Write-Host " SERVICE TEMPLATE CLONER"
+Write-Host "============================================================"
+Write-Host "Source       : $SourceRoot"
+Write-Host "Target       : $TargetRoot"
+Write-Host "Source name  : $SourceProjectName"
+Write-Host "Target name  : $TargetProjectName"
+Write-Host "Dry run      : $DryRun"
+Write-Host "Protected    : $($ProtectedIdentifiers -join ', ')"
 
 Copy-Template
 
@@ -443,13 +442,14 @@ Process-Projects
 
 Process-Solutions
 
-
 Write-Host ""
-Write-Host "=========================================="
-Write-Host " COMPLETED"
-Write-Host "=========================================="
+Write-Host "============================================================"
+Write-Host " CLONING COMPLETED"
+Write-Host "============================================================"
 
-if ($DryRun)
-{
-    Write-Host "Mode: DRY RUN"
+if ($DryRun) {
+    Write-Host "Mode: DRY RUN - no file contents were modified."
+}
+else {
+    Write-Host "Mode: EXECUTION"
 }
