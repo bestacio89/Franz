@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using Franz.API.MultiTenancy;
-using Franz.Common.MultiTenancy.Models;
+using Franz.Common.MultiTenancy;\nusing Franz.Common.MultiTenancy.Models;
 using Franz.Common.MultiTenancy.TenantResolution;
 
 namespace Franz.Testing.MultiTenancy;

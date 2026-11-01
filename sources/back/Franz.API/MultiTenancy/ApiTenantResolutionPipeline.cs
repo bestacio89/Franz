@@ -1,5 +1,6 @@
 using Franz.Common.MultiTenancy;
 using Franz.Common.MultiTenancy.TenantResolution;
+using Microsoft.AspNetCore.Http;
 
 namespace Franz.API.MultiTenancy;
 
@@ -10,6 +11,8 @@ namespace Franz.API.MultiTenancy;
 public sealed class ApiTenantResolutionPipeline(IEnumerable<ITenantResolver> resolvers)
     : ITenantResolutionPipeline
 {
+    internal const string HttpContextCacheKey = "__Franz.Api.TenantResolution";
+
     private readonly IReadOnlyList<ITenantResolver> _resolvers =
         (resolvers ?? throw new ArgumentNullException(nameof(resolvers)))
         .OrderBy(resolver => resolver.Order)
@@ -17,6 +20,11 @@ public sealed class ApiTenantResolutionPipeline(IEnumerable<ITenantResolver> res
 
     public async Task<TenantResolutionResult?> ResolveAsync(object? context = null)
     {
+        if (context is HttpContext httpContext &&
+            httpContext.Items.TryGetValue(HttpContextCacheKey, out var cached) &&
+            cached is TenantResolutionResult cachedResult)
+            return cachedResult;
+
         TenantResolutionResult? resolved = null;
 
         foreach (var resolver in _resolvers)
@@ -26,7 +34,7 @@ public sealed class ApiTenantResolutionPipeline(IEnumerable<ITenantResolver> res
                 continue;
 
             if (!candidate.Succeeded || candidate.Tenant is null)
-                return candidate;
+                return Cache(context, candidate);
 
             if (resolved is null)
             {
@@ -36,12 +44,19 @@ public sealed class ApiTenantResolutionPipeline(IEnumerable<ITenantResolver> res
 
             if (resolved.Tenant!.Id != candidate.Tenant.Id)
             {
-                return TenantResolutionResult.FailedResult(
+                return Cache(context, TenantResolutionResult.FailedResult(
                     candidate.Source,
-                    $"Conflicting tenant identities were supplied by {resolved.Source} and {candidate.Source}.");
+                    $"Conflicting tenant identities were supplied by {resolved.Source} and {candidate.Source}."));
             }
         }
 
-        return resolved;
+        return Cache(context, resolved);
+    }
+
+    private static TenantResolutionResult? Cache(object? context, TenantResolutionResult? result)
+    {
+        if (context is HttpContext httpContext && result is not null)
+            httpContext.Items[HttpContextCacheKey] = result;
+        return result;
     }
 }

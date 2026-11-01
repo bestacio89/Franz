@@ -36,7 +36,7 @@ public static class MultiTenancyServiceCollectionExtensions
             new ClaimsTenantRequestAuthorizer(membershipClaim));
 
         if (section.GetValue("Resolution:Host:Enabled", true))
-            services.AddScoped<ITenantResolver, HostTenantResolver>();
+            services.AddScoped<ITenantResolver, ApiHostTenantResolver>();
 
         if (section.GetValue("Resolution:Header:Enabled", true))
             services.AddScoped<ITenantResolver>(provider =>

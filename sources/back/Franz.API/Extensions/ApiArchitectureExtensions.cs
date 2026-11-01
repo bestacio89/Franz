@@ -1,6 +1,6 @@
 using Franz.Common.Http;
 using Franz.Common.Http.Documentation.Extensions;
-using Franz.Common.Http.MultiTenancy.Extensions;
+using Franz.Common.Http.MultiTenancy.Extensions;\nusing Franz.API.MultiTenancy;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 
