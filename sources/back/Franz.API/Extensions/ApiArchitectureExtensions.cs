@@ -26,9 +26,12 @@ public static class ApiArchitectureExtensions
             .UseAuthentication()
             .UseFranzMultiTenancy()
             .UseAuthorization()
-            .UseEndpoints(endpoints => endpoints.MapControllers().RequireAuthorization())
-            .UseDocumentation()
-            .UseHealthChecks("/health");
+            .UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers().RequireAuthorization();
+                endpoints.MapHealthChecks("/health");
+            })
+            .UseDocumentation();
 
         return app;
     }

@@ -66,7 +66,6 @@ if (app.Environment.IsDevelopment())
     app.UseDocumentation();
 }
 
-app.MapControllers();
 
 app.Run();
 
