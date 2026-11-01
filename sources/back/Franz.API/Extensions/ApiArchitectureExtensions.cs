@@ -1,6 +1,5 @@
 using Franz.API.MultiTenancy;
 using Franz.Common.Http;
-using Franz.Common.Http.Documentation.Extensions;
 using Franz.Common.Http.MultiTenancy.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -31,8 +30,7 @@ public static class ApiArchitectureExtensions
             {
                 endpoints.MapControllers().RequireAuthorization();
                 endpoints.MapHealthChecks("/health");
-            })
-            .UseDocumentation();
+            });
 
         return app;
     }
