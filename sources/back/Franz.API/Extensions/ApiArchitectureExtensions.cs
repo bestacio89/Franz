@@ -17,18 +17,18 @@ public static class ApiArchitectureExtensions
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        app.UseCertificateForwarding()
+        app.UseExceptionHandler()
+            .UseForwardedHeaders()
+            .UseCertificateForwarding()
             .UseFrenchLocalization()
             .UseRouting()
             .UseDefaultCors()
             .UseAuthentication()
             .UseFranzMultiTenancy()
             .UseAuthorization()
-            .UseForwardedHeaders()
             .UseEndpoints(endpoints => endpoints.MapControllers().RequireAuthorization())
             .UseDocumentation()
-            .UseHealthChecks("/health")
-            .UseExceptionHandler();
+            .UseHealthChecks("/health");
 
         return app;
     }

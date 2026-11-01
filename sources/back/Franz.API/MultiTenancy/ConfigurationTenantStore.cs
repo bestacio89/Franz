@@ -32,11 +32,13 @@ public sealed class ConfigurationTenantStore : ITenantStore
 
             var tenant = new TenantInfo(id, name);
             var status = tenantSection["Status"];
-            if (!string.IsNullOrWhiteSpace(status) &&
-                !Enum.TryParse(status, ignoreCase: true, out TenantStatus parsedStatus))
-                throw new InvalidOperationException($"Tenant '{id}' has an invalid Status.");
-            else if (!string.IsNullOrWhiteSpace(status))
-                tenant.Status = Enum.Parse<TenantStatus>(status, ignoreCase: true);
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                if (!Enum.TryParse<TenantStatus>(status, ignoreCase: true, out var parsedStatus))
+                    throw new InvalidOperationException($"Tenant '{id}' has an invalid Status.");
+
+                tenant.Status = parsedStatus;
+            }
 
             foreach (var domainSection in tenantSection.GetSection("Domains").GetChildren())
             {
