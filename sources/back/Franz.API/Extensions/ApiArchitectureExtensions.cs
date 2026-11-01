@@ -1,0 +1,35 @@
+using Franz.Common.Http;
+using Franz.Common.Http.Documentation.Extensions;
+using Franz.Common.Http.MultiTenancy.Extensions;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
+
+namespace Franz.API.Extensions;
+
+/// <summary>
+/// Composes the shared HTTP pipeline while placing tenant resolution between
+/// authentication and authorization. This is intentionally API-owned so the
+/// reusable Franz.Common packages remain unchanged.
+/// </summary>
+public static class ApiArchitectureExtensions
+{
+    public static IApplicationBuilder UseFranzApiArchitecture(this IApplicationBuilder app)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+
+        app.UseCertificateForwarding()
+            .UseFrenchLocalization()
+            .UseRouting()
+            .UseDefaultCors()
+            .UseAuthentication()
+            .UseFranzMultiTenancy()
+            .UseAuthorization()
+            .UseForwardedHeaders()
+            .UseEndpoints(endpoints => endpoints.MapControllers().RequireAuthorization())
+            .UseDocumentation()
+            .UseHealthChecks("/health")
+            .UseExceptionHandler();
+
+        return app;
+    }
+}
