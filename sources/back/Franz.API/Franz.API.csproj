@@ -18,6 +18,8 @@
     <PackageReference Include="Franz.Common.Http.Bootstrap" />
     <PackageReference Include="Franz.Common.Http.Client" />
     <PackageReference Include="Franz.Common.Http.EntityFramework" />
+    <PackageReference Include="Franz.Common.Http.MultiTenancy" />
+    <PackageReference Include="Franz.Common.MultiTenancy" />
     <PackageReference Include="Franz.Common.Logging" />
     <PackageReference Include="Franz.Common.Mediator" />
     <PackageReference Include="Franz.Common.Mediator.Polly" />

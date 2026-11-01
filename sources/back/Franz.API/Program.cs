@@ -33,6 +33,7 @@ builder.Services.RegisterPersistenceServices<ApplicationDbContext>(configuration
 
 // HTTP architecture owns the common API stack: controllers, routing, auth, and error handling.
 builder.Services.AddHttpArchitecture(environment, configuration);
+builder.Services.AddApiMultiTenancy(configuration);
 
 // Cross-cutting mediator behavior is explicit and composable.
 builder.Services
@@ -58,14 +59,13 @@ else
 
 app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
-app.UseHttpArchitecture();
+app.UseFranzApiArchitecture();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseDocumentation();
 }
 
-app.MapControllers();
 
 app.Run();
 
