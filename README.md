@@ -756,6 +756,10 @@ Architecture is a system of enforceable decisions.
 
 ---
 
+# Multi-tenancy and isolation
+
+The template enables tenant-aware execution by default. Its default relational profile uses a shared database with tenant-owned/global entity classification. The full [Multi-tenancy guide](docs/multitenancy/README.md) explains all Franz.Common 3.0.0 database isolation modes and the application-owned security and lifecycle responsibilities.
+
 # Final Statement
 
 Franz API Template exists to answer one question:
@@ -770,4 +774,4 @@ The answer:
 
 ## Current service baseline
 
-The `develop` branch is being maintained against **Franz.Common 2.3.3**. Refer to [Service Template Setup](Docs/Service-Template-Setup.md) for provider-neutral database configuration, Kafka hosted services, secret handling, runtime migration policy, and CI validation.
+The service template targets **Franz.Common 3.0.0**. Refer to [Service Template Setup](Docs/Service-Template-Setup.md) for runtime configuration and deployment guidance, and the [Multi-tenancy guide](docs/multitenancy/README.md) for shared-database, tenant-database, and domain-database isolation, HTTP, messaging, gRPC, caching, background jobs, provisioning, migrations, and testing.
