@@ -4,11 +4,13 @@ using Franz.Common.Business.Extensions;
 using Franz.Common.EntityFramework.Auditing;
 using Franz.Common.Http.Bootstrap.Extensions;
 using Franz.Common.Http.EntityFramework.Extensions;
+using Franz.Common.Http.MultiTenancy.Extensions;
 using Franz.Common.Logging.Extensions;
 using Franz.Common.Mediator.Extensions;
 using Franz.Common.Mediator.Polly;
 using Franz.Domain.Entities;
 using Franz.Persistence;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,15 +26,22 @@ builder.Services.AddFranzTelemetry(environment, configuration);
 builder.Services.RegisterApplicationServices();
 builder.Services.AddBusiness(typeof(Book).Assembly);
 
-// Database provider selection is configuration-driven and remains outside the domain.
+// Database provider selection and isolation remain configuration-driven.
 builder.Services.AddRelationalDatabase<ApplicationDbContext>(environment, configuration);
 builder.Services.AddFranzAuditing();
 
 // Register persistence concerns: repositories, cache integration, and persistence services.
-builder.Services.RegisterPersistenceServices<ApplicationDbContext>(configuration);
+builder.Services.RegisterPersistenceServices(configuration);
 
 // HTTP architecture owns the common API stack: controllers, routing, auth, and error handling.
 builder.Services.AddHttpArchitecture(environment, configuration);
+
+// The template is tenant-first. Tenant resolution and authenticated membership are fail-closed;
+// each consuming service must supply its tenant store and resolver.
+builder.Services.AddFranzMultiTenancy(options =>
+    configuration.GetSection("MultiTenancy:Http").Bind(options));
+builder.Services.AddTenantClaimsAuthorizer(options =>
+    configuration.GetSection("MultiTenancy:Claims").Bind(options));
 
 // Cross-cutting mediator behavior is explicit and composable.
 builder.Services

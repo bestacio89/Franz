@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="../../../common.targets" />
 
@@ -16,7 +16,8 @@
     <PackageReference Include="Franz.Common.Messaging.Bootstrap" />
     <PackageReference Include="Franz.Common.Messaging.EntityFramework" />
     <PackageReference Include="Franz.Common.Messaging.Hosting.Kafka" />
-    <PackageReference Include="Franz.Common.Messaging.KafKa" />
+    <PackageReference Include="Franz.Common.Messaging.Kafka" />
+    <PackageReference Include="Franz.Common.Messaging.MultiTenancy" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
   </ItemGroup>

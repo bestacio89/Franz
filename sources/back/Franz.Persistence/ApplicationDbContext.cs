@@ -1,76 +1,72 @@
-using Franz.Domain.Entities;
-using Franz.Persistence;
-using Franz.Common.Business.Domain;
 using Franz.Common.EntityFramework;
+using Franz.Common.EntityFramework.Configuration;
 using Franz.Common.Mediator.Dispatchers;
+using Franz.Common.MultiTenancy;
+using Franz.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
-namespace Franz.Persistence
+namespace Franz.Persistence;
+
+public sealed class ApplicationDbContext : DbContextBase
 {
-  public class ApplicationDbContext : DbContextBase
-  {
     public ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options,
-        IDispatcher dispatcher // Franz mediator dispatcher
-    ) : base(options, dispatcher)
+        IDispatcher dispatcher,
+        ITenantExecutionContextAccessor tenantExecutionContextAccessor,
+        IOptions<DatabaseOptions> databaseOptions,
+        IOptions<MultiTenancyOptions> multiTenancyOptions)
+        : base(
+            options,
+            dispatcher,
+            null,
+            tenantExecutionContextAccessor,
+            databaseOptions,
+            multiTenancyOptions)
     {
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-      base.OnModelCreating(modelBuilder);
+        base.OnModelCreating(modelBuilder);
 
-      // Configure Value Objects for Book
-      modelBuilder.Entity<Book>(builder =>
-      {
-        builder.OwnsOne(b => b.Isbn, isbn =>
+        modelBuilder.Entity<Book>(builder =>
         {
-          isbn.Property(p => p.Value)
-              .HasColumnName("Isbn")
-              .IsRequired();
+            builder.OwnsOne(b => b.Isbn, isbn =>
+            {
+                isbn.Property(p => p.Value).HasColumnName("Isbn").IsRequired();
+            });
+
+            builder.OwnsOne(b => b.Title, title =>
+            {
+                title.Property(p => p.Value).HasColumnName("Title").IsRequired();
+            });
+
+            builder.OwnsOne(b => b.Author, author =>
+            {
+                author.Property(p => p.Value).HasColumnName("Author").IsRequired();
+            });
         });
 
-        builder.OwnsOne(b => b.Title, title =>
-        {
-          title.Property(p => p.Value)
-              .HasColumnName("Title")
-              .IsRequired();
-        });
+        modelBuilder.Entity<Book>()
+            .HasIndex(book => book.TenantId);
 
-        builder.OwnsOne(b => b.Author, author =>
+        modelBuilder.Entity<Member>(builder =>
         {
-          author.Property(p => p.Value)
-              .HasColumnName("Author")
-              .IsRequired();
-        });
-      });
+            builder.HasIndex(member => member.TenantId);
 
-      // Configure Value Objects for Member
-      modelBuilder.Entity<Member>(builder =>
-      {
-        builder.OwnsOne(m => m.Name, name =>
-        {
-          name.Property(p => p.Value)
-              .HasColumnName("Name")
-              .IsRequired();
-        });
+            builder.OwnsOne(m => m.Name, name =>
+            {
+                name.Property(p => p.Value).HasColumnName("Name").IsRequired();
+            });
 
-        builder.OwnsOne(m => m.Email, email =>
-        {
-          email.Property(p => p.Value)
-              .HasColumnName("Email")
-              .IsRequired();
+            builder.OwnsOne(m => m.Email, email =>
+            {
+                email.Property(p => p.Value).HasColumnName("Email").IsRequired();
+            });
         });
-      });
-
-      // Apply seeders (if any)
-      // modelBuilder.ApplyConfiguration(new BookSeeder());
-      // modelBuilder.ApplyConfiguration(new MemberSeeder());
     }
 
     public DbSet<Book> Books { get; set; } = null!;
     public DbSet<Member> Members { get; set; } = null!;
-
-    // Later: DbSet<Loan>, DbSet<Reservation>, etc.
-  }
 }
