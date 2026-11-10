@@ -8,10 +8,6 @@ param(
     [switch]$SkipSolutionProcessing
 )
 
-# ============================================================
-# PROJECT TEMPLATE CLONER
-# ============================================================
-
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
@@ -28,11 +24,27 @@ $IgnoredDirectories = @(
     "node_modules"
 )
 
-# Framework identifiers are never renamed.
-# Matching is case-insensitive, restoration preserves original
-# casing and spelling.
+# Explicit framework namespaces and identifiers.
+# These are never renamed.
 $ProtectedIdentifiers = @(
     "Franz.Common"
+)
+
+# Framework-owned identifiers beginning with these prefixes
+# are preserved in source content.
+#
+# Examples:
+# FranzMediator
+# IFranzRepository
+# AddFranzServices
+# ConfigureFranz
+# FranzEntity
+#
+# Template namespaces such as Franz.Domain are intentionally
+# excluded and will be renamed.
+$ProtectedIdentifierPrefixes = @(
+    "Franz",
+    "IFranz"
 )
 
 $TextExtensions = @(
@@ -66,6 +78,14 @@ if ([string]::IsNullOrWhiteSpace($TargetProjectName)) {
 
 if ($SourceProjectName -eq $TargetProjectName) {
     throw "Source and target project names must be different."
+}
+
+if ($SourceProjectName -notmatch '^[A-Za-z_][A-Za-z0-9_]*$') {
+    throw "SourceProjectName must be a valid identifier."
+}
+
+if ($TargetProjectName -notmatch '^[A-Za-z_][A-Za-z0-9_]*$') {
+    throw "TargetProjectName must be a valid identifier."
 }
 
 # ============================================================
@@ -108,14 +128,13 @@ if (Test-Path -LiteralPath $TargetRoot) {
     throw "Target already exists: $TargetRoot"
 }
 
-# Prevent cloning into the source tree.
 $SourcePrefix = $SourceRoot + [System.IO.Path]::DirectorySeparatorChar
 
 if ($TargetRoot.StartsWith(
     $SourcePrefix,
     [System.StringComparison]::OrdinalIgnoreCase
 )) {
-    throw "Target directory cannot be inside the source directory."
+    throw "Target cannot be created inside the source directory."
 }
 
 # ============================================================
@@ -179,7 +198,7 @@ function Write-FileSafe {
 }
 
 # ============================================================
-# IDENTIFIER PROTECTION
+# FRAMEWORK IDENTIFIER PROTECTION
 # ============================================================
 
 function Protect-FrameworkIdentifiers {
@@ -188,6 +207,7 @@ function Protect-FrameworkIdentifiers {
     $protectedValues = @{}
     $index = 0
 
+    # Protect explicitly declared framework namespaces first.
     foreach ($identifier in $ProtectedIdentifiers) {
 
         $pattern = [regex]::Escape($identifier)
@@ -208,6 +228,66 @@ function Protect-FrameworkIdentifiers {
             [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
         )
     }
+
+    # Protect framework-owned identifiers beginning with Franz
+    # or IFranz, but not template namespaces such as Franz.Domain.
+    #
+    # The negative lookahead excludes known template namespace
+    # segments, allowing them to be renamed.
+    #
+    # Identifier examples:
+    # FranzMediator
+    # IFranzRepository
+    # AddFranzServices
+    # ConfigureFranz
+    # FranzEntity
+    #
+    # Namespace examples:
+    # Franz.Common.Mediator (protected above)
+    # Franz.Domain (not protected)
+    # Franz.Application (not protected)
+
+    $excludedSegments = @(
+        "Domain",
+        "Application",
+        "Infrastructure",
+        "Api",
+        "API",
+        "Contracts",
+        "Presentation",
+        "Persistence",
+        "Tests",
+        "Web",
+        "Worker",
+        "Host",
+        "Abstractions"
+    )
+
+    $excludedPattern = ($excludedSegments | ForEach-Object {
+        [regex]::Escape($_)
+    }) -join "|"
+
+    $identifierPattern = (
+        '(?<![A-Za-z0-9_])' +
+        '(?:I?Franz[A-Za-z0-9_]*)' +
+        '(?!\.(?:' + $excludedPattern + ')(?![A-Za-z0-9_]))' +
+        '(?![A-Za-z0-9_])'
+    )
+
+    $Content = [regex]::Replace(
+        $Content,
+        $identifierPattern,
+        {
+            param($match)
+
+            $token = "__CLONER_PROTECTED_$index`__"
+            $index++
+
+            $protectedValues[$token] = $match.Value
+
+            return $token
+        }
+    )
 
     return @{
         Content = $Content
@@ -242,18 +322,17 @@ function Replace-ProjectIdentity {
         return $Content
     }
 
-    # Protect framework namespaces and references first.
     $protected = Protect-FrameworkIdentifiers $Content
 
     $Content = $protected.Content
 
-    # Replace only the template identity.
+    # Rename template identity.
     $Content = $Content.Replace(
         $SourceProjectName,
         $TargetProjectName
     )
 
-    # Restore framework identifiers exactly as they were.
+    # Restore framework identifiers exactly.
     $Content = Restore-FrameworkIdentifiers `
         $Content `
         $protected.Tokens
@@ -300,7 +379,21 @@ function Copy-Template {
     Write-Step "Copying template"
 
     if ($DryRun) {
+
         Write-Host "[DRY] Create target directory: $TargetRoot"
+
+        Get-ChildItem `
+            -LiteralPath $SourceRoot `
+            -Force |
+
+        Where-Object {
+            $_.Name -notin $IgnoredDirectories
+        } |
+
+        ForEach-Object {
+            Write-Host "[DRY] Copy $($_.FullName)"
+        }
+
         return
     }
 
@@ -348,11 +441,14 @@ function Rename-Tree {
 
     foreach ($item in $items) {
 
-        if (Is-ProtectedPath $item.FullName) {
+        if (Is-ProtectedPath $item.Name) {
             continue
         }
 
-        if ($item.Name -notlike "*$SourceProjectName*") {
+        if ($item.Name.IndexOf(
+            $SourceProjectName,
+            [System.StringComparison]::Ordinal
+        ) -lt 0) {
             continue
         }
 
@@ -382,7 +478,7 @@ function Process-TextFiles {
 
     foreach ($file in Get-SafeFiles) {
 
-        if (Is-ProtectedPath $file.FullName) {
+        if (Is-ProtectedPath $file.Name) {
             continue
         }
 
@@ -426,7 +522,7 @@ function Process-Projects {
 
     ForEach-Object {
 
-        if (Is-ProtectedPath $_.FullName) {
+        if (Is-ProtectedPath $_.Name) {
             return
         }
 
@@ -434,7 +530,6 @@ function Process-Projects {
             $_.FullName
         )
 
-        # Normalize exact template identity properties.
         $content = [regex]::Replace(
             $content,
             "(<AssemblyName>)$([regex]::Escape($SourceProjectName))(?=</AssemblyName>)",
@@ -484,7 +579,7 @@ function Process-Solutions {
 
     ForEach-Object {
 
-        if (Is-ProtectedPath $_.FullName) {
+        if (Is-ProtectedPath $_.Name) {
             return
         }
 
@@ -520,7 +615,7 @@ function Validate-Clone {
             continue
         }
 
-        if (Is-ProtectedPath $file.FullName) {
+        if (Is-ProtectedPath $file.Name) {
             continue
         }
 
@@ -535,7 +630,7 @@ function Validate-Clone {
 
     if ($remaining.Count -gt 0) {
 
-        Write-Warning "Some source identity references remain:"
+        Write-Warning "Source identity references remain:"
 
         foreach ($path in $remaining) {
             Write-Warning $path
@@ -545,7 +640,6 @@ function Validate-Clone {
         Write-Host "No remaining source identity references found."
     }
 
-    # Verify framework identifiers have not been lost.
     $frameworkReferences = @(
         Get-SafeFiles |
         Where-Object {
@@ -554,7 +648,9 @@ function Validate-Clone {
         Select-String -Pattern "Franz\.Common" -List
     )
 
-    Write-Host "Files retaining Franz.Common references: $($frameworkReferences.Count)"
+    Write-Host "Files retaining Franz.Common: $($frameworkReferences.Count)"
+
+    Write-Host "Validation completed."
 }
 
 # ============================================================
@@ -572,6 +668,7 @@ Write-Host "Source name  : $SourceProjectName"
 Write-Host "Target name  : $TargetProjectName"
 Write-Host "Dry run      : $DryRun"
 Write-Host "Protected    : $($ProtectedIdentifiers -join ', ')"
+Write-Host "Prefixes     : $($ProtectedIdentifierPrefixes -join ', ')"
 
 Copy-Template
 
@@ -589,8 +686,6 @@ if (!$DryRun) {
 }
 else {
 
-    # Dry-run performs the planned operations without creating
-    # or modifying the destination.
     Write-Step "Dry run completed"
 
     Write-Host "No files or directories were modified."
