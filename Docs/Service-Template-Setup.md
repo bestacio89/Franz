@@ -10,7 +10,7 @@ The API and Consumer hosts require validated tenant execution contexts by defaul
 
 Configuration is supplied by `appsettings.json`, environment-specific configuration, environment variables, and deployment secret stores. Never commit credentials.
 
-The API defaults to PostgreSQL for local development. The relational provider is selected by `Database:Provider` and currently supports the providers exposed by Franz.Common 2.3.3: `postgres`, `mariadb`, `sqlserver`, and `oracle`. The domain and persistence projects do not reference a provider-specific Franz package.
+The API defaults to PostgreSQL for local development. The relational provider is selected by `Database:Provider` and currently supports the providers exposed by Franz.Common 3.0.0: `postgres`, `mariadb`, `sqlserver`, and `oracle`. The domain and persistence projects do not reference a provider-specific Franz package.
 
 Override database values through environment variables, for example:
 

@@ -52,11 +52,11 @@ The client authorization behavior is opt-in. Register it only when the applicati
 {
   "Franz": {
     "Grpc": {
-      "RequireTenant": true
-    },
-    "Client": {
+      "RequireTenant": true,
+      "Client": {
         "DefaultClientTimeout": "00:00:15"
       }
+    }
   }
 }
 ```
