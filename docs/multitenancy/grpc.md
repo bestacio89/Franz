@@ -54,9 +54,9 @@ The client authorization behavior is opt-in. Register it only when the applicati
     "Grpc": {
       "RequireTenant": true
     },
-    "Grpc:Client": {
-      "DefaultClientTimeout": "00:00:15"
-    }
+    "Client": {
+        "DefaultClientTimeout": "00:00:15"
+      }
   }
 }
 ```
