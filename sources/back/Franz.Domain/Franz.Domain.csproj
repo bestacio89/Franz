@@ -1,14 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-	<Import Project="../../../common.targets" />
+  <Import Project="../../../common.targets" />
 
-	<ItemGroup>
-	  <PackageReference Include="Franz.Common.Business"/>
-	
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Franz.Common.Business" />
+    <PackageReference Include="Franz.Common.MultiTenancy" />
+  </ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="Registration\" />
-	</ItemGroup>
+  <ItemGroup>
+    <Folder Include="Registration\" />
+  </ItemGroup>
 
 </Project>

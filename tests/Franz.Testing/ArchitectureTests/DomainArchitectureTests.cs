@@ -6,6 +6,7 @@ using Franz.Common.Business.Events;
 using Franz.Common.Mediator;
 using Franz.Common.Mediator.Results;
 using Franz.Common.Mediator.Errors;
+using Franz.Common.MultiTenancy;
 namespace Franz.Testing.ArchitectureTests;
 
 /// <summary>

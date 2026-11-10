@@ -1,12 +1,16 @@
 # Service template setup
 
-This template targets .NET 10 and uses the Franz.Common 2.3.3 package baseline.
+This template targets .NET 10 and uses the Franz.Common 3.0.0 package baseline.
+
+## Multi-tenancy
+
+The API and Consumer hosts require validated tenant execution contexts by default. Implement the application-owned tenant store, HTTP resolver, HTTP membership authorizer, and message producer authorizer before starting the hosts. The sample uses `SharedDatabase`; the framework also supports `TenantDatabase` and `DomainDatabase` for relational EF provider routing. See the [complete multi-tenancy guide](../docs/multitenancy/README.md) before changing the isolation mode.
 
 ## Configuration
 
 Configuration is supplied by `appsettings.json`, environment-specific configuration, environment variables, and deployment secret stores. Never commit credentials.
 
-The API defaults to PostgreSQL for local development. The relational provider is selected by `Database:Provider` and currently supports the providers exposed by Franz.Common 2.3.3: `postgres`, `mariadb`, `sqlserver`, and `oracle`. The domain and persistence projects do not reference a provider-specific Franz package.
+The API defaults to PostgreSQL for local development. The relational provider is selected by `Database:Provider` and currently supports the providers exposed by Franz.Common 3.0.0: `postgres`, `mariadb`, `sqlserver`, and `oracle`. The domain and persistence projects do not reference a provider-specific Franz package.
 
 Override database values through environment variables, for example:
 
@@ -32,3 +36,6 @@ The consumer host's Kafka options are bound under `Messaging:Kafka`. Required se
 ## Validation
 
 The GitHub Actions workflow runs on pull requests targeting `develop` and can also be invoked manually. It restores, builds in Release, and runs the solution tests using the .NET 10 SDK.
+
+
+For tenant lifecycle, cache isolation, transport propagation, database provisioning, migrations, and provider-specific limitations, see the [Multi-tenancy guide](../docs/multitenancy/README.md).
