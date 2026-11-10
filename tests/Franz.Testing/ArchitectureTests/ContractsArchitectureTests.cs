@@ -15,7 +15,7 @@ using Xunit;
 
 namespace Franz.Testing.ArchitectureTests
 {
-  public class ContractsArchitecture : BaseArchitectureTest
+  public class ContractsArchitectureTests : BaseArchitectureTest
   {
 
     [Fact]

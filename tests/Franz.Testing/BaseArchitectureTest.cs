@@ -31,7 +31,7 @@ namespace Franz.Testing
 
       // Include Franz.Common and Franz.Common.Mediator
       const string allowedPattern =
-        @".*\.(Common(\.Mediator)?|Mediator|Domain|Application|API|Persistence|Contracts)(\.dll)?$";
+        @".*\.(Common(\..*)?|Mediator|Domain|Application|API|Persistence|Contracts)(\.dll)?$";
 
       EnsureAssembliesLoaded(allowedPattern);
 

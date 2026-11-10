@@ -104,6 +104,10 @@ namespace Franz.Testing.ArchitecturalReports.Layers
               .Classes()
               .That()
               .ResideInAssembly(PersistenceAssembly)
+              // Franz.Common 3.0 emits this composition-only source-generated type
+              // into the consuming assembly. It is registration glue, not persistence logic.
+              .And()
+              .DoNotHaveNameEndingWith("FranzMediatorGeneratedRegistration")
               .Should()
               .OnlyDependOnTypesThat()
               // Franz Core / Business
